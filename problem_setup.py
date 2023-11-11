@@ -19,9 +19,12 @@ nphot    = 1000000
 #
 from disk_model import *
 from vertical_profile_class import DiskModel_vertical
+Mass_of_star   = 0.5*Msun
+Accretion_rate = 5e-6*Msun/yr
+Radius_of_disk = 50*au
 opacity_table = generate_opacity_table(a_min=0, a_max=10, q=-3.5, dust_to_gas=0.01)
 disk_property_table = generate_disk_property_table(opacity_table)
-DM = DiskModel_vertical(opacity_table, disk_property_table, Mstar=0.5*Msun, Mdot=5e-6*Msun/yr, Rd=50*au, Z_max=50*au, Q=1.5, N_R=250, N_Z=250)
+DM = DiskModel_vertical(opacity_table, disk_property_table, Mstar=Mass_of_star, Mdot=Accretion_rate, Rd=Radius_of_disk, Z_max=50*au, Q=1.5, N_R=250, N_Z=250)
 DM.precompute_property(miu=2, factor=1.5)
 DM.extend_to_spherical(NTheta=500)
 #
@@ -154,4 +157,37 @@ with open('dustopac.inp','w+') as f:
     f.write('0                          0=Thermal grain\n')
     f.write('refractory_organics        Extension of name of dustkappa_***.inp file\n')
     f.write('----------------------------------------------------------------------------\n')
-
+#
+# Write the lines.inp control file
+#
+with open('lines.inp','w+') as f:
+    f.write('1\n')
+    f.write('1\n')
+    f.write('co    leiden    0    0\n')
+#
+# Write velocity field
+#
+iformat = 1
+vr      = 0
+vtheta  = 0
+vphi    = np.sqrt(G*Mass_of_star/(DM.r_sph*au))  # Keplerian velocity
+with open('gas_velocity.inp','w+') as f:
+    f.write(str(iformat)+'\n')
+    f.write('%d\n'%(nr*ntheta*nphi))
+    for idx_r in range(nr):
+        for idx_theta in range(ntheta):
+            for idx_phi in range(nphi):
+                f.write('%13.6e %13.6e %13.6e \n'%(vr,vtheta,vphi[idx_r]))
+    f.write('\n')
+#
+# Write the molecule number density file. 
+#
+abunco = 1e-4
+factco = abunco/(2.3*mp)
+nco    = DM.rho_sph*factco
+with open('numberdens_co.inp','w+') as f:
+    f.write('1\n')                       # Format number
+    f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
+    data = nco.ravel(order='F')          # Create a 1-D view, fortran-style indexing
+    data.tofile(f, sep='\n', format="%13.6e")
+    f.write('\n')
