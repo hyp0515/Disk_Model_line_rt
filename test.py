@@ -12,4 +12,4 @@ DM.extend_to_spherical(NTheta=500)
 # print(DM.theta_grid[-1])
 # print(0.5*np.pi)
 
-print(DM.rho_sph)
+print(DM.rho_sph) 
