@@ -117,7 +117,7 @@ class DiskModel_vertical:
                 rho_grid = np.where(z_grid <=h,  # condition
                                     rho_0*np.exp(-(z_grid**2/h_g**2)*(1-(h_r/h))),  # if true
                                     rho_0*np.exp(-((z_grid-h_r)/h_g)**2)*np.exp(-((h-h_r)/h_g)*h_r/h_g))  # if false
-                rho_grid = np.maximum(rho_grid, 1e-50)  # set the floor of density
+                rho_grid = np.maximum(rho_grid, 1e-15)  # set the floor of density
                 dz = z_grid*1
                 dz[1:] = z_grid[1:]-z_grid[:-1]
                 m_grid = np.cumsum(rho_grid*dz)  # (2.3) # m_1 sufficiently small and m_ND = M
@@ -212,13 +212,17 @@ class DiskModel_vertical:
         theta_map = np.arccos(pos_map[:, :, 1]/r_map)
         self.theta_map = theta_map
 
-        theta_min = theta_map[-1, -1]
+        # theta_min = theta_map[-1, -1]        
+        # theta_min = theta_map[0, -1]
+        theta_min = np.deg2rad(30)
         theta_grid = np.logspace(np.log10(theta_min), np.log10(np.max(theta_map)), NTheta)
-        theta_grid = -1*theta_grid + np.pi - theta_min
+        # theta_grid = -1*theta_grid + np.pi - theta_min
+        theta_grid = -1*theta_grid + 0.5*np.pi + theta_min
         theta_grid = theta_grid[::-1]
         self.theta_grid = theta_grid
 
-        r_min = np.min(r_map)/np.sin(theta_min)
+        # r_min = np.min(r_map)/np.sin(theta_min)
+        r_min = np.min(r_map)
         self.rmin = r_min
         r_grid = np.logspace(np.log10(r_min), np.log10(self.Rd/au), self.NR)
         self.r_sph = r_grid
@@ -256,10 +260,12 @@ class DiskModel_vertical:
         rho_sph_2d = interpolate(self.rho_map)
         T_sph_2d = interpolate(self.T_map)
         
-        # self.rho_sph = rotate_around_theta_axis(mirror_with_r_plane(rho_sph_2d))
-        # self.T_sph = rotate_around_theta_axis(mirror_with_r_plane(T_sph_2d))
-        
-        self.rho_sph = rotate_around_theta_axis(mirror_with_r_plane(rho_sph_2d))
+        mask_condition = r_sph_in_cyl < r_min
+        rho_sph_2d[mask_condition] = 1e-10
+        T_sph_2d[mask_condition] = 500
+
+        self.rho_sph = rotate_around_theta_axis(mirror_with_r_plane(rho_sph_2d))/au  
+        # divided by au is somehow working on radmc3d
         self.T_sph = rotate_around_theta_axis(mirror_with_r_plane(T_sph_2d))
         self.make_spherical_grid()
         return
