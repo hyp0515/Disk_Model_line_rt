@@ -119,6 +119,7 @@ with open('radmc3d.inp','w+') as f:
     f.write('scattering_mode_max = 0\n')   # Put this to 1 for isotropic scattering
     f.write('iranfreqmode = 1\n')
     f.write('istar_sphere = 1\n')
+    f.write('tgas_eq_tdust = 1\n')
 #
 # Write dust opacity files
 #
