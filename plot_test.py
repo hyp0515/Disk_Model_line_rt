@@ -1,57 +1,27 @@
-# import problem_setup as p
-# import numpy as np
-# from mpl_toolkits.mplot3d import axes3d
+import numpy as np
 from matplotlib import pyplot as plt
-# from matplotlib import cm
 from radmc3dPy.image import *
 from radmc3dPy.analyze import *
+from disk_model import *
+from vertical_profile_class import DiskModel_vertical
+from problem_setup import problem_setup
 
 
-# makeImage(npix=500,incl=0.,phi=0.,wav=80.,sizeau=120)   # This calls radmc3d 
-fig2  = plt.figure()
-a=readImage()
-plotImage(a,log=True,au=True,maxlog=5,cmap='hot')
 
+# problem_setup(a_max=1, Mass_of_star=1*Msun, Accretion_rate=1e-5*Msun/yr, Radius_of_disk=50*au)
 
-# makeImage(npix=500,incl=60.,phi=0.,wav=90.,sizeau=120)   # This calls radmc3d 
+for degree in [0,15,30,60,90]:
+    os.system(f"radmc3d spectrum incl {degree} phi 0 iline 1 widthkms 5 vkms 0 linenlam 100")
+    s = readSpectrum('spectrum.out')
+    if degree == 0:
+        peak_lam = s[np.argmax(s, axis=1),0]
+        v_axis = cc*((s[:,0]**2/peak_lam**2-1)/(s[:,0]**2/peak_lam**2+1))*1e-5
+    plt.plot(v_axis-5, 1e23*s[:,1], label=f'{degree}')
+plt.legend()
+# plt.show()
+plt.savefig('different_incl')
+
+# makeImage(npix=500,incl=60.,phi=0.,wav=1300.,sizeau=100,posang=142)  
 # fig2  = plt.figure()
 # a=readImage()
-# plotImage(a,log=True,au=True,maxlog=5,cmap='hot')
-
-# os.system("radmc3d sed incl 90")
-
-# # Plotting it "by hand", the SED as seen at 1 pc distance
-
-# fig3  = plt.figure()
-# s     = readSpectrum()
-# lam   = s[:,0]
-# nu    = 1e4*cc/lam
-# fnu   = s[:,1]
-# nufnu = nu*fnu
-# plt.plot(1e-11*nu,1e20*fnu)
-# plt.xscale('log')
-# plt.yscale('log')
-# plt.axis([1e-1, 5e+4, 1e-1, 1e4])
-# plt.xlabel('$\\nu [GHz]$')
-# plt.ylabel('$ Flux Density \; [\mathrm{erg}\,\mathrm{cm}^{-2}\,\mathrm{s}^{-1}\,\mathrm{Hz}^{-1}]$')
-
-
-# plt.xlim((3e+1, 3e+6))
-# plt.xlabel('$\lambda\; [\mu \mathrm{m}$]')
-# plt.ylabel('$\\nu F_\\nu \; [\mathrm{erg}\,\mathrm{cm}^{-2}\,\mathrm{s}^{-1}]$')
-
-#
-# Use the radmc3dPy.analyze tool set for plotting the SED, 
-# this time let's plot nuLnu in units of Lsun
-#
-
-# fig4  = plt.figure()
-# plotSpectrum(s,nulnu=True,lsun=True,xlg=True,ylg=False,micron=True)
-# plt.axis([1e-1,1e4,1e-8, 50])
-
-
-# s = readSpectrum('spectrum.out')
-
-# plt.plot(s[:,0], s[:,1])
-
-plt.show()
+# plotImage(a,log=True,cmap='gist_ncar',au=True,arcsec=False, dpc=140, bunit='snu', maxlog=6)
