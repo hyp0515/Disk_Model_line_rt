@@ -107,7 +107,7 @@ class DiskModel_vertical:
             so h can be set as an array from 0 to any large number, iterate until the last element of the m_grid
             nearly equal to M, check which h makes the closest value, and set the value to be the h at that radius.
             """
-            h_itr = np.linspace(0.1, 100, 100000)
+            h_itr = np.linspace(0.01, 100, 1000000)
             err = 1
             h_index = 0
 
