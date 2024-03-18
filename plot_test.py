@@ -60,7 +60,7 @@ from problem_setup import problem_setup
 # a=readImage()
 # plotImage(a,log=True,cmap='gist_ncar',au=True,arcsec=False, dpc=140, bunit='snu', maxlog=6)
 
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au)
+problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au)
 v_list = np.linspace(-5, 5, 11, endpoint=True)
 for v in v_list:
     os.system(f"radmc3d image incl 70 iline 1 vkms {v}")

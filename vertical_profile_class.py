@@ -6,18 +6,21 @@ from scipy.interpolate import interp2d
 
 class DiskModel_vertical:
 
-    def __init__(self, opacity_table, disk_property_table, Mstar, Mdot, Rd, Z_max, Q, N_R, N_Z, cut_r_min = True):
+    def __init__(self, opacity_table, disk_property_table, Mstar, Mdot, Rd, Z_max, Q, 
+                 N_R, N_Z, cut_r_min = True, pancake = False):
         """
         cut_r_min : cut_r_min is to cut the data inside the R_min where Sigma = 0 which makes some calculation errors  
         """
         self.DM_horizontal = DiskModel(opacity_table, disk_property_table)
         self.load_horizontal_disk_model(Mstar, Mdot, Rd, Q, N_R, cut_r_min)
         self.make_position_map(Z_max, N_Z, cut_r_min)
+        if pancake is True:
+            self.pancake_model()
         return
     
     def load_horizontal_disk_model(self, Mstar, Mdot, Rd, Q, N_R, cut_r_min):
         """
-        Run Wenrui's radial profile to get initial properties.
+        Run Wenrui's radial profile to get initial r-dependent profiles.
         """
         self.Mstar = Mstar
         self.Mdot = Mdot
@@ -201,9 +204,16 @@ class DiskModel_vertical:
         self.kappa_r_map = kappa_r_map
         return
 
+    def pancake_model(self):
+        rho_pancake = 1e-18*np.ones((self.NR, 10))
+        T_pancake = 100*np.ones((self.NR, 10))
+        self.rho_map = np.append(rho_pancake, np.zeros((self.NR, self.NZ-10)), axis=1)
+        self.T_map = np.append(T_pancake, np.zeros((self.NR, self.NZ-10)), axis=1)
+        return
+
     def extend_to_spherical(self, NTheta):
         self.NTheta = NTheta
-        self.NPhi = 20  # Since this model is only axisymmetric so the value of NPhi isn't important
+        self.NPhi = 100  # Since this model is only axisymmetric so the value of NPhi isn't important
 
         pos_map = self.pos_map.copy()        
         r_map = np.sqrt(pos_map[:, :, 0]**2+ pos_map[:, :, 1]**2) # distance map of every points

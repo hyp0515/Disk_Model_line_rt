@@ -24,8 +24,8 @@ class problem_setup:
         opacity_table = generate_opacity_table(a_min=0, a_max=a_max, q=-3.5, dust_to_gas=0.01)
         disk_property_table = generate_disk_property_table(opacity_table)
         DM = DiskModel_vertical(opacity_table, disk_property_table, Mstar=Mass_of_star, Mdot=Accretion_rate,
-                                Rd=Radius_of_disk, Z_max=50*au, Q=1.5, N_R=100, N_Z=100)
-        DM.precompute_property(miu=2, factor=1.5)
+                                Rd=Radius_of_disk, Z_max=50*au, Q=1.5, N_R=100, N_Z=100, pancake=True)
+        # DM.precompute_property(miu=2, factor=1.5)
         DM.extend_to_spherical(NTheta=200)
         #
         # Write the wavelength_micron.inp file
