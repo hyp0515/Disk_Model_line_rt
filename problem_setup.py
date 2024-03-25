@@ -27,6 +27,8 @@ class problem_setup:
                                 Rd=Radius_of_disk, Z_max=50*au, Q=1.5, N_R=100, N_Z=100, pancake=True)
         # DM.precompute_property(miu=2, factor=1.5)
         DM.extend_to_spherical(NTheta=200)
+        self.r_sph = DM.r_sph
+        self.theta_sph = DM.theta_sph
         #
         # Write the wavelength_micron.inp file
         #

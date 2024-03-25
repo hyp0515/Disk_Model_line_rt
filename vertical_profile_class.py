@@ -213,7 +213,7 @@ class DiskModel_vertical:
 
     def extend_to_spherical(self, NTheta):
         self.NTheta = NTheta
-        self.NPhi = 100  # Since this model is only axisymmetric so the value of NPhi isn't important
+        self.NPhi = 200  # Since this model is only axisymmetric so the value of NPhi isn't important
 
         pos_map = self.pos_map.copy()        
         r_map = np.sqrt(pos_map[:, :, 0]**2+ pos_map[:, :, 1]**2) # distance map of every points
