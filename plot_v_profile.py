@@ -28,5 +28,12 @@ c = ax.pcolormesh(Theta_0, R_0, v_map_0, cmap='Reds', norm=LogNorm())
 Theta_pi, R_pi = np.meshgrid(theta_grid+np.pi, r_grid)
 ax.pcolormesh(Theta_pi, R_pi, v_map_pi, cmap='Blues', norm=c.norm)
 
+# Add contour lines over the colormesh
+contour_levels = np.logspace(np.log10(v_map_0.min()), np.log10(v_map_0.max()), num=5)  # Adjust the levels as needed
+contours = ax.contour(Theta_0, R_0, v_map_0, levels=contour_levels, colors='black')
+
+contour_levels = np.logspace(np.log10(v_map_pi.min()), np.log10(v_map_pi.max()), num=5)  # Adjust the levels as needed
+contours = ax.contour(Theta_pi, R_pi, v_map_pi, levels=contour_levels, colors='black')
+
 fig.colorbar(c, ax=ax)
 plt.show()
