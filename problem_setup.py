@@ -24,8 +24,8 @@ class problem_setup:
         opacity_table = generate_opacity_table(a_min=0, a_max=a_max, q=-3.5, dust_to_gas=0.01)
         disk_property_table = generate_disk_property_table(opacity_table)
         DM = DiskModel_vertical(opacity_table, disk_property_table, Mstar=Mass_of_star, Mdot=Accretion_rate,
-                                Rd=Radius_of_disk, Z_max=50*au, Q=1.5, N_R=100, N_Z=100, pancake=True)
-        # DM.precompute_property(miu=2, factor=1.5)
+                                Rd=Radius_of_disk, Z_max=50*au, Q=1.5, N_R=100, N_Z=100, pancake=False)
+        DM.precompute_property(miu=2, factor=1.5)
         DM.extend_to_spherical(NTheta=200)
         self.r_sph = DM.r_sph
         self.theta_sph = DM.theta_sph
@@ -162,6 +162,7 @@ class problem_setup:
         vr      = 0
         vtheta  = 0
         vphi    = np.sqrt(G*Mass_of_star/(DM.r_sph*au))  # Keplerian velocity
+        vphi    = 5e5*np.ones(vphi.shape)                # Constant velocity
         with open('gas_velocity.inp','w+') as f:
             f.write(str(iformat)+'\n')
             f.write('%d\n'%(nr*ntheta*nphi))
