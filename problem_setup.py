@@ -28,7 +28,7 @@ class problem_setup:
         # DM.precompute_property(miu=2, factor=1.5)
         DM.extend_to_spherical(NTheta=200)
         self.r_sph = DM.r_sph
-        self.theta_sph = DM.theta_sph
+        self.theta_sph = np.delete(DM.theta_sph, DM.NTheta)
         #
         # Write the wavelength_micron.inp file
         #
@@ -176,6 +176,23 @@ class problem_setup:
                     for idx_phi in range(nphi):
                         f.write('%13.6e %13.6e %13.6e \n'%(vr,vtheta,vphi[idx_r]))
             f.write('\n')
+
+        # def kep(index_R, index_theta):
+        #     r = self.r_sph * au
+        #     theta = self.theta_sph
+        #     vphi = np.sqrt(G*Mass_of_star/r[index_R]/np.sin(theta[index_theta]))
+        #     return vphi
+        
+        # with open('gas_velocity.inp','w+') as f:
+        #     f.write(str(iformat)+'\n')
+        #     f.write('%d\n'%(nr*ntheta*nphi))
+        #     for idx_r in range(nr):
+        #         for idx_theta in range(ntheta):
+        #             for idx_phi in range(nphi):
+        #                 f.write('%13.6e %13.6e %13.6e \n'%(vr,vtheta,kep(idx_r,idx_theta)))
+        #     f.write('\n')
+
+        
         #
         # Write the molecule number density file. 
         #

@@ -10,7 +10,7 @@ from matplotlib.colors import LogNorm
 p = problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au)
 r_grid = np.array(p.r_sph)
 theta_grid = np.array(p.theta_sph)-0.5*np.pi
-theta_grid = np.delete(theta_grid, 200)
+
 
 
 

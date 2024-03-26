@@ -205,8 +205,8 @@ class DiskModel_vertical:
         return
 
     def pancake_model(self):
-        rho_pancake = 1e-15*np.ones((self.NR, 10))
-        T_pancake = 700*np.ones((self.NR, 10))
+        rho_pancake = 1e-18*np.ones((self.NR, 10))
+        T_pancake = 100*np.ones((self.NR, 10))
         self.rho_map = np.append(rho_pancake, np.zeros((self.NR, self.NZ-10)), axis=1)
         self.T_map = np.append(T_pancake, np.zeros((self.NR, self.NZ-10)), axis=1)
         return
