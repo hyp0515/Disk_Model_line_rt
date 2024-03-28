@@ -7,7 +7,7 @@ from vertical_profile_class import DiskModel_vertical
 from problem_setup import problem_setup
 from matplotlib.colors import LogNorm
 
-p = problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au)
+p = problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, pancake=True)
 r_grid = np.array(p.r_sph)
 theta_grid = np.array(p.theta_sph)-0.5*np.pi
 

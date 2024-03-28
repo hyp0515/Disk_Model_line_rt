@@ -20,13 +20,16 @@ nphot    = 1000000
 from disk_model import *
 from vertical_profile_class import DiskModel_vertical
 class problem_setup:
-    def __init__(self, a_max, Mass_of_star, Accretion_rate, Radius_of_disk):        
+    def __init__(self, a_max, Mass_of_star, Accretion_rate, Radius_of_disk, pancake=False):        
         opacity_table = generate_opacity_table(a_min=0, a_max=a_max, q=-3.5, dust_to_gas=0.01)
         disk_property_table = generate_disk_property_table(opacity_table)
-        DM = DiskModel_vertical(opacity_table, disk_property_table, Mstar=Mass_of_star, Mdot=Accretion_rate,
-                                Rd=Radius_of_disk, Z_max=50*au, Q=1.5, N_R=100, N_Z=100, pancake=True)
-        # DM.precompute_property(miu=2, factor=1.5)
-        DM.extend_to_spherical(NTheta=200)
+
+        DM = DiskModel_vertical(opacity_table, disk_property_table)
+        DM.input_disk_parameter(Mstar=Mass_of_star, Mdot=Accretion_rate,
+                                Rd=Radius_of_disk, Q=1.5, N_R=100)
+        if pancake is True:
+            DM.pancake_model()
+        DM.extend_to_spherical(NTheta=200, NPhi=200)
         self.r_sph = DM.r_sph
         self.theta_sph = np.delete(DM.theta_sph, DM.NTheta)
         #
@@ -163,10 +166,10 @@ class problem_setup:
         vtheta  = 0
         vphi    = np.sqrt(G*Mass_of_star/(DM.r_sph*au))    # Keplerian velocity
         vphi    = 5e5*np.ones(vphi.shape)                  # Constant velocity
-        vphi_1  = 5e5*np.ones(int(len(vphi)/2))
-        vphi_2  = 3e5*np.ones(int(len(vphi)*2/6))
-        vphi_3  = 1e5*np.ones(int(len(vphi)*1/6))
-        vphi    = np.concatenate((vphi_1, vphi_2, vphi_3)) # Layered velocity
+        # vphi_1  = 5e5*np.ones(int(len(vphi)/2))
+        # vphi_2  = 3e5*np.ones(int(len(vphi)*2/6))
+        # vphi_3  = 1e5*np.ones(int(len(vphi)*1/6))
+        # vphi    = np.concatenate((vphi_1, vphi_2, vphi_3)) # Layered velocity
 
         with open('gas_velocity.inp','w+') as f:
             f.write(str(iformat)+'\n')
