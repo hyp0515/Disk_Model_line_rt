@@ -7,9 +7,6 @@ from scipy.interpolate import interp2d
 class DiskModel_vertical:
 
     def __init__(self, opacity_table, disk_property_table):
-        """
-        cut_r_min : cut_r_min is to cut the data inside the R_min where Sigma = 0 which makes some calculation errors  
-        """
         self.DM_horizontal = DiskModel(opacity_table, disk_property_table)
         return
     

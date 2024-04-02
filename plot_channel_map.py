@@ -60,9 +60,15 @@ from problem_setup import problem_setup
 # a=readImage()
 # plotImage(a,log=True,cmap='gist_ncar',au=True,arcsec=False, dpc=140, bunit='snu', maxlog=6)
 
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, pancake=False)
+problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, pancake=True)
 v_list = np.linspace(-5, 5, 11, endpoint=True)
+# os.system("radmc3d image incl 70 iline 1 vkms -5")
+# im = readImage('image.out')
+# print(im.image.shape)
+
 for v in v_list:
     os.system(f"radmc3d image incl 70 iline 1 vkms {v}")
     im = readImage('image.out')
+    # plt.imshow(np.transpose(im.image[:,:,0]),cmap=plt.cm.gist_heat)
+    # plt.show()
     plotImage(im, arcsec=True, dpc=140., cmap='hot')
