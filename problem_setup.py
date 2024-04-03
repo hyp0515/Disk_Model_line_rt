@@ -103,7 +103,7 @@ class problem_setup:
             f.write(str(iformat)+'\n')
             f.write('%d\n'%(nr*ntheta*nphi))
             f.write(str(nspec)+'\n')
-            data = DM.rho_sph.ravel(order='F')         # Create a 1-D view, fortran-style indexing
+            data = 0.01*DM.rho_sph.ravel(order='F')         # Create a 1-D view, fortran-style indexing
             data.tofile(f, sep='\n', format="%13.6e")
             f.write('\n')
         #
@@ -166,10 +166,10 @@ class problem_setup:
         vtheta  = 0
         vphi    = np.sqrt(G*Mass_of_star/(DM.r_sph*au))    # Keplerian velocity
         vphi    = 5e5*np.ones(vphi.shape)                  # Constant velocity
-        # vphi_1  = 5e5*np.ones(int(len(vphi)/2))
+        vphi_1  = 1e5*np.ones(int(len(vphi)*1/2))
         # vphi_2  = 3e5*np.ones(int(len(vphi)*2/6))
-        # vphi_3  = 1e5*np.ones(int(len(vphi)*1/6))
-        # vphi    = np.concatenate((vphi_1, vphi_2, vphi_3)) # Layered velocity
+        vphi_3  = 100e5*np.ones(int(len(vphi)*1/2))
+        vphi    = np.concatenate((vphi_1, vphi_3)) # Layered velocity
 
         with open('gas_velocity.inp','w+') as f:
             f.write(str(iformat)+'\n')
