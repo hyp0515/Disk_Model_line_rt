@@ -165,37 +165,21 @@ class problem_setup:
         vr      = 0
         vtheta  = 0
         vphi    = np.sqrt(G*Mass_of_star/(DM.r_sph*au))    # Keplerian velocity
-        vphi    = 5e5*np.ones(vphi.shape)                  # Constant velocity
-        vphi_1  = 1e5*np.ones(int(len(vphi)*1/2))
+        # vphi    = 5e5*np.ones(vphi.shape)                  # Constant velocity
+        # vphi_1  = 1e5*np.ones(int(len(vphi)*1/2))
         # vphi_2  = 3e5*np.ones(int(len(vphi)*2/6))
-        vphi_3  = 100e5*np.ones(int(len(vphi)*1/2))
-        vphi    = np.concatenate((vphi_1, vphi_3)) # Layered velocity
+        # vphi_3  = 100e5*np.ones(int(len(vphi)*1/2))
+        # vphi    = np.concatenate((vphi_1, vphi_3)) # Layered velocity
 
         with open('gas_velocity.inp','w+') as f:
             f.write(str(iformat)+'\n')
             f.write('%d\n'%(nr*ntheta*nphi))
-            for idx_r in range(nr):
+            for idx_phi in range(nphi):
                 for idx_theta in range(ntheta):
-                    for idx_phi in range(nphi):
+                    for idx_r in range(nr):
                         f.write('%13.6e %13.6e %13.6e \n'%(vr,vtheta,vphi[idx_r]))
             f.write('\n')
 
-        # def kep(index_R, index_theta):
-        #     r = self.r_sph * au
-        #     theta = self.theta_sph
-        #     vphi = np.sqrt(G*Mass_of_star/r[index_R]/np.sin(theta[index_theta]))
-        #     return vphi
-        
-        # with open('gas_velocity.inp','w+') as f:
-        #     f.write(str(iformat)+'\n')
-        #     f.write('%d\n'%(nr*ntheta*nphi))
-        #     for idx_r in range(nr):
-        #         for idx_theta in range(ntheta):
-        #             for idx_phi in range(nphi):
-        #                 f.write('%13.6e %13.6e %13.6e \n'%(vr,vtheta,kep(idx_r,idx_theta)))
-        #     f.write('\n')
-
-        
         #
         # Write the molecule number density file. 
         #
@@ -220,5 +204,4 @@ class problem_setup:
             data = nch3oh.ravel(order='F')          # Create a 1-D view, fortran-style indexing
             data.tofile(f, sep='\n', format="%13.6e")
             f.write('\n')
-    
         return
