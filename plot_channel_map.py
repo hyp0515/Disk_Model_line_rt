@@ -29,23 +29,23 @@ from problem_setup import problem_setup
 
 
 
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, pancake=False)
-os.system(f"radmc3d spectrum incl 0 phi 0 iline 240 widthkms 10 vkms 0 linenlam 100")
-s = readSpectrum('spectrum.out')
-peak_lam = s[np.argmax(s, axis=1),0]
-v_axis = cc*((s[:,0]**2/peak_lam**2-1)/(s[:,0]**2/peak_lam**2+1))*1e-5
-plt.plot(v_axis-5, 1e26*s[:,1], label=f'0'+r'$^\circ$')
+# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, pancake=False)
+# os.system(f"radmc3d spectrum incl 0 phi 0 iline 240 widthkms 10 vkms 0 linenlam 100")
+# s = readSpectrum('spectrum.out')
+# peak_lam = s[np.argmax(s, axis=1),0]
+# v_axis = cc*((s[:,0]**2/peak_lam**2-1)/(s[:,0]**2/peak_lam**2+1))*1e-5
+# plt.plot(v_axis-5, 1e26*s[:,1], label=f'0'+r'$^\circ$')
 
-for deg in [30, 60, 90]:
-    # problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au)
-    os.system(f"radmc3d spectrum incl {deg} phi 0 iline 240 widthkms 10 vkms 0 linenlam 100")
-    s = readSpectrum('spectrum.out')
-    plt.plot(v_axis-5, 1e26*s[:,1], label=f'{deg}'+r'$^\circ$')
-plt.legend()
-plt.xlabel('Velocity (km/s)')
-plt.ylabel('Intensity (mJy/beam)')
-plt.title('Spectra of $\mathregular{CH_3OH}$ with different inclination')
-plt.savefig('different_incl.pdf')
+# for deg in [30, 60, 90]:
+#     # problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au)
+#     os.system(f"radmc3d spectrum incl {deg} phi 0 iline 240 widthkms 10 vkms 0 linenlam 100")
+#     s = readSpectrum('spectrum.out')
+#     plt.plot(v_axis-5, 1e26*s[:,1], label=f'{deg}'+r'$^\circ$')
+# plt.legend()
+# plt.xlabel('Velocity (km/s)')
+# plt.ylabel('Intensity (mJy/beam)')
+# plt.title('Spectra of $\mathregular{CH_3OH}$ with different inclination')
+# plt.savefig('different_incl.pdf')
 
 
 # s = readSpectrum('spectrum.out')
@@ -68,15 +68,15 @@ plt.savefig('different_incl.pdf')
 # a=readImage()
 # plotImage(a,log=True,cmap='gist_ncar',au=True,arcsec=False, dpc=140, bunit='snu', maxlog=6)
 
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, pancake=True)
-# v_list = np.linspace(-5, 5, 11, endpoint=True)
-# # os.system("radmc3d image incl 70 iline 1 vkms -5")
-# # im = readImage('image.out')
-# # print(im.image.shape)
+problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, pancake=True)
+v_list = np.linspace(-5, 5, 11, endpoint=True)
+# os.system("radmc3d image incl 70 iline 1 vkms -5")
+# im = readImage('image.out')
+# print(im.image.shape)
 
-# for v in v_list:
-#     os.system(f"radmc3d image incl 70 iline 1 vkms {v}")
-#     im = readImage('image.out')
-#     # plt.imshow(np.transpose(im.image[:,:,0]),cmap=plt.cm.gist_heat)
-#     # plt.show()
-#     plotImage(im, arcsec=True, dpc=140., cmap='hot')
+for v in v_list:
+    os.system(f"radmc3d image incl 70 iline 1 vkms {v}")
+    im = readImage('image.out')
+    # plt.imshow(np.transpose(im.image[:,:,0]),cmap=plt.cm.gist_heat)
+    # plt.show()
+    plotImage(im, arcsec=True, dpc=140., cmap='hot')
