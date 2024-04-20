@@ -163,6 +163,7 @@ class problem_setup:
         #
         iformat = 1
         vr      = 0
+        vr      = -0.5*np.sqrt(G*Mass_of_star/(DM.r_sph*au)) # Infall velocity
         vtheta  = 0
         vphi    = np.sqrt(G*Mass_of_star/(DM.r_sph*au))    # Keplerian velocity
         # vphi    = 5e5*np.ones(vphi.shape)                  # Constant velocity
@@ -177,7 +178,7 @@ class problem_setup:
             for idx_phi in range(nphi):
                 for idx_theta in range(ntheta):
                     for idx_r in range(nr):
-                        f.write('%13.6e %13.6e %13.6e \n'%(vr,vtheta,vphi[idx_r]))
+                        f.write('%13.6e %13.6e %13.6e \n'%(vr[idx_r],vtheta,vphi[idx_r]))
             f.write('\n')
 
         #
