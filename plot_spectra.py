@@ -32,7 +32,7 @@ plt.close()
 ###############################################################################
 '''
 Spectra with different inclination
-# '''
+'''
 problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, pancake=False)
 os.system(f"radmc3d spectrum incl 0 phi 0 iline 240 widthkms 5 vkms 0 linenlam 100")
 s = readSpectrum('spectrum.out')
