@@ -20,7 +20,7 @@ nphot    = 1000000
 from disk_model import *
 from vertical_profile_class import DiskModel_vertical
 class problem_setup:
-    def __init__(self, a_max, Mass_of_star, Accretion_rate, Radius_of_disk, pancake=False):        
+    def __init__(self, a_max, Mass_of_star, Accretion_rate, Radius_of_disk, v_infall, pancake=False):        
         opacity_table = generate_opacity_table(a_min=0, a_max=a_max, q=-3.5, dust_to_gas=0.01)
         disk_property_table = generate_disk_property_table(opacity_table)
 
@@ -125,7 +125,7 @@ class problem_setup:
             # f.write('iranfreqmode = 1\n')
             f.write('istar_sphere = 1\n')
             f.write('tgas_eq_tdust = 1\n')
-            f.write('setthreads = 5\n')
+            f.write('setthreads = 1\n')
         #
         # Write dust opacity files
         #
@@ -164,7 +164,7 @@ class problem_setup:
         #
         iformat = 1
         vr      = 0
-        vr      = -0.5*np.sqrt(G*Mass_of_star/(DM.r_sph*au)) # Infall velocity
+        vr      = -v_infall*np.sqrt(G*Mass_of_star/(DM.r_sph*au)) # Infall velocity
         vtheta  = 0
         vphi    = np.sqrt(G*Mass_of_star/(DM.r_sph*au))    # Keplerian velocity
         # vphi    = 5e5*np.ones(vphi.shape)                  # Constant velocity

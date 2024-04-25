@@ -24,7 +24,7 @@ Plot images and save them into one plot
 '''
 def plot_channel_maps(incl=70, vlist=None, line=1, tworow=True):
 
-    if vlist is None : vlist = np.linspace(-4, 4, 9, endpoint=True)
+    if vlist is None : vlist = np.linspace(-5, 5, 11, endpoint=True)
     
     if tworow is not True:
         fig, ax = plt.subplots(1, len(vlist), figsize=(15, 12), sharex=True, sharey=True, gridspec_kw={'wspace': 0, 'hspace': 0})
@@ -60,7 +60,16 @@ def plot_channel_maps(incl=70, vlist=None, line=1, tworow=True):
         plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0, hspace=0)
     return
 
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, pancake=False)
-plot_channel_maps()
-plt.show()
 ###############################################################################
+vinfall=[0, 1, 5, 10]
+for vin in vinfall:
+    incl_list = [0, 15, 30, 45, 60, 75, 90]
+    problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, 
+                  pancake=False,v_infall=0.1*vin)
+    for deg in incl_list:
+        plot_channel_maps(incl = deg, line=240)
+        plt.savefig(f'./Figures/channel_maps/iline_240/{vin}_infall_incl_{deg}.png')
+        print('Finish...')
+
+
+
