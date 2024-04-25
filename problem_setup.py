@@ -125,7 +125,7 @@ class problem_setup:
             # f.write('iranfreqmode = 1\n')
             f.write('istar_sphere = 1\n')
             f.write('tgas_eq_tdust = 1\n')
-            f.write('setthreads = 1\n')
+            f.write('setthreads = 8\n')
         #
         # Write dust opacity files
         #

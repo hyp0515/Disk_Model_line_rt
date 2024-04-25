@@ -63,12 +63,15 @@ def plot_channel_maps(incl=70, vlist=None, line=1, tworow=True):
 ###############################################################################
 vinfall=[0, 1, 5, 10]
 for vin in vinfall:
-    incl_list = [0, 15, 30, 45, 60, 75, 90]
     problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, 
-                  pancake=False,v_infall=0.1*vin)
+                  pancake=True,v_infall=0.1*vin)
+    incl_list = [0, 15, 30, 45, 60, 75, 90]
     for deg in incl_list:
         plot_channel_maps(incl = deg, line=240)
-        plt.savefig(f'./Figures/channel_maps/iline_240/{vin}_infall_incl_{deg}.png')
+        plt.savefig(f'./Figures/channel_maps/iline_240/pancake/{vin}_infall_incl_{deg}.png')
+        print('Finish...')
+        plot_channel_maps(incl = deg, line=1)
+        plt.savefig(f'./Figures/channel_maps/iline_1/pancake/{vin}_infall_incl_{deg}.png')
         print('Finish...')
 
 
