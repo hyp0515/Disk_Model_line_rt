@@ -135,7 +135,8 @@ class problem_setup:
         kappa_abs = opacity_table['kappa']
         kappa_sca = opacity_table['kappa_s']
         g         = opacity_table['g']
-        for idx, composition in enumerate(['water','silicate','troilite','refractory_organics']):
+        # for idx, composition in enumerate(['water','silicate','troilite','refractory_organics']):
+        for idx, composition in enumerate(['silicate']): # for now, only silicate is considered
             with open('dustkappa_'+composition+'.inp', "w+") as f:
                 f.write(str(iformat)+'\n')
                 f.write(str(nlam)+'\n')

@@ -11,17 +11,22 @@ from problem_setup import problem_setup
 '''
 Spectra with different maximum grain sizes
 '''
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, pancake=False)
-os.system(f"radmc3d spectrum incl 0 phi 0 iline 240 widthkms 5 vkms 0 linenlam 100")
-s = readSpectrum('spectrum.out')
-peak_lam = s[np.argmax(s, axis=1),0]
-v_axis = cc*((s[:,0]**2/peak_lam**2-1)/(s[:,0]**2/peak_lam**2+1))*1e-5
-
+# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, 
+#               pancake=False, v_infall=0)
+# os.system(f"radmc3d spectrum incl 0 phi 0 iline 240 widthkms 5 vkms 0 linenlam 101")
+# s = readSpectrum('spectrum.out')
+# freq = (cc*1e-2) / (s[:, 0]*1e-6)
+# v = cc / 1e5 * (freq[50] - freq) / freq[50]
+# print(s[:, 0])
+# print(freq)
+# print(v)
 for amax in [0.001, 0.01, 0.1, 1]:
-    problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au)
-    os.system(f"radmc3d spectrum incl 70 phi 0 iline 240 widthkms 5 vkms 0 linenlam 100")
+    problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=0.5)
+    os.system(f"radmc3d spectrum incl 70 phi 0 iline 240 widthkms 5 vkms 0 linenlam 101")
     s = readSpectrum('spectrum.out')
-    plt.plot(v_axis-5, 1e26*s[:,1], label=f'{amax}cm')
+    freq = (cc*1e-2) / (s[:, 0]*1e-6)
+    v = cc / 1e5 * (freq[50] - freq) / freq[50]
+    plt.plot(v, 1e26*s[:,1], label=f'{amax}cm')
 plt.legend()
 plt.xlabel('Velocity (km/s)')
 plt.ylabel('Intensity (mJy/beam)')
@@ -33,18 +38,23 @@ plt.close()
 '''
 Spectra with different inclination
 '''
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, pancake=False)
-os.system(f"radmc3d spectrum incl 0 phi 0 iline 240 widthkms 5 vkms 0 linenlam 100")
-s = readSpectrum('spectrum.out')
-peak_lam = s[np.argmax(s, axis=1),0]
-v_axis = cc*((s[:,0]**2/peak_lam**2-1)/(s[:,0]**2/peak_lam**2+1))*1e-5
-plt.plot(v_axis-5, 1e26*s[:,1], label=f'0'+r'$^\circ$')
+# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, 
+#               pancake=False, v_infall=0)
+# os.system(f"radmc3d spectrum incl 0 phi 0 iline 240 widthkms 5 vkms 0 linenlam 101")
+# s = readSpectrum('spectrum.out')
+# freq = (cc*1e-2) / (s[:, 0]*1e-6)
+# v = cc / 1e5 * (freq[50] - freq) / freq[50]
+# peak_lam = s[np.argmax(s, axis=1),0]
+# v_axis = cc*((s[:,0]**2/peak_lam**2-1)/(s[:,0]**2/peak_lam**2+1))*1e-5
 
-for deg in [30, 60, 90]:
-    # problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au)
-    os.system(f"radmc3d spectrum incl {deg} phi 0 iline 240 widthkms 5 vkms 0 linenlam 100")
+for deg in [0, 15, 30, 45, 60, 75, 90]:
+    problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, 
+              pancake=False, v_infall=0.5)
+    os.system(f"radmc3d spectrum incl {deg} phi 0 iline 240 widthkms 5 vkms 0 linenlam 101")
     s = readSpectrum('spectrum.out')
-    plt.plot(v_axis-5, 1e26*s[:,1], label=f'{deg}'+r'$^\circ$')
+    freq = (cc*1e-2) / (s[:, 0]*1e-6)
+    v = cc / 1e5 * (freq[50] - freq) / freq[50]
+    plt.plot(v, 1e26*s[:,1], label=f'{deg}'+r'$^\circ$')
 plt.legend()
 plt.xlabel('Velocity (km/s)')
 plt.ylabel('Intensity (mJy/beam)')

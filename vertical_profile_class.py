@@ -1,6 +1,7 @@
 import numpy as np
 from disk_model import *
 from scipy.interpolate import interp2d
+from scipy.optimize import minimize_scalar
 # All unit are in cgs except height and radius are in au
 #########################################################################################
 
@@ -25,24 +26,25 @@ class DiskModel_vertical:
         self.Mstar = Mstar
         self.Mdot = Mdot
         self.Rd = Rd        
-        self.NR = N_R        
+        self.NR = N_R
+
         self.DM_horizontal.generate_disk_profile(Mstar=self.Mstar, Mdot=self.Mdot, Rd=self.Rd, Q=Q, N_R=self.NR)
-        self.R_grid = self.DM_horizontal.R[1:]/au  # radial grid
-        self.T_mid = self.DM_horizontal.T_mid  # temperature at midplane(z=0)
-        self.T_eff = self.DM_horizontal.T_eff  # effective temperature extracted from Wenrui's disk_model
-        self.M = self.DM_horizontal.Sigma/2  # Sigma/2 is the definition of M in Hubeny+90
+        self.R_grid    = self.DM_horizontal.R[1:]/au  # radial grid
+        self.T_mid     = self.DM_horizontal.T_mid  # temperature at midplane(z=0)
+        self.T_eff     = self.DM_horizontal.T_eff  # effective temperature extracted from Wenrui's disk_model
+        self.M         = self.DM_horizontal.Sigma/2  # Sigma/2 is the definition of M in Hubeny+90
         self.tau_r_mid = self.DM_horizontal.tau_r_mid
         self.tau_p_mid = self.DM_horizontal.tau_p_mid
         if cut_r_min:
             cut = np.argmax(self.M > 0)
-            self.R_grid = self.R_grid[cut:]
-            self.T_mid = self.T_mid[cut:]
-            self.T_eff = self.T_eff[cut:]
-            self.M = self.M[cut:]
+            self.R_grid    = self.R_grid[cut:]
+            self.T_mid     = self.T_mid[cut:]
+            self.T_eff     = self.T_eff[cut:]
+            self.M         = self.M[cut:]
             self.tau_p_mid = self.tau_p_mid[cut:]
             self.tau_r_mid = self.tau_r_mid[cut:]
             self.NR = len(self.R_grid)
-            self.cut = cut
+            # self.cut = cut
         self.Q = G*Mstar*(self.R_grid*au)**(-3)  # (2.2) effective vertical gravity
         self.make_position_map()
         return
@@ -92,51 +94,86 @@ class DiskModel_vertical:
         self.make_rho_and_m_map()
         return
         
+    # def make_rho_and_m_map(self):
+    #     """
+    #     Calculate volumn density and mass-depth scale
+    #     !! This is the original version !!
+    #     """
+    #     M = self.M*1
+    #     h_grid = np.empty((self.NR))
+    #     rho_map = np.empty((self.NR, self.NZ))
+    #     m_map = np.empty((self.NR, self.NZ))
+    #     for r in range(self.NR):
+    #         z_grid = self.Z_grid
+    #         h_g = self.H_g[r]
+    #         h_itr = np.linspace(0.01, 100, 1000000)
+    #         err = 1
+    #         h_index = 0
+
+    #         while err > 0.01:
+    #             h = h_itr[h_index]
+    #             rho_0 = M[r]/h
+    #             rho_grid = rho_0*np.exp(-(z_grid**2/h_g**2))
+    #             rho_grid = np.maximum(rho_grid, 1e-10)  # set lower limit of density
+    #             dz = np.diff(z_grid, prepend=z_grid[0])  # calculate grid spacing
+    #             m_grid = np.cumsum(rho_grid * dz)  # cumulative mass distribution
+    #             err = np.abs(1-m_grid[-1]/M[r])
+    #             h_index +=1                
+
+    #         h_grid[r] = h_itr[h_index-1]
+    #         rho_map[r, :] = rho_grid/au
+    #         m_map[r, :] = m_grid[::-1]
+
+    #     self.rho_map = rho_map
+    #     self.m_map = m_map
+    #     self.H = h_grid
+    #     self.make_tau_and_T_map()
+    #     return
+
     def make_rho_and_m_map(self):
         """
-        Calculate volumn density and mass-depth scale
+        Calculate volume density and mass-depth scale
+        !! This is the faster modification by ChatGPT !!
         """
-        M = self.M*1
+        M = self.M * 1
         h_grid = np.empty((self.NR))
         rho_map = np.empty((self.NR, self.NZ))
         m_map = np.empty((self.NR, self.NZ))
+        def mass_error(h, z_grid, M_r, h_g):
+            rho_0 = M_r / h
+            rho_grid = rho_0 * np.exp(-(z_grid**2 / h_g**2))
+            rho_grid = np.maximum(rho_grid, 1e-10)
+            dz = np.diff(z_grid, prepend=z_grid[0])
+            m_grid = np.cumsum(rho_grid * dz)
+            return np.abs(1 - m_grid[-1] / M_r)
+
+
         for r in range(self.NR):
             z_grid = self.Z_grid
             h_g = self.H_g[r]
-            h_r = self.H_r[r]
-            """
-            A simple method to find h: 
-            Different h can cause the last element of the m_grid unequal to M, 
-            so h can be set as an array from 0 to any large number, iterate until the last element of the m_grid
-            nearly equal to M, check which h makes the closest value, and set the value to be the h at that radius.
-            """
-            h_itr = np.linspace(0.01, 100, 1000000)
-            err = 1
-            h_index = 0
+            '''
+            Using scipy.optimize.minimize_scalar to numerically find h to prevent loops
+            '''
+            result = minimize_scalar(mass_error, bounds=(0.01, 100), args=(z_grid, M[r], h_g), method='bounded')
+            h = result.x
 
-            while err > 0.1:
-                h = h_itr[h_index]
-                rho_0 = M[r]/h
-                rho_grid = np.where(z_grid <=h,  # condition
-                                    rho_0*np.exp(-(z_grid**2/h_g**2)*(1-(h_r/h))),  # if true
-                                    rho_0*np.exp(-((z_grid-h_r)/h_g)**2)*np.exp(-((h-h_r)/h_g)*h_r/h_g))  # if false
-                rho_grid = np.maximum(rho_grid, 1e-10)  # set lower limit of density
-                dz = z_grid*1
-                dz[1:] = z_grid[1:]-z_grid[:-1]
-                m_grid = np.cumsum(rho_grid*dz)  # (2.3) # m_1 sufficiently small and m_ND = M
-                err = np.abs(1-m_grid[-1]/M[r])
-                h_index +=1                
-            h_grid[r] = h_itr[h_index-1]
-            rho_map[r, :] = rho_grid
+            rho_0 = M[r] / h
+            rho_grid = rho_0 * np.exp(-(z_grid**2 / h_g**2))
+            rho_grid = np.maximum(rho_grid, 1e-10)
+            dz = np.diff(z_grid, prepend=z_grid[0])
+            m_grid = np.cumsum(rho_grid * dz)
+
+            h_grid[r] = h
+            rho_map[r, :] = rho_grid/au
             m_map[r, :] = m_grid[::-1]
 
-        self.rho_map = rho_map/au  # the divided by au is the made-up of units errors
+        self.rho_map = rho_map
         self.m_map = m_map
         self.H = h_grid
         self.make_tau_and_T_map()
         return
 
-    
+
     def make_tau_and_T_map(self):
         """
         Using disk_property_table to calculate kappa_r from T, and further calculating tau_r and T
@@ -179,17 +216,15 @@ class DiskModel_vertical:
                 else:
                     T_old = T_grid[-1]
 
-                err = 1
-                n_itr = 0
-                n_itr_max = 50
                 # iterate until T_new = T_old
-                while err > 1e-10 and n_itr < n_itr_max:
+                for _ in range(50):
                     kappa_r_grid[z] = get_kappa_from_T(T_old)
                     tau_r = get_tau_from_kappa(m_grid, kappa_r_grid)
                     T_new = get_T_from_tau(r, tau_r, t_eff)
-                    err = np.abs(1-T_new/T_old)
-                    n_itr +=1
+                    if np.abs(1-T_new/T_old) < 1e-10:
+                        break
                     T_old = T_new
+                
                 T_grid = np.append(T_grid, T_new)
                 tau_r_grid = np.append(tau_r_grid, tau_r)
                 kappa_r_grid = np.append(kappa_r_grid, get_kappa_from_T(T_new))
