@@ -11,55 +11,96 @@ from problem_setup import problem_setup
 '''
 Spectra with different maximum grain sizes
 '''
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, 
-#               pancake=False, v_infall=0)
-# os.system(f"radmc3d spectrum incl 0 phi 0 iline 240 widthkms 5 vkms 0 linenlam 101")
-# s = readSpectrum('spectrum.out')
-# freq = (cc*1e-2) / (s[:, 0]*1e-6)
-# v = cc / 1e5 * (freq[50] - freq) / freq[50]
-# print(s[:, 0])
-# print(freq)
-# print(v)
+
 for amax in [0.001, 0.01, 0.1, 1]:
     problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=0.5)
-    os.system(f"radmc3d spectrum incl 70 phi 0 iline 240 widthkms 5 vkms 0 linenlam 101")
+    os.system(f"radmc3d spectrum incl 70 phi 0 iline 240 widthkms 20 vkms 0 linenlam 101")
     s = readSpectrum('spectrum.out')
     freq = (cc*1e-2) / (s[:, 0]*1e-6)
     v = cc / 1e5 * (freq[50] - freq) / freq[50]
-    plt.plot(v, 1e26*s[:,1], label=f'{amax}cm')
+    plt.plot(v, 1e26*s[:,1]/(140*140), label=f'{amax}cm')
 plt.legend()
 plt.xlabel('Velocity (km/s)')
 plt.ylabel('Intensity (mJy/beam)')
 plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
-plt.savefig('different_amax')
+plt.savefig('different_amax_incl_70_include_dust')
 plt.close()
+
+for amax in [0.001, 0.01, 0.1, 1]:
+    problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=0.5)
+    os.system(f"radmc3d spectrum incl 60 phi 0 iline 240 widthkms 20 vkms 0 linenlam 101")
+    s = readSpectrum('spectrum.out')
+    freq = (cc*1e-2) / (s[:, 0]*1e-6)
+    v = cc / 1e5 * (freq[50] - freq) / freq[50]
+    plt.plot(v, 1e26*s[:,1]/(140*140), label=f'{amax}cm')
+plt.legend()
+plt.xlabel('Velocity (km/s)')
+plt.ylabel('Intensity (mJy/beam)')
+plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
+plt.savefig('different_amax_incl_60_include_dust')
+plt.close()
+
+for amax in [0.001, 0.01, 0.1, 1]:
+    problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=0.5)
+    os.system(f"radmc3d spectrum incl 65 phi 0 iline 240 widthkms 20 vkms 0 linenlam 101")
+    s = readSpectrum('spectrum.out')
+    freq = (cc*1e-2) / (s[:, 0]*1e-6)
+    v = cc / 1e5 * (freq[50] - freq) / freq[50]
+    plt.plot(v, 1e26*s[:,1]/(140*140), label=f'{amax}cm')
+plt.legend()
+plt.xlabel('Velocity (km/s)')
+plt.ylabel('Intensity (mJy/beam)')
+plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
+plt.savefig('different_amax_incl_65_include_dust')
+plt.close()
+
+for amax in [0.001, 0.01, 0.1, 1]:
+    problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=0.5)
+    os.system(f"radmc3d spectrum incl 60 phi 0 iline 240 widthkms 20 vkms 0 linenlam 101 nodust")
+    s = readSpectrum('spectrum.out')
+    freq = (cc*1e-2) / (s[:, 0]*1e-6)
+    v = cc / 1e5 * (freq[50] - freq) / freq[50]
+    plt.plot(v, 1e26*s[:,1]/(140*140), label=f'{amax}cm')
+plt.legend()
+plt.xlabel('Velocity (km/s)')
+plt.ylabel('Intensity (mJy/beam)')
+plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
+plt.savefig('different_amax_incl_60_nodust')
+plt.close()
+
+for amax in [0.001, 0.01, 0.1, 1]:
+    problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=0.5)
+    os.system(f"radmc3d spectrum incl 65 phi 0 iline 240 widthkms 20 vkms 0 linenlam 101")
+    s = readSpectrum('spectrum.out')
+    freq = (cc*1e-2) / (s[:, 0]*1e-6)
+    v = cc / 1e5 * (freq[50] - freq) / freq[50]
+    plt.plot(v, 1e26*s[:,1]/(140*140), label=f'{amax}cm')
+plt.legend()
+plt.xlabel('Velocity (km/s)')
+plt.ylabel('Intensity (mJy/beam)')
+plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
+plt.savefig('different_amax_incl_65_nodust')
+plt.close()
+
 
 ###############################################################################
 '''
 Spectra with different inclination
 '''
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, 
-#               pancake=False, v_infall=0)
-# os.system(f"radmc3d spectrum incl 0 phi 0 iline 240 widthkms 5 vkms 0 linenlam 101")
-# s = readSpectrum('spectrum.out')
-# freq = (cc*1e-2) / (s[:, 0]*1e-6)
-# v = cc / 1e5 * (freq[50] - freq) / freq[50]
-# peak_lam = s[np.argmax(s, axis=1),0]
-# v_axis = cc*((s[:,0]**2/peak_lam**2-1)/(s[:,0]**2/peak_lam**2+1))*1e-5
 
 for deg in [0, 15, 30, 45, 60, 75, 90]:
     problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, 
               pancake=False, v_infall=0.5)
-    os.system(f"radmc3d spectrum incl {deg} phi 0 iline 240 widthkms 5 vkms 0 linenlam 101")
+    os.system(f"radmc3d spectrum incl {deg} phi 0 iline 240 widthkms 20 vkms 0 linenlam 101")
     s = readSpectrum('spectrum.out')
     freq = (cc*1e-2) / (s[:, 0]*1e-6)
     v = cc / 1e5 * (freq[50] - freq) / freq[50]
-    plt.plot(v, 1e26*s[:,1], label=f'{deg}'+r'$^\circ$')
+    plt.plot(v, 1e26*s[:,1]/(140*140), label=f'{deg}'+r'$^\circ$')
 plt.legend()
 plt.xlabel('Velocity (km/s)')
 plt.ylabel('Intensity (mJy/beam)')
 plt.title('Spectra of $\mathregular{CH_3OH}$ with different inclination')
-plt.savefig('different_incl')
+plt.savefig('different_incl_include_dust')
 plt.close()
 
 ###############################################################################
