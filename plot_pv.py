@@ -5,7 +5,15 @@ from radmc3dPy.analyze import *
 from disk_model import *
 from vertical_profile_class import DiskModel_vertical
 from problem_setup import problem_setup
-
+###############################################################################
+"""
+CB68
+Mass          : 0.08-0.30 Msun
+Accretion rate: 4-7e-7    Msun/yr
+Radius        : 20-40     au
+Distance      : 140       pc
+"""
+###############################################################################
 vinfall = np.linspace(0, 1, 6, endpoint=True)
 incl = [0, 15, 30, 45, 60, 75, 90]
 # for idx_v, vin in enumerate(vinfall):

@@ -121,11 +121,11 @@ class problem_setup:
         #
         with open('radmc3d.inp','w+') as f:
             f.write('nphot = %d\n'%(nphot))
-            f.write('scattering_mode_max = 0\n')   # Put this to 1 for isotropic scattering
+            f.write('scattering_mode_max = 2\n')   # Put this to 1 for isotropic scattering
             # f.write('iranfreqmode = 1\n')
             f.write('istar_sphere = 1\n')
             f.write('tgas_eq_tdust = 1\n')
-            f.write('setthreads = 8\n')
+            f.write('setthreads = 8\n') # Depending on the number of cores in your computer
         #
         # Write dust opacity files
         #
