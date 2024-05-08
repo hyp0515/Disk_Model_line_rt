@@ -14,9 +14,10 @@ Radius        : 20-40     au
 Distance      : 140       pc
 """
 ###############################################################################
-vinfall = np.linspace(0, 1, 6, endpoint=True)
-incl = [0, 15, 30, 45, 60, 75, 90]
-
+vinfall = [0.1, 0.5, 1, 5]
+incl = [70, 80, 90]
+# amax = [1, 0.1, 0.01, 0.001]
+# mstar = [0.1, 0.3, 0.5]
 
 for idx_v, vin in enumerate(vinfall):
     problem_setup(a_max=0.01, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, 
@@ -71,7 +72,7 @@ for idx_v, vin in enumerate(vinfall):
         ax.plot([-30, 30], [0, 0], 'w:')
         plt.savefig(f'./Figures/pv/width_20/with_cbar/extracted_gas/incl_{inc}_vinfall_{vin:.1f}.png')
         plt.close()
-        
+###############################################################################       
 
                 
 
