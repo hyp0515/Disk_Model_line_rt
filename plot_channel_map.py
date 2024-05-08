@@ -89,62 +89,100 @@ Plot images and save them into one plot
 #         print('Finish...')
 
 ###############################################################################
-def plot_extracted_gas(incl=70, vlist=None, line=240, tworow=True):
+'''
+Plot extracted gas images and save them into one plot
+'''
+# def plot_extracted_gas(incl=70, vlist=None, line=240, tworow=True):
 
-    if vlist is None : vlist = np.linspace(-5, 5, 11, endpoint=True)
+#     if vlist is None : vlist = np.linspace(-5, 5, 11, endpoint=True)
     
-    if tworow is not True:
-        fig, ax = plt.subplots(1, len(vlist), figsize=(15, 12), sharex=True, sharey=True, gridspec_kw={'wspace': 0, 'hspace': 0})
-        for idx, v in enumerate(vlist):
+#     if tworow is not True:
+#         fig, ax = plt.subplots(1, len(vlist), figsize=(15, 12), sharex=True, sharey=True, gridspec_kw={'wspace': 0, 'hspace': 0})
+#         for idx, v in enumerate(vlist):
 
-            os.system(f"radmc3d image npix 200 incl {incl} sizeau 70 iline {line} vkms {v} nphot_scat 10000000")
-            os.system('mv image.out image_gas.out')
-            im_gas = readImage('image_gas.out')
-            os.system(f"radmc3d image npix 200 incl {incl} lambda {im_gas.wav[0]} sizeau 70 nphot_scat 10000000 noline")
-            os.system('mv image.out image_dust.out')
-            im_dust = readImage('image_dust.out')
-            data_gas  = np.transpose(im_gas.imageJyppix[:, ::-1, 0])/(140*140)
-            data_dust = np.transpose(im_dust.imageJyppix[:, ::-1, 0])/(140*140)
+#             os.system(f"radmc3d image npix 200 incl {incl} sizeau 70 iline {line} vkms {v} nphot_scat 10000000")
+#             os.system('mv image.out image_gas.out')
+#             im_gas = readImage('image_gas.out')
+#             os.system(f"radmc3d image npix 200 incl {incl} lambda {im_gas.wav[0]} sizeau 70 nphot_scat 10000000 noline")
+#             os.system('mv image.out image_dust.out')
+#             im_dust = readImage('image_dust.out')
+#             data_gas  = np.transpose(im_gas.imageJyppix[:, ::-1, 0])/(140*140)
+#             data_dust = np.transpose(im_dust.imageJyppix[:, ::-1, 0])/(140*140)
 
-            ax[idx].imshow(data_gas-data_dust, cmap='hot')
-            ax[idx].axis('off')
-            ax[idx].set_title(f'{v} $km/s$')
-        plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0, hspace=-1)
-    else:
-        fig, ax = plt.subplots(2, int((len(vlist)+1)/2), figsize=(15, 8), sharex=True, sharey=True, gridspec_kw={'wspace': 0, 'hspace': 0})
-        for idx, v in enumerate(vlist):
-            os.system(f"radmc3d image npix 200 incl {incl} sizeau 70 iline {line} vkms {v} nphot_scat 1000000")
-            os.system('mv image.out image_gas.out')
-            im_gas = readImage('image_gas.out')
-            os.system(f"radmc3d image npix 200 incl {incl} lambda {im_gas.wav[0]} sizeau 70 nphot_scat 1000000 noline")
-            os.system('mv image.out image_dust.out')
-            im_dust = readImage('image_dust.out')
-            data_gas  = np.transpose(im_gas.imageJyppix[:, ::-1, 0])/(140**2)  # 140**2 is distance*2
-            data_dust = np.transpose(im_dust.imageJyppix[:, ::-1, 0])/(140**2)
-            if idx == (len(vlist)-1)/2:
-                ax[0, idx].imshow(data_gas-data_dust, cmap='hot')
-                ax[0, idx].axis('off')
-                ax[0, idx].set_title(f'{v} $km/s$')
-                ax[1, idx].imshow(data_gas-data_dust, cmap='hot')
-                ax[1, idx].axis('off')
-                ax[1, idx].set_title(f'{v} $km/s$')
-            elif idx > (len(vlist)-1)/2:
-                ax[1, len(vlist)-1-idx].imshow(data_gas-data_dust, cmap='hot')
-                ax[1, len(vlist)-1-idx].axis('off')
-                ax[1, len(vlist)-1-idx].set_title(f'{v} $km/s$')
-            else:
-                ax[0, idx].imshow(data_gas-data_dust, cmap='hot')
-                ax[0, idx].axis('off')
-                ax[0, idx].set_title(f'{v} $km/s$')
-        plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0, hspace=0)
-    return
+#             ax[idx].imshow(data_gas-data_dust, cmap='hot')
+#             ax[idx].axis('off')
+#             ax[idx].set_title(f'{v} $km/s$')
+#         plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0, hspace=-1)
+#     else:
+#         fig, ax = plt.subplots(2, int((len(vlist)+1)/2), figsize=(15, 8), sharex=True, sharey=True, gridspec_kw={'wspace': 0, 'hspace': 0})
+#         for idx, v in enumerate(vlist):
+#             os.system(f"radmc3d image npix 200 incl {incl} sizeau 70 iline {line} vkms {v} nphot_scat 1000000")
+#             os.system('mv image.out image_gas.out')
+#             im_gas = readImage('image_gas.out')
+#             os.system(f"radmc3d image npix 200 incl {incl} lambda {im_gas.wav[0]} sizeau 70 nphot_scat 1000000 noline")
+#             os.system('mv image.out image_dust.out')
+#             im_dust = readImage('image_dust.out')
+#             data_gas  = np.transpose(im_gas.imageJyppix[:, ::-1, 0])/(140**2)  # 140**2 is distance*2
+#             data_dust = np.transpose(im_dust.imageJyppix[:, ::-1, 0])/(140**2)
+#             if idx == (len(vlist)-1)/2:
+#                 ax[0, idx].imshow(data_gas-data_dust, cmap='hot')
+#                 ax[0, idx].axis('off')
+#                 ax[0, idx].set_title(f'{v} $km/s$')
+#                 ax[1, idx].imshow(data_gas-data_dust, cmap='hot')
+#                 ax[1, idx].axis('off')
+#                 ax[1, idx].set_title(f'{v} $km/s$')
+#             elif idx > (len(vlist)-1)/2:
+#                 ax[1, len(vlist)-1-idx].imshow(data_gas-data_dust, cmap='hot')
+#                 ax[1, len(vlist)-1-idx].axis('off')
+#                 ax[1, len(vlist)-1-idx].set_title(f'{v} $km/s$')
+#             else:
+#                 ax[0, idx].imshow(data_gas-data_dust, cmap='hot')
+#                 ax[0, idx].axis('off')
+#                 ax[0, idx].set_title(f'{v} $km/s$')
+#         plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0, hspace=0)
+#     return
 ###############################################################################
-vinfall=[0, 0.1, 0.5, 1]
-for vin in vinfall:
-    problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, 
-                  pancake=False,v_infall=vin)
-    incl_list = [0, 15, 30, 45, 60, 75, 90]
-    for deg in incl_list:
-        plot_extracted_gas(incl = deg, line=240)
-        plt.savefig(f'./Figures/extracted_gas/channel_maps/{vin}_infall_incl_{deg}.png')
-        print('Finish...')
+# vinfall=[0, 0.1, 0.5, 1]
+# for vin in vinfall:
+#     problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, 
+#                   pancake=False,v_infall=vin)
+#     incl_list = [0, 15, 30, 45, 60, 75, 90]
+#     for deg in incl_list:
+#         plot_extracted_gas(incl = deg, line=240)
+#         plt.savefig(f'./Figures/extracted_gas/channel_maps/{vin}_infall_incl_{deg}.png')
+#         print('Finish...')
+###############################################################################
+'''
+Plot dust images
+'''
+# def plot_dust(incl=None):
+#     incl_angle = incl
+#     if incl is None:
+#         incl_angle = [0, 15, 30, 45, 60, 75, 90]
+#     os.system(f"radmc3d image npix 200 incl {str(incl_angle[0])} sizeau 70 iline 240 vkms 0 nphot_scat 1000")
+#     os.system('mv image.out image_gas.out')
+#     im_gas = readImage('image_gas.out')
+#     fig, ax = plt.subplots(1, len(incl_angle), figsize=(40, 10), sharex=True, sharey=True, gridspec_kw={'wspace': 0, 'hspace': 0})
+#     data_min = []
+#     data_max = []
+#     for idx, icl in enumerate(incl_angle):
+#         os.system(f"radmc3d image npix 200 incl {icl} lambda {im_gas.wav[0]} sizeau 70 nphot_scat 10000000 noline")
+#         os.system(f'mv image.out image_{idx}.out')
+#         im_dust = readImage(f'image_{idx}.out')
+#         data_dust = np.transpose(im_dust.imageJyppix[:, ::-1, 0])/(140*140)
+#         data_min.append(np.min(data_dust))
+#         data_max.append(np.max(data_dust))
+#     for idx, icl in enumerate(incl_angle):
+#         im_dust = readImage(f'image_{idx}.out')
+#         data_dust = np.transpose(im_dust.imageJyppix[:, ::-1, 0])/(140*140)
+#         ax[idx].imshow(data_dust, cmap='hot',extent=[-35,35,-35,35],vmin = min(data_min), vmax = max(data_max))
+#         ax[idx].set_title(f'{icl}'+'$^{\circ}$')
+#     return
+###############################################################################
+# for a in [0.1, 0.01, 0.001]:
+#     for mstar in [0.1, 0.5, 1, 1, 5]:
+
+#         problem_setup(a_max=a, Mass_of_star=mstar*Msun, Accretion_rate=mstar*1e-5*Msun/yr, Radius_of_disk=30*au, 
+#                         pancake=False,v_infall=0)
+#         plot_dust()
+#         plt.savefig(f'./Figures/dust_maps/amax_{a}_mstar_{mstar}.png')
