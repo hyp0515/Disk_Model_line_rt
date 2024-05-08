@@ -8,6 +8,7 @@ cleanmodel:
 cleanall:
 	@rm -f	*.o *.mod *.pyc *.dat *.out *.info *.used           \
 	   *wavelength_micron.inp dustopac.inp dust_density.inp     \
+	   dustkappa_silicate.inp gas_velocity.inp lines.inp        \
 	   dust_density.uinp *.uout *.udat                          \
 	   amr_grid.inp stars.inp radmc3d.inp image_script.pro      \
 	   radmc3d Makefile~ *.pro~ README*~ *.f90~ *.inp~ *.py~
