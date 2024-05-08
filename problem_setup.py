@@ -168,6 +168,7 @@ class problem_setup:
         vr      = -v_infall*np.sqrt(G*Mass_of_star/(DM.r_sph*au)) # Infall velocity
         vtheta  = 0
         vphi    = np.sqrt(G*Mass_of_star/(DM.r_sph*au))    # Keplerian velocity
+        vphi    = np.zeros(vphi.shape)                     # No Keplerian rotation
         # vphi    = 5e5*np.ones(vphi.shape)                  # Constant velocity
         # vphi_1  = 1e5*np.ones(int(len(vphi)*1/2))
         # vphi_2  = 3e5*np.ones(int(len(vphi)*2/6))

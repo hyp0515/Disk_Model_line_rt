@@ -39,7 +39,7 @@ for idx_v, vin in enumerate(vinfall):
         ax.set_ylabel("Velocity [km/s]")
         ax.plot([0, 0], [-20, 20], 'w:')
         ax.plot([-30, 30], [0, 0], 'w:')
-        plt.savefig(f'./Figures/pv/width_20/with_cbar/scattering/incl_{inc}_vinfall_{vin:.1f}.png')
+        plt.savefig(f'./Figures/pv/noinfall/scattering/incl_{inc}_vinfall_{vin:.1f}.png')
         plt.close()
 
 
@@ -57,7 +57,7 @@ for idx_v, vin in enumerate(vinfall):
         ax.set_ylabel("Velocity [km/s]")
         ax.plot([0, 0], [-20, 20], 'w:')
         ax.plot([-30, 30], [0, 0], 'w:')
-        plt.savefig(f'./Figures/pv/width_20/with_cbar/noline/incl_{inc}_vinfall_{vin:.1f}.png')
+        plt.savefig(f'./Figures/pv/noinfall/noline/incl_{inc}_vinfall_{vin:.1f}.png')
         plt.close()
 
         
@@ -70,8 +70,10 @@ for idx_v, vin in enumerate(vinfall):
         ax.set_ylabel("Velocity [km/s]")
         ax.plot([0, 0], [-20, 20], 'w:')
         ax.plot([-30, 30], [0, 0], 'w:')
-        plt.savefig(f'./Figures/pv/width_20/with_cbar/extracted_gas/incl_{inc}_vinfall_{vin:.1f}.png')
+        plt.savefig(f'./Figures/pv/noinfall/extracted_gas/incl_{inc}_vinfall_{vin:.1f}.png')
         plt.close()
+os.system('make cleanmodel')
+os.system('make cleanall')
 ###############################################################################       
 
                 
