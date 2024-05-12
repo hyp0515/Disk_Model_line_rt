@@ -1,0 +1,8 @@
+The figures in this directory in using the input of:
+a_max   = 0.01 cm
+Mstar   = 0.14 Msun
+M_dot   = Mstar * 1e-5
+Radius  = 30 au
+Motion  : Keplerian and infalling
+incl    = [0, 15, 30, 45, 60, 75, 90]
+vinfall = np.linpsace(0, 1, 6, endpoint=True)

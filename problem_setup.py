@@ -35,14 +35,14 @@ class problem_setup:
         #
         # Write the wavelength_micron.inp file
         #
-        lam1     = 0.1e0
-        lam2     = 7.0e0
-        lam3     = 25.e0
-        lam4     = 1.0e4
-        # lam1     = 3.0e2
-        # lam2     = 3.0e3
-        # lam3     = 3.0e4
-        # lam4     = 3.0e5
+        # lam1     = 0.1e0
+        # lam2     = 7.0e0
+        # lam3     = 25.e0
+        # lam4     = 1.0e4
+        lam1     = 3.0e2
+        lam2     = 3.0e3
+        lam3     = 3.0e4
+        lam4     = 3.0e5
         n12      = 20
         n23      = 100
         n34      = 30
@@ -103,7 +103,8 @@ class problem_setup:
             f.write(str(iformat)+'\n')
             f.write('%d\n'%(nr*ntheta*nphi))
             f.write(str(nspec)+'\n')
-            data = 0.01*DM.rho_sph.ravel(order='F')         # Create a 1-D view, fortran-style indexing
+            rho = np.where(np.log10(DM.rho_sph)<-20, 1e-20, DM.rho_sph)
+            data = 0.01*rho.ravel(order='F')         # Create a 1-D view, fortran-style indexing
             data.tofile(f, sep='\n', format="%13.6e")
             f.write('\n')
         #
@@ -113,7 +114,8 @@ class problem_setup:
             f.write(str(iformat)+'\n')
             f.write('%d\n'%(nr*ntheta*nphi))
             f.write(str(nspec)+'\n')
-            data = DM.T_sph.ravel(order='F')         # Create a 1-D view, fortran-style indexing
+            T = np.where(np.log10(DM.rho_sph)<-20, 5, DM.T_sph)
+            data = T.ravel(order='F')         # Create a 1-D view, fortran-style indexing
             data.tofile(f, sep='\n', format="%13.6e")
             f.write('\n')
         #
@@ -125,7 +127,7 @@ class problem_setup:
             # f.write('iranfreqmode = 1\n')
             f.write('istar_sphere = 1\n')
             f.write('tgas_eq_tdust = 1\n')
-            f.write('setthreads = 12\n') # Depending on the number of cores in your computer
+            f.write('setthreads = 8\n') # Depending on the number of cores in your computer
         #
         # Write dust opacity files
         #
@@ -200,8 +202,9 @@ class problem_setup:
         # Write the molecule number density file. 
         #
         abunch3oh = 1e-10
+        abunch3oh = np.where(T<100, 1e-10, 1e-5)
         factch3oh = abunch3oh/(2.3*mp)
-        nch3oh    = DM.rho_sph*factch3oh
+        nch3oh    = rho*factch3oh
         with open('numberdens_ch3oh.inp','w+') as f:
             f.write('1\n')                       # Format number
             f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
