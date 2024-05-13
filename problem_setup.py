@@ -26,7 +26,7 @@ class problem_setup:
 
         DM = DiskModel_vertical(opacity_table, disk_property_table)
         DM.input_disk_parameter(Mstar=Mass_of_star, Mdot=Accretion_rate,
-                                Rd=Radius_of_disk, Q=1.5, N_R=100)
+                                Rd=Radius_of_disk, Q=1.5, N_R=2000)
         if pancake is True:
             DM.pancake_model()
         DM.extend_to_spherical(NTheta=200, NPhi=200)
@@ -103,7 +103,7 @@ class problem_setup:
             f.write(str(iformat)+'\n')
             f.write('%d\n'%(nr*ntheta*nphi))
             f.write(str(nspec)+'\n')
-            rho = np.where(np.log10(DM.rho_sph)<-20, 1e-20, DM.rho_sph)
+            rho = np.where(np.log10(DM.rho_sph)<-18, 1e-18, DM.rho_sph)
             data = 0.01*rho.ravel(order='F')         # Create a 1-D view, fortran-style indexing
             data.tofile(f, sep='\n', format="%13.6e")
             f.write('\n')
@@ -114,7 +114,8 @@ class problem_setup:
             f.write(str(iformat)+'\n')
             f.write('%d\n'%(nr*ntheta*nphi))
             f.write(str(nspec)+'\n')
-            T = np.where(np.log10(DM.rho_sph)<-20, 5, DM.T_sph)
+            T = np.where(np.log10(DM.rho_sph)<-18, 5, DM.T_sph)
+            # T = DM.T_sph
             data = T.ravel(order='F')         # Create a 1-D view, fortran-style indexing
             data.tofile(f, sep='\n', format="%13.6e")
             f.write('\n')

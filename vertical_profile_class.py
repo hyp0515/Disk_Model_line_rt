@@ -177,8 +177,9 @@ class DiskModel_vertical:
     def make_tau_and_T_map(self):
         """
         Using disk_property_table to calculate kappa_r from T, and further calculating tau_r and T
+        (Faster)
         """
-        
+        # t_start = time.time()
         def get_kappa_from_T(T):  # 2(d)
             # using the functions below can avoid using saha equation to calculate n_e, the step described on 2(d)
             get_kappa_r = self.DM_horizontal.get_kappa_r  # interpolating function extracted from Wenrui's Disk_Model class
@@ -186,56 +187,58 @@ class DiskModel_vertical:
             return kappa_r
         def get_tau_from_kappa(m_grid, kappa_r):  # 2(a)
             dm = m_grid.copy()
-            dm[1:] = m_grid[1:]-m_grid[:-1]
-            dm = dm[:len(kappa_r)]
+            dm[:, 1:] = m_grid[:, 1:]-m_grid[:, :-1]
+            dm = dm[:, :len(kappa_r)]
             dtau_r = dm*kappa_r  # (3.4)
             # The upper and lower bound are m and 0 in m-variable,
             # meaning that the upper and lower bound in z-variable are z and infinity.
-            tau_r = np.cumsum(dtau_r)[-1]
+            tau_r = np.cumsum(dtau_r, axis=1)[:, -1]
             return tau_r
-        def get_T_from_tau(r, tau, T_eff):  # 2(b)
-            tau_p = self.tau_p_mid[r]*2
-            tau_r = self.tau_r_mid[r]*2
+        def get_T_from_tau(tau, T_eff):  # 2(b)
+            tau_p = self.tau_p_mid*2
+            tau_r = self.tau_r_mid*2
             T = (T_eff**4*(3/4)*(tau*(1-tau/tau_r)+(1/np.sqrt(3))+(1/(1.5*tau_p))))**(1/4)  # (3) from Wenrui+22
             return T
         
-        T_map = np.empty((self.NR, self.NZ))
+        t_eff_map = np.tile(self.T_eff[:, np.newaxis], (1, self.NZ))
+        m_grid = self.m_map[:, ::-1]
+        kappa_r_map = np.empty((self.NR, self.NZ))
+        T_map = np.ones((self.NR, self.NZ))  # np.ones is to prevent RuntimeWarning
         tau_r_map = np.empty((self.NR, self.NZ))
-        kappa_r_map = np.empty((self.NR, self.NZ))        
-        for r in range(self.NR):
-            t_eff = self.T_eff[r]
-            m_grid = self.m_map[r, ::-1]
-            kappa_r_grid = np.array([])
-            T_grid = np.array([])
-            tau_r_grid = np.array([])
-            for z in range(self.NZ):
+        
 
-                if z == 0:  # initialize kappa_r_grid
-                    T_old = 5  # the lowest temperature in Wenrui's code
-                    kappa_r_grid = np.append(kappa_r_grid, get_kappa_from_T(T_old))
-                else:
-                    T_old = T_grid[-1]
+        for z in range(self.NZ):
 
-                # iterate until T_new = T_old
-                for _ in range(50):
-                    kappa_r_grid[z] = get_kappa_from_T(T_old)
-                    tau_r = get_tau_from_kappa(m_grid, kappa_r_grid)
-                    T_new = get_T_from_tau(r, tau_r, t_eff)
-                    if np.abs(1-T_new/T_old) < 1e-10:
-                        break
-                    T_old = T_new
-                
-                T_grid = np.append(T_grid, T_new)
-                tau_r_grid = np.append(tau_r_grid, tau_r)
-                kappa_r_grid = np.append(kappa_r_grid, get_kappa_from_T(T_new))
-            T_map[r, :] = T_grid[::-1]
-            tau_r_map[r, :] = tau_r_grid[::-1]
-            kappa_r_grid = kappa_r_grid[1:]
-            kappa_r_map[r, :] = kappa_r_grid[::-1]
+            if z == 0:  # initialize kappa_r_grid
+                T_old = 5*np.ones((self.NR))  # the lowest temperature in Wenrui's code
+            else:
+                T_old = T_map[:, -1]
+
+            # iterate until T_new = T_old
+            for _ in range(50):
+                kappa_r_map[:, z] = get_kappa_from_T(T_old)
+                tau_r = get_tau_from_kappa(m_grid[:, :(z+1)], kappa_r_map[:, :(z+1)])
+                T_new = get_T_from_tau(tau_r, t_eff_map[:, z])
+                if np.max(np.abs((T_old-T_new)/T_old)) < 1e-10:
+                    break
+                # print(np.min(T_new)) 
+                T_old = T_new
+             
+            T_map[:, z] = T_new
+            tau_r_map[:, z] = tau_r
+            kappa_r_map[:, z] = get_kappa_from_T(T_new)
+            
+        T_map = T_map[:, ::-1]
+        tau_r_map = tau_r_map[:, ::-1]
+        kappa_r_map = kappa_r_map[:, 1:]
+        kappa_r_map = kappa_r_map[:, ::-1]
         
         self.T_map = T_map
+        
         self.tau_r_map = tau_r_map
         self.kappa_r_map = kappa_r_map
+        # t_end = time.time()
+        # print(t_end-t_start)
         return
 
     def pancake_model(self):
@@ -257,7 +260,7 @@ class DiskModel_vertical:
         self.r_sph = r_grid
 
         theta_map = np.arccos(pos_map[:, :, 1]/r_map)
-        theta_min = np.deg2rad(30) # the starting angle of theta
+        theta_min = np.deg2rad(1) # the starting angle of theta
         theta_grid = np.logspace(np.log10(theta_min), np.log10(np.max(theta_map)), NTheta)
         theta_grid = -1*theta_grid + 0.5*np.pi + theta_min
         theta_grid = theta_grid[::-1]       
@@ -297,7 +300,7 @@ class DiskModel_vertical:
         mask_condition = r_sph_in_cyl < r_min
         rho_sph_2d[mask_condition] = 1e-5/au
         T_sph_2d[mask_condition] = 1200
-
+        
         self.rho_sph = rotate_around_theta_axis(mirror_with_r_plane(rho_sph_2d)) 
         self.T_sph = rotate_around_theta_axis(mirror_with_r_plane(T_sph_2d))
         self.make_spherical_grid()
