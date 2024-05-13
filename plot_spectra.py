@@ -21,7 +21,7 @@ Spectra with different maximum grain sizes
 
 for amax in [0.001, 0.01, 0.1, 1]:
     problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=0.5)
-    os.system(f"radmc3d spectrum incl 70 phi 0 iline 240 widthkms 20 vkms 0 linenlam 101")
+    os.system(f"radmc3d spectrum incl 70 phi 0 iline 240 widthkms 20 vkms 0 linenlam 101 noscat")
     s = readSpectrum('spectrum.out')
     freq = (cc*1e-2) / (s[:, 0]*1e-6)
     v = cc / 1e5 * (freq[50] - freq) / freq[50]
