@@ -55,3 +55,5 @@ ax.set_title('Number density map of methanol')
 fig.colorbar(c, ax=ax, label=r'log($n_{\mathregular{CH_3OH}}$) [$cm^{-3}$]')
 plt.savefig('./Figures/profile/ndensity_profile.png')
 plt.close()
+
+os.system('make cleanall')

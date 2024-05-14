@@ -26,7 +26,7 @@ class problem_setup:
 
         DM = DiskModel_vertical(opacity_table, disk_property_table)
         DM.input_disk_parameter(Mstar=Mass_of_star, Mdot=Accretion_rate,
-                                Rd=Radius_of_disk, Q=1.5, N_R=2000)
+                                Rd=Radius_of_disk, Q=1.5, N_R=200)
         if pancake is True:
             DM.pancake_model()
         DM.extend_to_spherical(NTheta=200, NPhi=200)
