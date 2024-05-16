@@ -17,13 +17,13 @@ Distance      : 140       pc
 """
 ###############################################################################
 def sed_model(theta):
-    amax, Mstar, Mdot, incl= theta
-    problem_setup(a_max=amax, Mass_of_star=Mstar*Msun, Accretion_rate=Mdot*1e-5*Msun/yr, Radius_of_disk=30*au, pancake=False, v_infall=0)
-    os.system(f'radmc3d spectrum incl {incl*100} lambdarange 300. 3000. nlam 100 noline noscat')
+    amax, Mstar, Mdot, incl, d, r = theta
+    problem_setup(a_max=amax, Mass_of_star=Mstar*Msun, Accretion_rate=Mdot*1e-5*Msun/yr, Radius_of_disk=r*au, pancake=False, v_infall=0)
+    os.system(f'radmc3d spectrum incl {incl} lambdarange 300. 3000. nlam 100 noline noscat')
     s = readSpectrum('spectrum.out')
     lam = s[:, 0]
     nu = (1e-2*cc)*1e-9/(1e-6*lam) # GHz
-    fnu = s[:, 1]*1e26/(140**2) # mJy
+    fnu = s[:, 1]*1e26/(d**2) # mJy
     return nu, fnu
 
 # Synthetic data (Mock Observation)
@@ -46,8 +46,8 @@ def log_likelihood(theta, Freq, Flux, err):
     return -0.5 * np.sum((Flux - flux_model[freq_index]) ** 2 / err**2)
 
 def log_prior(theta):
-    a_max, Mstar, Mdot, incl = theta
-    if 0.001 < a_max < 1 and 0.08 < Mstar < 0.50 and 0.02 < Mdot < 2 and .50 < incl < .90:
+    a_max, Mstar, Mdot, incl, d, r = theta
+    if 0.001 < a_max < 1 and 0.08 < Mstar < 0.50 and 0.02 < Mdot < 2 and 50 < incl < 90 and 130 < d < 150 and 20 < r < 50:
         return 0.0
     return -np.inf
 
@@ -85,7 +85,7 @@ def plotter(sampler, x=observed_Freq, y=observed_Flux, yerr=err):
     plt.savefig('MCMC_test.pdf')
     # plt.show()
 
-def posterior(sampler, label = ['$a_{max}$','$M_{*}$', '$\dot{M}$', '$i^{\circ}$']):
+def posterior(sampler, label = ['$a_{max}$','$M_{*}$', '$\dot{M}$', '$i^{\circ}$', 'Distance[pc]', 'Radius [au]']):
     samples = sampler.flatchain
     fig = corner.corner(
         samples, labels=label, 
@@ -93,8 +93,9 @@ def posterior(sampler, label = ['$a_{max}$','$M_{*}$', '$\dot{M}$', '$i^{\circ}$
         )
     fig.savefig('corner_test.pdf')
 
-nwalkers, ndim = 100, 4  # Number of walkers and dimension of the parameter space
-pos = [np.array([0.1, 0.14, 0.14, .70]) + 1e-2 * np.random.randn(ndim) for i in range(nwalkers)]
+nwalkers, ndim = 100, 6  # Number of walkers and dimension of the parameter space
+pos = [np.array([0.1, 0.14, 0.14, 70, 140, 30]) + 1e-2 * np.random.randn(ndim) for i in range(nwalkers)]
 sampler, pos, prob, state = main(pos,nwalkers,100,ndim,log_probability, (observed_Freq, observed_Flux, err))
 plotter(sampler)
 posterior(sampler)
+os.system('make cleanall')
