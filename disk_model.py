@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
+import warnings
 
 
 
@@ -126,7 +127,7 @@ Opacity
 """
 def generate_opacity_table(
     a_min, a_max, q, dust_to_gas,
-    precomputed_grain_properties_fname='./data_for_disk_model/opacity_tables/grain_properties.pkl',
+    precomputed_grain_properties_fname='../../data_for_disk_model/opacity_tables/grain_properties.pkl',
     T_min=5, T_max=2000, N_T=30,
     ):
     """
@@ -235,99 +236,99 @@ def generate_opacity_table(
     opacity_table['g'] = g
     return opacity_table
 
-def compute_grain_properties_DSHARP(
-    fname='./data_for_disk_model/opacity_tables/grain_properties.pkl',
-    nang=3, # same as the default value in dsharp_opac
-    ):
-    """
-    Store grain properties computed using the DSHARP opacity model
-    (Birnstiel et al. 2018)
+# def compute_grain_properties_DSHARP(
+#     fname='./data_for_disk_model/opacity_tables/grain_properties.pkl',
+#     nang=3, # same as the default value in dsharp_opac
+#     ):
+#     """
+#     Store grain properties computed using the DSHARP opacity model
+#     (Birnstiel et al. 2018)
     
-    Args:
-      fname: file name for storing computed grain properties
-      nang: number of angles to compute opacity (passed to dsharp_opac)
-    """
+#     Args:
+#       fname: file name for storing computed grain properties
+#       nang: number of angles to compute opacity (passed to dsharp_opac)
+#     """
     
-    import dsharp_opac # this can be installed from https://github.com/birnstiel/dsharp_opac
+#     import dsharp_opac # this can be installed from https://github.com/birnstiel/dsharp_opac
 
-    # dust grain compoistion following Birnstiel et al. 2018
-    # the four species:
-    # water, scilicate, troilite, refractory organics
-    N_composition = 4
-    rho_grain = np.array([0.92, 3.30, 4.83, 1.50])
-    mass_frac = np.array([0.2, 0.3291, 0.0743, 0.3966])
-    vol_frac = np.array([0.3642, 0.1670, 0.0258, 0.4430])
+#     # dust grain compoistion following Birnstiel et al. 2018
+#     # the four species:
+#     # water, scilicate, troilite, refractory organics
+#     N_composition = 4
+#     rho_grain = np.array([0.92, 3.30, 4.83, 1.50])
+#     mass_frac = np.array([0.2, 0.3291, 0.0743, 0.3966])
+#     vol_frac = np.array([0.3642, 0.1670, 0.0258, 0.4430])
 
-    # sublimation temperature from Pollack et al. 1994
-    T_crit = np.array([150, 425, 680, 1200])
+#     # sublimation temperature from Pollack et al. 1994
+#     T_crit = np.array([150, 425, 680, 1200])
 
-    diel_constants = [dsharp_opac.diel_warrenbrandt08(),
-                      dsharp_opac.diel_draine2003(species='astrosilicates'),
-                      dsharp_opac.diel_henning('troilite'),
-                      dsharp_opac.diel_henning('organics', refractory=True),
-                     ]
+#     diel_constants = [dsharp_opac.diel_warrenbrandt08(),
+#                       dsharp_opac.diel_draine2003(species='astrosilicates'),
+#                       dsharp_opac.diel_henning('troilite'),
+#                       dsharp_opac.diel_henning('organics', refractory=True),
+#                      ]
 
-    species_exists = [[1,1,1,1],
-                      [0,1,1,1],
-                      [0,1,1,0],
-                      [0,1,0,0]]
-    # species_exits[i,j] = species j exists in temperature range i
-    species_exists = np.array(species_exists)
-    rho_grain_eff = np.zeros(N_composition)
-    mass_ratio_after_subl = np.ones(N_composition)
-    mixed_diel_constants = [None]*N_composition
-    for i in range(N_composition):
-        mass_ratio_after_subl[i] = np.sum(mass_frac*species_exists[i])
-        current_vol_frac = vol_frac*species_exists[i]
-        current_vol_frac = current_vol_frac/np.sum(current_vol_frac)
-        rho_grain_eff[i] = np.sum(current_vol_frac*rho_grain)
-        mixed_diel_constants[i] = dsharp_opac.diel_mixed(constants=diel_constants,
-                                  abundances=current_vol_frac,
-                                  rule='Bruggeman')
-        mixed_diel_constants[i] = mixed_diel_constants[i].get_normal_object()
+#     species_exists = [[1,1,1,1],
+#                       [0,1,1,1],
+#                       [0,1,1,0],
+#                       [0,1,0,0]]
+#     # species_exits[i,j] = species j exists in temperature range i
+#     species_exists = np.array(species_exists)
+#     rho_grain_eff = np.zeros(N_composition)
+#     mass_ratio_after_subl = np.ones(N_composition)
+#     mixed_diel_constants = [None]*N_composition
+#     for i in range(N_composition):
+#         mass_ratio_after_subl[i] = np.sum(mass_frac*species_exists[i])
+#         current_vol_frac = vol_frac*species_exists[i]
+#         current_vol_frac = current_vol_frac/np.sum(current_vol_frac)
+#         rho_grain_eff[i] = np.sum(current_vol_frac*rho_grain)
+#         mixed_diel_constants[i] = dsharp_opac.diel_mixed(constants=diel_constants,
+#                                   abundances=current_vol_frac,
+#                                   rule='Bruggeman')
+#         mixed_diel_constants[i] = mixed_diel_constants[i].get_normal_object()
 
-    # generate grids for grain size and wavelength
-    a_min = 1e-6
-    a_max = 1
-    N_a = 121
-    a_grid = np.logspace(np.log10(a_min),np.log10(a_max),N_a)
-    lam_min = 1e-5 # 1000K=0.0002898cm, choose lam_min << this
-    lam_max = 1 # 10K = 0.02898cm, choose lam_max >> this
-    N_lam = 101
-    lam_grid = np.logspace(np.log10(lam_min),np.log10(lam_max),N_lam)
+#     # generate grids for grain size and wavelength
+#     a_min = 1e-6
+#     a_max = 1
+#     N_a = 121
+#     a_grid = np.logspace(np.log10(a_min),np.log10(a_max),N_a)
+#     lam_min = 1e-5 # 1000K=0.0002898cm, choose lam_min << this
+#     lam_max = 1 # 10K = 0.02898cm, choose lam_max >> this
+#     N_lam = 101
+#     lam_grid = np.logspace(np.log10(lam_min),np.log10(lam_max),N_lam)
 
-    mie_data_package = [None]*N_composition
-    for i in range(N_composition):
-        mie_data_package[i] = dsharp_opac.get_mie_coefficients(
-            a_grid, lam_grid, mixed_diel_constants[i],
-            nang=nang, extrapolate_large_grains=False)
+#     mie_data_package = [None]*N_composition
+#     for i in range(N_composition):
+#         mie_data_package[i] = dsharp_opac.get_mie_coefficients(
+#             a_grid, lam_grid, mixed_diel_constants[i],
+#             nang=nang, extrapolate_large_grains=False)
 
-    kappa   = [None]*N_composition # abroption opacity
-    kappa_s = [None]*N_composition # scattering opacity
-    g       = [None]*N_composition # asymmetry factor
-    for i in range(N_composition):
-        m = 4*np.pi/3 * a_grid**3 * rho_grain_eff[i]
-        kappa_both = dsharp_opac.get_kappa_from_q(
-            a_grid, m,
-            mie_data_package[i]['q_abs'],
-            mie_data_package[i]['q_sca'],
-        )
-        kappa[i] = kappa_both[0]
-        kappa_s[i] = kappa_both[1]
-        g[i] = mie_data_package[i]['g']
+#     kappa   = [None]*N_composition # abroption opacity
+#     kappa_s = [None]*N_composition # scattering opacity
+#     g       = [None]*N_composition # asymmetry factor
+#     for i in range(N_composition):
+#         m = 4*np.pi/3 * a_grid**3 * rho_grain_eff[i]
+#         kappa_both = dsharp_opac.get_kappa_from_q(
+#             a_grid, m,
+#             mie_data_package[i]['q_abs'],
+#             mie_data_package[i]['q_sca'],
+#         )
+#         kappa[i] = kappa_both[0]
+#         kappa_s[i] = kappa_both[1]
+#         g[i] = mie_data_package[i]['g']
 
-    grain_properties = {}
-    grain_properties['a_grid'] = a_grid
-    grain_properties['lam_grid'] = lam_grid
-    grain_properties['kappa'] = kappa
-    grain_properties['kappa_s'] = kappa_s
-    grain_properties['g'] = g
-    grain_properties['T_crit'] = T_crit
-    grain_properties['mass_ratio_after_subl'] = mass_ratio_after_subl
+#     grain_properties = {}
+#     grain_properties['a_grid'] = a_grid
+#     grain_properties['lam_grid'] = lam_grid
+#     grain_properties['kappa'] = kappa
+#     grain_properties['kappa_s'] = kappa_s
+#     grain_properties['g'] = g
+#     grain_properties['T_crit'] = T_crit
+#     grain_properties['mass_ratio_after_subl'] = mass_ratio_after_subl
 
-    with open(fname,"wb") as f:
-        pickle.dump(grain_properties, f)
-    return
+#     with open(fname,"wb") as f:
+#         pickle.dump(grain_properties, f)
+#     return
 
 
 
@@ -552,102 +553,6 @@ def generate_disk_property_table(
     disk_property_table['T_mid'] = data_profile[4]
     return disk_property_table
 
-
-
-
-"""
-=======================================================================
-Compute intensity with scattering
-=======================================================================
-"""
-def generate_ddtau_matrix_for_J(tauf_grid):
-    # generate an operator corresponding to d^2/dtau^2, which will be applied on J.
-    # boundary conditions:
-    # at tau=tau_mid (tauf_grid[-1]): dJ/dtau=0
-    # at tau=0: J = 1/sqrt(3) * dJ/dtau
-    n = len(tauf_grid)
-    D2 = np.zeros((n,n))
-    # middle portion
-    dl = tauf_grid[1:-1]-tauf_grid[:-2]
-    dr = tauf_grid[2:]-tauf_grid[1:-1]
-    wl = 2/((dl+dr)*dl)
-    wr = 2/((dl+dr)*dr)
-    wc = -wl-wr
-    i = np.arange(n-2, dtype='int')
-    D2[i+1, i  ] = wl
-    D2[i+1, i+1] = wc
-    D2[i+1, i+2] = wr
-    # tau=0 bdry (first row)
-    d = tauf_grid[1]-tauf_grid[0]
-    # J(-1) = J(1) - 2*d*dJdtau = J(1) - 2*d*sqrt(3)*J(0)
-    D2[0,0] = -2/d**2 - 1/d**2 * 2*d*np.sqrt(3)
-    D2[0,1] = 1/d**2 + 1/d**2
-    # tau=tau_mid bdry (last row)
-    d = tauf_grid[-1]-tauf_grid[-2]
-    D2[-1,-1] = -2/d**2
-    D2[-1,-2] = 2/d**2
-    return D2
-def solve_J(tauf_grid, B, omega):
-    D2 = generate_ddtau_matrix_for_J(tauf_grid)
-    LHS = 1/3*D2 - np.diag(1-omega)
-    RHS = -(1-omega)*B
-    J = np.linalg.solve(LHS, RHS)
-    return J
-def generate_tauf_grid(tau_mid, dtau=0.2, n_min=5):
-    tauf = [0]
-    while tauf[-1]<tau_mid:
-        tauf_next = max(tauf[-1]*(1+dtau), tauf[-1]+dtau)
-        tauf_next = min(tauf_next, tau_mid)
-        tauf.append(tauf_next)
-    tauf = np.array(tauf)
-    if len(tauf)<n_min:
-        tauf = np.linspace(0, tau_mid, n_min)
-    return tauf
-def get_I_with_scattering(
-    T_mid, tau_r_mid, tau_p_mid,
-    cosI, lam_obs,
-    get_kappa_r,
-    f_kappa_obs, f_kappa_s_obs,
-    dtau=0.2,
-    ):
-    tauf_grid = generate_tauf_grid(tau_r_mid, dtau=dtau)
-    tau_grid = (tauf_grid[1:]+tauf_grid[:-1])/2
-    tau_r = 2*tau_r_mid
-    tau_p = 2*tau_p_mid
-    T_4_over_T_mid_4 = (tauf_grid*(1-tauf_grid/tau_r) + 1/np.sqrt(3) + 1/(1.5*tau_p))/\
-                       (0.25*tau_r + 1/np.sqrt(3) + 1/(1.5*tau_p))
-    Tf_grid = T_4_over_T_mid_4**(1/4) * T_mid
-    T_4_over_T_mid_4 = (tau_grid*(1-tau_grid/tau_r) + 1/np.sqrt(3) + 1/(1.5*tau_p))/\
-                       (0.25*tau_r + 1/np.sqrt(3) + 1/(1.5*tau_p))
-    T_grid = T_4_over_T_mid_4**(1/4) * T_mid
-    dtau_grid = tauf_grid[1:]-tauf_grid[:-1]
-    dtau_obs_grid = dtau_grid/get_kappa_r(T_grid)*(f_kappa_obs(T_grid)+f_kappa_s_obs(T_grid))
-    dtau_a_obs_grid = dtau_grid/get_kappa_r(T_grid)*f_kappa_obs(T_grid)
-    tauf_obs_grid = np.concatenate(([0],np.cumsum(dtau_obs_grid)))
-    # print('tau_obs_mid=',tauf_obs_grid[-1])
-    omegaf_grid = f_kappa_s_obs(Tf_grid)/(f_kappa_obs(Tf_grid)+f_kappa_s_obs(Tf_grid)+1e-80) # avoid zero division err
-    # solve J
-    nu_obs = c_light/lam_obs
-    Bf_grid = B(Tf_grid,nu_obs)
-    Jf_grid = solve_J(tauf_obs_grid, Bf_grid, omegaf_grid)
-    Sf_grid = (1-omegaf_grid)*Bf_grid + omegaf_grid*Jf_grid
-    S_grid = (Sf_grid[1:]+Sf_grid[:-1])/2
-    # extend to full disk
-    tauf_obs_full = np.concatenate((tauf_obs_grid, 2*tauf_obs_grid[-1]-tauf_obs_grid[-2::-1])) / cosI
-    S_full = np.concatenate((S_grid, S_grid[::-1]))
-    I = np.sum(S_full * np.exp(-tauf_obs_full[:-1])*(1-np.exp(-(tauf_obs_full[1:]-tauf_obs_full[:-1]))))
-    # sanity check: below should give the same result as no scattering
-    #tauf_a_obs_grid = np.concatenate(([0],np.cumsum(dtau_a_obs_grid)))
-    #tauf_a_obs_full = np.concatenate((tauf_a_obs_grid, 2*tauf_a_obs_grid[-1]-tauf_a_obs_grid[-2::-1])) / cosI
-    #B_grid = (Bf_grid[1:]+Bf_grid[:-1])/2
-    #B_full = np.concatenate((B_grid, B_grid[::-1]))
-    #I = np.sum(B_full * np.exp(-tauf_a_obs_full[:-1])*(1-np.exp(-(tauf_a_obs_full[1:]-tauf_a_obs_full[:-1]))))
-    tau_obs = np.sum(dtau_obs_grid)*2 # this is face-on optical depth
-    tau_a_obs = np.sum(dtau_a_obs_grid)*2 # this is face-on optical depth
-    return I, tau_obs, tau_a_obs
-
-
-
 """
 =======================================================================
 Disk model class
@@ -783,427 +688,3 @@ class DiskModel:
         self.tau_r_mid = tau_r_mid
         self.tau_p_mid = tau_p_mid
         return
-    def generate_observed_flux_single_wavelength_no_scattering(
-        self, cosI, lam_obs, f_kappa_obs, N_tau=50, tau_min=0.01,
-        ):
-        nu = c_light/lam_obs
-        # construct tau grid
-        tau_max = self.tau_r_mid*2
-        tau_min = np.minimum(tau_max/N_tau,tau_min)
-        tau_grid = np.logspace(np.log10(tau_min), np.log10(tau_max/2), N_tau) # first dimension: tau, second dimension: r
-        tau_grid = np.concatenate((tau_grid, tau_max - tau_grid[-2::-1], [tau_max]), axis=0)
-        dtau_grid = tau_grid*1
-        dtau_grid[1:] = dtau_grid[1:]-dtau_grid[:-1]
-        tau_p = self.tau_p_mid*2
-        tau_r = self.tau_r_mid*2
-        # get temperature profile
-        T_4_over_T_mid_4 = (tau_grid*(1-tau_grid/tau_r) + 1/np.sqrt(3) + 1/(1.5*tau_p))/\
-                           (0.25*tau_r + 1/np.sqrt(3) + 1/(1.5*tau_p))
-        T_grid = T_4_over_T_mid_4**(1/4) * self.T_mid
-        # get tau_obs
-        dtau_obs_grid = dtau_grid * f_kappa_obs(T_grid)/self.get_kappa_r(T_grid) / cosI
-        tau_obs_grid = np.cumsum(dtau_obs_grid, axis=0)
-        # in the first verion of the paper, I included cosI for tau_obs_grid but not dtau_obs_grid.
-        B_grid = B(T_grid,nu)
-        I_obs = np.sum(B_grid*np.exp(-tau_obs_grid+dtau_obs_grid)*(1-np.exp(-dtau_obs_grid)), axis=0)        
-        tau_obs = tau_obs_grid[-1] * cosI # ignore geometric factor
-        return I_obs, tau_obs, tau_obs # this matches the output dimension of generate_observed_flux_single_wavelength()
-    def generate_observed_flux_single_wavelength(
-        self, cosI, lam_obs, f_kappa_obs, f_kappa_s_obs, dtau=0.2,
-        ):
-        n = len(self.T_mid)
-        I_obs = np.zeros(n)
-        tau_obs = np.zeros(n)
-        tau_a_obs = np.zeros(n)
-        for i in range(n):
-            I_obs[i], tau_obs[i], tau_a_obs[i] = get_I_with_scattering(
-                self.T_mid[i], self.tau_r_mid[i], self.tau_p_mid[i], cosI, lam_obs, self.get_kappa_r, f_kappa_obs, f_kappa_s_obs, dtau=dtau)
-        return I_obs, tau_obs, tau_a_obs
-    def set_lam_obs_list(self, lam_obs_list):
-        """
-        Set wavelengths of observation
-        """
-        self.lam_obs_list = lam_obs_list
-        self.N_lam_obs = len(lam_obs_list)
-        self.f_kappa_obs_list = []
-        self.f_kappa_s_obs_list = []
-        for i in range(self.N_lam_obs):
-            self.f_kappa_obs_list.append(generate_get_kappa_lam(self.opacity_table, lam_obs_list[i]))
-            self.f_kappa_s_obs_list.append(generate_get_kappa_lam(self.opacity_table, lam_obs_list[i], scattering=True))
-    def generate_observed_flux(self, cosI, scattering=True, **kwargs):
-        """
-        Generate flux density at observed wavelengths
-        """
-        self.I_obs = []
-        self.tau_obs = []
-        self.tau_a_obs = []
-        self.scattering = scattering
-        for i in range(self.N_lam_obs):
-            if scattering:
-                I_obs, tau_obs, tau_a_obs = self.generate_observed_flux_single_wavelength(cosI, self.lam_obs_list[i], self.f_kappa_obs_list[i], self.f_kappa_s_obs_list[i], **kwargs)
-            else:
-                I_obs, tau_obs, tau_a_obs = self.generate_observed_flux_single_wavelength_no_scattering(cosI, self.lam_obs_list[i], self.f_kappa_obs_list[i], **kwargs)
-            self.I_obs.append(I_obs)
-            self.tau_obs.append(tau_obs)
-            self.tau_a_obs.append(tau_a_obs)
-        return
-
-
-
-
-"""
-=======================================================================
-Disk image class
-=======================================================================
-"""
-from astropy.io import fits
-from scipy import ndimage
-import warnings
-class DiskImage:
-    """
-    Stores the image of a system (at one wavelength).
-    Can also be used to generate mock observation for given F(R) and
-    compare mock observation with image.
-
-    Attributes:
-      img: observed image
-      img_model: mock observation image
-      au_per_pix: au per pixel
-      (see others in __init__)
-    """
-    def __init__(
-        self, fname, ra_deg, dec_deg, distance_pc, rms_Jy, disk_pa,
-        img_size_au=400, remove_background=False,
-        ):
-        
-        self.ra_deg = ra_deg
-        self.dec_deg = dec_deg
-        self.distance_pc = distance_pc
-        distance = self.distance_pc*pc
-        self.rms_Jy = rms_Jy
-        self.disk_pa = disk_pa
-        self.img_size_au = img_size_au
-        fits_data = fits.open(fname)
-        hdr = fits_data[0].header
-        img = fits_data[0].data[0,0]
-        if ra_deg is None:
-            icx_float = img.shape[-1]/2
-        else:
-            icx_float = (ra_deg-hdr['CRVAL1'])/hdr['CDELT1']+hdr['CRPIX1']-1
-        if dec_deg is None:
-            icy_float = img.shape[-2]/2
-        else:
-            icy_float = (dec_deg-hdr['CRVAL2'])/hdr['CDELT2']+hdr['CRPIX2']-1
-        icx = int(icx_float)
-        icy = int(icy_float)
-        signx = int(-np.sign(hdr['CDELT1'])) # x propto minus RA
-        signy = int(np.sign(hdr['CDELT2']))
-        self.au_per_pix = abs(hdr['CDELT1'])/180*pi*distance/au
-        Npix_half = int(np.ceil(self.img_size_au/self.au_per_pix))
-        if (icx-Npix_half)<0 or (icx+Npix_half)>=img.shape[-1] or (icy-Npix_half)<0 or (icy+Npix_half)>=img.shape[-2]:
-            print('warning: image is too small for given img_size_au')
-            # reduce Npix_half
-            Npix_half = min(Npix_half, icx)
-            Npix_half = min(Npix_half, img.shape[-1]-icx-1)
-            Npix_half = min(Npix_half, icy)
-            Npix_half = min(Npix_half, img.shape[-2]-icy-1)
-            if Npix_half<20:
-                raise ValueError('Cannot locate source within image!')
-            print('new img size =',Npix_half*self.au_per_pix,'au')
-        self.Npix_half = Npix_half
-        self.img_size_au = Npix_half*self.au_per_pix
-        self.img = img[icy-Npix_half*signy:icy+(Npix_half+1)*signy:signy,
-                       icx-Npix_half*signx:icx+(Npix_half+1)*signx:signx]
-        # put fitted disk center in center of image
-        self.img = ndimage.shift(self.img,
-                                 ((icy-icy_float)*signy, (icx-icx_float)*signx),
-                                 order=1)
-        if remove_background:
-            background = np.sum(self.img *(self.img <(3*self.rms_Jy))) / np.sum(self.img <(3*self.rms_Jy))
-            self.img = self.img - background
-        # area of a gaussian beam: pi/(4*ln(2)) * bmaj*bmin
-        # beam area in rad^2
-        self.beam_area = pi/(4*np.log(2)) * (hdr['BMAJ']/180*pi)*(hdr['BMIN']/180*pi)
-        # beam width in au
-        self.beam_maj_au = (hdr['BMAJ']/180*pi)*distance/au
-        self.beam_min_au = (hdr['BMIN']/180*pi)*distance/au
-        self.beam_pa = hdr['BPA']
-        fits_data.close()
-        return
-
-    def generate_mock_observation(self, R, I, cosI):
-        """
-        Generate mock observation for gievn I(R). (here I is the intensity)
-
-        Args:
-          R, I: 1d array, I = I(R) at R[1:]
-                so len(F) = len(R)-1
-          cosI: inclination
-        """
-        R_au = R/au
-        I = np.concatenate(([I[0]], I))
-        f_I = scipy.interpolate.interp1d(R_au, I, bounds_error=False, fill_value=0, kind='linear')
-        N_half = self.Npix_half
-        x1d = np.arange(-N_half,N_half+1)*self.au_per_pix
-        y,x = np.meshgrid(x1d,x1d,indexing='ij')
-        r = np.sqrt(x**2/cosI**2+y**2)
-        I = f_I(r)
-        # rotate to align with beam
-        I = ndimage.interpolation.rotate(I, -self.disk_pa+self.beam_pa,reshape=False) # ccw rotate
-        # blur: 2sqrt(2*log(2)) * sigma = FWHM
-        sigmas = np.array([self.beam_maj_au, self.beam_min_au])/self.au_per_pix/(2*np.sqrt(2*np.log(2)))
-        I = ndimage.gaussian_filter(I, sigma=sigmas)
-        # rotate to align with image
-        I = ndimage.interpolation.rotate(I, -self.beam_pa,reshape=False)
-        # convert to flux density in Jy/beam
-        self.img_model = I*1e23*self.beam_area
-        return
-    def evaluate_log_likelihood(self, sigma_log_model=np.log(2)/2):
-        img1 = self.img
-        img2 = self.img_model
-        sigma = self.rms_Jy # noise
-        chisq1 = (img1-img2)**2/(2*sigma**2)
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            chisq2 = np.log(img1/img2)**2 / (2*sigma_log_model**2)
-        chisq2 = np.nan_to_num(chisq2, nan=1e6)
-        chisq = np.minimum(chisq1, chisq2)
-
-        dlog_likelihood =  - chisq + 1/2 # normalization is unimportant here
-
-        beam_size_au_sq = self.beam_maj_au * self.beam_min_au * pi/(4*np.log(2))
-        pix_size_au_sq = self.au_per_pix**2
-        beam_per_pix = pix_size_au_sq/beam_size_au_sq
-        log_likelihood = np.sum(dlog_likelihood*beam_per_pix)
-
-        self.log_likelihood=log_likelihood
-        return log_likelihood
-    def evaluate_disk_chi_sq(self, sigma_log_model=np.log(2)/2):
-        img1 = self.img
-        img2 = self.img_model
-        sigma = self.rms_Jy # noise
-        chisq1 = (img1-img2)**2/(2*sigma**2)
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            chisq2 = np.log(img1/img2)**2 / (2*sigma_log_model**2)
-        chisq2 = np.nan_to_num(chisq2, nan=1e6)
-        chisq = np.minimum(chisq1, chisq2)
-
-        is_disk = (img2>sigma)
-        mean_chisq = np.sum(chisq*is_disk)/np.sum(is_disk)
-
-        beam_size_au_sq = self.beam_maj_au * self.beam_min_au * pi/(4*np.log(2))
-        pix_size_au_sq = self.au_per_pix**2
-        beam_per_pix = pix_size_au_sq/beam_size_au_sq
-        disk_area_in_beam = np.sum(is_disk)*beam_per_pix
-
-        self.mean_chisq = mean_chisq
-        self.disk_area_in_beam = disk_area_in_beam
-        return mean_chisq, disk_area_in_beam
-
-
-
-
-"""
-=======================================================================
-Disk fitting class
-=======================================================================
-"""
-def const_Mdot_over_Mstar(Mstar, Rd, Mdot_arg):
-    Mdot = Mstar*Mdot_arg
-    return Mdot
-
-import scipy.optimize
-class DiskFitting:
-    """
-    Class for fitting multi-wavelength observations of a system.
-    
-    Attributes:
-        source_name
-        disk_model: DiskModel object
-        disk_image_list: list of DiskImage objects
-    """
-    def __init__(self, source_name, opacity_table, disk_property_table):
-        self.source_name = source_name
-        self.disk_model = DiskModel(opacity_table, disk_property_table)
-        self.disk_image_list = []
-        self.lam_obs_list = []
-        # leave the arguements for minimize here for better flexibility
-        self.default_kwargs_for_minimize = {
-            'x0':[np.log(0.5*Msun), np.log(50*au)],
-            'bounds': ((np.log(0.005*Msun),np.log(100*Msun)), (np.log(2*au),np.log(800*au))),
-            'options':{'maxiter':1e3, 'disp':False},
-            'method':'Powell'
-        }
-
-        return
-    def add_observation(self, disk_image, lam_obs):
-        self.disk_image_list.append(disk_image)
-        self.lam_obs_list.append(lam_obs)
-        self.disk_model.set_lam_obs_list(self.lam_obs_list)
-    def set_cosI(self, cosI):
-        self.cosI = cosI
-    def evaluate_log_likelihood(
-        self, Mstar, Rd, Mdot, Q, weights=None,
-        ):
-        self.disk_model.generate_disk_profile(
-            Mstar=Mstar,Mdot=Mdot,Rd=Rd,Q=Q)
-        self.disk_model.generate_observed_flux(cosI=self.cosI)
-        N_obs = len(self.lam_obs_list)
-        ll = np.zeros(N_obs)
-        for i in range(N_obs):
-            self.disk_image_list[i].generate_mock_observation(
-                R=self.disk_model.R, I=self.disk_model.I_obs[i], cosI=self.cosI)
-            ll[i] = self.disk_image_list[i].evaluate_log_likelihood()
-        if weights is None:
-            ll = np.mean(ll)
-        else:
-            ll = np.sum(ll*weights)
-        return ll
-    def fit(
-        self,
-        Mdot_fn=const_Mdot_over_Mstar,
-        Mdot_arg = 1e-5/yr,
-        Q=1.5,
-        weights=None,
-        kwargs_for_minimize=None,
-        ):
-        """
-        Fit model to observation.
-
-        Args:
-          Mdot_fn: a function that takes (Mstar, Rd, Mdot_arg) and
-                   returns Mdot
-          Mdot_arg: the last argument for Mdot_fn()
-          Q: Toomre Q to be passed to disk model
-          weights: weights for each observed wavelength
-          kwargs_for_minimize: kwargs to be passed to
-                               optimize.minimize();
-                               see self.default_kwargs_for_minimize
-        """
-
-
-        if kwargs_for_minimize is None:
-            kwargs_for_minimize = self.default_kwargs_for_minimize
-
-        def f(x):
-            Mstar, Rd = np.exp(x[0]), np.exp(x[1])
-            Mdot = Mdot_fn(Mstar, Rd, Mdot_arg)
-            ll = self.evaluate_log_likelihood(Mstar, Rd, Mdot, Q, weights)
-            normalized_edge_F = self.I_obs[0][-1]*self.disk_image_list[0].beam_area*1e23/self.disk_image_list[0].rms_Jy
-            edge_penalty = (normalized_edge_F<1)*(1-normalized_edge_F)*1e4
-            return -ll+edge_penalty
-
-        res = scipy.optimize.minimize(f, **kwargs_for_minimize)
-
-        # record mean chisq
-        self.mean_chisq_list = []
-        self.disk_area_list = []
-        for i in range(len(self.lam_obs_list)):
-            mean_chisq, disk_area = self.disk_image_list[i].evaluate_disk_chi_sq()
-            self.mean_chisq_list.append(mean_chisq)
-            self.disk_area_list.append(disk_area)
-        return res
-
-import time
-import astropy.table
-import os
-
-def fit_vandam_image(
-    source_name,
-    data_folder_path='./data',
-    dust_model_name='1mm',
-    location_mode='separate',
-    verbose=True,
-    **kwargs,
-    ):
-    """
-    Construct a DiskFitting object and fit it for a system in
-    the VANDAM Orion survey.
-
-    Args:
-      source_name: source name. needs to match the name in 
-                   VANDAM_T20_properties.txt
-      dust_model_name: name for dust model, used to load opacity
-                       and disk property tables
-      location_mode: 'separate': use Tobin et al. 2020 values
-                                 ALMA and VLA source locations can be different
-                     'average': average between ALMA and VLA
-                     'alma', 'vla': use ALMA / VLA values for both
-      verbose: output time used for fitting
-      **kwargs: kwargs to be passed to DiskFitting.fit()
-    """
-    t_start = time.time()
-
-    data = astropy.table.Table.read(data_folder_path+"/VANDAM_T20_properties.txt", format="ascii")
-    data.add_index('Source') # add index by source
-    i = data.loc_indices[source_name]
-
-    opacity_table_fname = data_folder_path+'/opacity_tables/kappa_'+dust_model_name+'.pkl'
-    with open(opacity_table_fname,"rb") as f:
-        opacity_table = pickle.load(f)
-
-    # disk_property_table_fname = data_folder_path+'/disk_property_tables/disk_property_1mm.pkl'
-    # with open(disk_property_table_fname,"rb") as f:
-    #     disk_property_table = pickle.load(f)
-
-    disk_property_table_fname = data_folder_path+'/disk_property_tables/disk_property_'+dust_model_name+'.pkl'
-    with open(disk_property_table_fname,"rb") as f:
-        disk_property_table = pickle.load(f)
-
-    D = DiskFitting(source_name, opacity_table, disk_property_table)
-
-    cosI = data[i]['A_dBmin']/data[i]['A_dBmaj']
-    D.set_cosI(cosI)
-
-    R_T20 = data[i]['RdiskA']
-    
-    ra_deg_a = data[i]['A_RA_deg']
-    ra_deg_v = data[i]['V_RA_deg']
-    dec_deg_a = data[i]['A_DEC_deg']
-    dec_deg_v = data[i]['V_DEC_deg']
-    if location_mode=='average':
-        ra_deg_a = ra_deg_v = (ra_deg_a+ra_deg_v)/2
-        dec_deg_a = dec_deg_v = (dec_deg_a+dec_deg_v)/2
-    elif location_mode=='alma':
-        ra_deg_v = ra_deg_a
-        dec_deg_v = dec_deg_a
-    elif location_mode=='vla':
-        ra_deg_a = ra_deg_v
-        dec_deg_a = dec_deg_v
-
-    f_alma = data_folder_path+'/observation/'+data[i]['FieldA']+'_cont_robust0.5.pbcor.fits'
-    if not os.path.exists(f_alma):
-        f_alma = data_folder_path+'/observation/'+data[i]['FieldA']+'_cont_robust2.pbcor.fits'
-    f_vla = data_folder_path+'/observation/'+data[i]['FieldV']+'.A.Ka.cont.0.5.robust.image.pbcor.fits'
-
-    DI_alma = DiskImage(
-        fname = f_alma,
-        ra_deg = ra_deg_a,
-        dec_deg = dec_deg_a,
-        distance_pc = data[i]['DistanceA'],
-        rms_Jy = data[i]['A_RMS']*1e-3, # convert to Jy/beam
-        disk_pa = data[i]['A_dPA'],
-        img_size_au = max(400, 2*R_T20),
-    )
-
-    DI_vla = DiskImage(
-        fname = f_vla,
-        ra_deg = ra_deg_v,
-        dec_deg = dec_deg_v,
-        distance_pc = data[i]['DistanceA'],
-        rms_Jy = data[i]['V_RMS']*1e-6, # convert to Jy/beam
-        disk_pa = data[i]['A_dPA'], # use the same position angle for both observations
-        img_size_au = max(400, 2*R_T20),
-    )
-
-    D.add_observation(DI_alma, 0.087)
-    D.add_observation(DI_vla, 0.9)
-
-    D.fit(**kwargs)
-
-    t_end = time.time()
-    if verbose:
-        print('Finished '+source_name+', took',t_end-t_start,'sec.')
-
-    return D
