@@ -144,28 +144,28 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11, tworow=T
 for idx_mc, mcth in enumerate([True, False]):
     for idx_snow, snow in enumerate([True, False]):
         problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                 pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True)
+                      pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True)
 
-        # plot_gas_channel_maps(v_width=5, nlam=11, nodust=True, scat=False)
-        # if mcth is True:
-        #     plt.savefig(f'./figures/mctherm/nodust_snowline_{str(snow)}.png')
-        # elif mcth is False:
-        #     plt.savefig(f'./figures/x22/nodust_snowline_{str(snow)}.png')
-        # plt.close()
+        plot_gas_channel_maps(v_width=5, nlam=11, nodust=True, scat=False)
+        if mcth is True:
+            plt.savefig(f'./figures/mctherm/nodust_snowline_{str(snow)}.png')
+        elif mcth is False:
+            plt.savefig(f'./figures/x22/nodust_snowline_{str(snow)}.png')
+        plt.close()
 
-        # plot_gas_channel_maps(v_width=5, nlam=11, nodust=False, scat=False)
-        # if mcth is True:
-        #     plt.savefig(f'./figures/mctherm/noscat_snowline_{str(snow)}.png')
-        # elif mcth is False:
-        #     plt.savefig(f'./figures/x22/noscat_snowline_{str(snow)}.png')
-        # plt.close()
+        plot_gas_channel_maps(v_width=5, nlam=11, nodust=False, scat=False)
+        if mcth is True:
+            plt.savefig(f'./figures/mctherm/noscat_snowline_{str(snow)}.png')
+        elif mcth is False:
+            plt.savefig(f'./figures/x22/noscat_snowline_{str(snow)}.png')
+        plt.close()
 
-        # plot_gas_channel_maps(v_width=5, nlam=11, nodust=False, scat=True)
-        # if mcth is True:
-        #     plt.savefig(f'./figures/mctherm/scat_snowline_{str(snow)}.png')
-        # elif mcth is False:
-        #     plt.savefig(f'./figures/x22/scat_snowline_{str(snow)}.png')
-        # plt.close()
+        plot_gas_channel_maps(v_width=5, nlam=11, nodust=False, scat=True)
+        if mcth is True:
+            plt.savefig(f'./figures/mctherm/scat_snowline_{str(snow)}.png')
+        elif mcth is False:
+            plt.savefig(f'./figures/x22/scat_snowline_{str(snow)}.png')
+        plt.close()
 
         plot_gas_channel_maps(v_width=5, nlam=11, extract_gas=True)
         if mcth is True:

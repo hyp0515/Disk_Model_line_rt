@@ -39,7 +39,7 @@ class problem_setup:
             # f.write('iranfreqmode = 1\n')
             f.write('istar_sphere = 1\n')
             f.write('tgas_eq_tdust = 1\n')
-            f.write('setthreads = 10\n') # Depending on the number of cores in your computer
+            f.write('setthreads = 7\n') # Depending on the number of cores in the computer
         #
         # Write the lines.inp control file
         #
