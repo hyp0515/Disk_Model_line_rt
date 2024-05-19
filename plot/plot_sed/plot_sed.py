@@ -16,11 +16,19 @@ Mass          : 0.08-0.30 Msun
 Accretion rate: 4-7e-7    Msun/yr
 Radius        : 20-40     au
 Distance      : 140       pc
+observed_Freq = [233.8, 233.8, 233.8, 246.7, 246.7, 246.7, 246.7, 246.7]
+observed_Flux = [   56,    55,    59,    62,    60,    60,    61,    66]
 """
 ###############################################################################
 # Plotter
-def plot_sed(plot_nu=True, GHz=True, mjy=True):
-
+def plot_sed(incl=70, scat=True, plot_nu=True, GHz=True, mjy=True):
+    if scat is True:
+        prompt = ' nphot_spec 100000 '
+    elif scat is False:
+        prompt = ' noscat '
+    freq = np.array([5e1, 1e3]) # GHz
+    wav = ((cc*1e-2)/(freq*1e9))*1e+6
+    os.system(f"radmc3d spectrum incl {incl} lambdarange {wav[-1]} {wav[0]} nlam 200"+prompt+"noline")
     s = readSpectrum('spectrum.out')
     lam = s[:, 0]
     fnu = s[:, 1]/(140**2)
@@ -52,63 +60,40 @@ def plot_sed(plot_nu=True, GHz=True, mjy=True):
         plt.xlim((1e2, 1e6))
     return 
 ###############################################################################
-"""
-Different maximum grain sizes
-"""
-# amax_list = [0.1, 0.01, 0.001]
-# for amax in amax_list:
-#     problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, pancake=False, v_infall=0)
-#     os.system("radmc3d sed incl 70 noline")
-#     plot_sed()
-# label = [str(a*10)+' mm' for a in amax_list]
-# plt.legend(label)
-# observed_Freq = [233.8, 233.8, 233.8, 246.7, 246.7, 246.7, 246.7, 246.7]
-# observed_Flux = [   56,    55,    59,    62,    60,    60,    61,    66]
-# plt.scatter(observed_Freq, observed_Flux, color='black')
-# plt.savefig('different_amax')
-# plt.close()
-###############################################################################
-"""
-Different mass of star
-"""
-# mstar_list = [0.10, 0.15, 0.20, 0.25, 0.30]
-# for mstar in mstar_list:
-#     problem_setup(a_max=0.01, Mass_of_star=mstar*Msun, Accretion_rate=mstar*1e-5*Msun/yr, Radius_of_disk=30*au, pancake=False, v_infall=0)
-#     os.system("radmc3d sed incl 70 noline")
-#     plot_sed()
-# label = [str(mstar)+r' $M_{\odot}$' for mstar in mstar_list]
-# plt.legend(label)
-# observed_Freq = [233.8, 233.8, 233.8, 246.7, 246.7, 246.7, 246.7, 246.7]
-# observed_Flux = [   56,    55,    59,    62,    60,    60,    61,    66]
-# plt.scatter(observed_Freq, observed_Flux, color='black')
-# plt.savefig('different_mstar')
-# plt.close()
+a_list = [1, 0.1, 0.01, 0.001]
+incl_list = [0, 30, 60, 90]
+for idx_mc, mcth in enumerate([True, False]):
+    for idx_scat, scat in enumerate([False, True]):
 
-###############################################################################
-"""
-Different inclination angle
-"""
-# incl_list = [0, 15, 45, 60, 75, 90]
-# problem_setup(a_max=0.01, Mass_of_star=0.14*Msun, Accretion_rate=0.14*1e-5*Msun/yr, Radius_of_disk=30*au, pancake=False, v_infall=0)
-# for incl in incl_list:
-#     os.system(f"radmc3d sed incl {incl} noline")
-#     plot_sed()
-# label = [str(i)+r'$^{\circ}$' for i in incl_list]
-# plt.legend(label)
-# observed_Freq = [233.8, 233.8, 233.8, 246.7, 246.7, 246.7, 246.7, 246.7]
-# observed_Flux = [   56,    55,    59,    62,    60,    60,    61,    66]
-# plt.scatter(observed_Freq, observed_Flux, color='black')
-# plt.savefig('different_incl')
-# plt.close()
-###############################################################################
-problem_setup(a_max=1, Mass_of_star=0.14*Msun, Accretion_rate=0.14*1e-5*Msun/yr, Radius_of_disk=30*au, pancake=False, v_infall=0)
-os.system('radmc3d spectrum incl 70 lambdarange 300. 3000. nlam 100 noline noscat')
-plot_sed()
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14*1e-5*Msun/yr, Radius_of_disk=30*au, pancake=False, v_infall=0)
-os.system('radmc3d spectrum incl 70 lambdarange 300. 3000. nlam 100 noline noscat')
-plot_sed()
-problem_setup(a_max=0.01, Mass_of_star=0.14*Msun, Accretion_rate=0.14*1e-5*Msun/yr, Radius_of_disk=30*au, pancake=False, v_infall=0)
-os.system('radmc3d spectrum incl 70 lambdarange 300. 3000. nlam 100 noline noscat')
-plot_sed()
+        for idx_a, amax in enumerate(a_list):
+
+            problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
+                        pancake=False, mctherm=mcth, snowline=False, floor=True, kep=True)
+            plot_sed(scat=scat)
+        plt.legend([str(a)+" mm" for a in a_list])
+        observed_Freq = [233.8, 233.8, 233.8, 246.7, 246.7, 246.7, 246.7, 246.7]
+        observed_Flux = [   56,    55,    59,    62,    60,    60,    61,    66]
+        plt.scatter(observed_Freq, observed_Flux, color='black')
+        if mcth is True:
+            plt.savefig(f'./figures/mctherm/different_amax_scat_{str(scat)}.png')
+        elif mcth is False:
+            plt.savefig(f'./figures/x22/different_amax_scat_{str(scat)}.png')
+        plt.close()
+
+
+        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
+                        pancake=False, mctherm=mcth, snowline=False, floor=True, kep=True)
+        for idx_incl, angle in enumerate(incl_list):
+            plot_sed(incl=angle, scat=scat)
+        plt.legend([str(i)+r'$^\circ$' for i in incl_list])
+        observed_Freq = [233.8, 233.8, 233.8, 246.7, 246.7, 246.7, 246.7, 246.7]
+        observed_Flux = [   56,    55,    59,    62,    60,    60,    61,    66]
+        plt.scatter(observed_Freq, observed_Flux, color='black')
+        if mcth is True:
+            plt.savefig(f'./figures/mctherm/different_incl_scat_{str(scat)}.png')
+        elif mcth is False:
+            plt.savefig(f'./figures/x22/different_incl_scat_{str(scat)}.png')
+        plt.close()
+
 os.system('make cleanall')
-plt.show()
+

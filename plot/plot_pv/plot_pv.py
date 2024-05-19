@@ -61,7 +61,7 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=51,
         extracted_gas = data_gas-data_dust
 
         fig, ax = plt.subplots()
-        c = ax.pcolormesh(im.x/au, v, (extracted_gas[:, center, :].T)*1e3/(140**2), shading="nearest", rasterized=True, cmap='jet')
+        c = ax.pcolormesh(im_gas.x/au, v, (extracted_gas[:, center, :].T)*1e3/(140**2), shading="nearest", rasterized=True, cmap='jet')
         cbar = fig.colorbar(c, ax=ax)
         cbar.set_label('mJy/pixel')
         ax.set_xlabel("Offset [au]")
@@ -88,7 +88,7 @@ for idx_mc, mcth in enumerate([True, False]):
         plt.close()
         
         # noscat
-        plot_pv(v_width=20, nlam=11, nodust=False, scat=False)
+        plot_pv(v_width=20, nlam=51, nodust=False, scat=False)
         if mcth is True:
             plt.savefig(f'./figures/mctherm/noscat_snowline_{str(snow)}_5.png')
         elif mcth is False:
@@ -127,7 +127,7 @@ for idx_mc, mcth in enumerate([True, False]):
         plt.close()
         
         # noscat
-        plot_pv(v_width=20, nlam=11, nodust=False, scat=False)
+        plot_pv(v_width=20, nlam=51, nodust=False, scat=False)
         if mcth is True:
             plt.savefig(f'./figures/mctherm/noscat_snowline_{str(snow)}_7.png')
         elif mcth is False:

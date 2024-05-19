@@ -23,7 +23,7 @@ from vertical_profile_class import DiskModel_vertical
 
 class problem_setup:
     def __init__(self, a_max, Mass_of_star, Accretion_rate, Radius_of_disk, v_infall, 
-                 pancake=False, mctherm=True, snowline=True, floor=True, kep=True):
+                 pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False):
         """
         pancake  : simple slab model
         mctherm  : temperature calculated by radmc3d (stellar heating)
@@ -235,6 +235,9 @@ class problem_setup:
                     data = T.ravel(order='F')         # Create a 1-D view, fortran-style indexing
                     data.tofile(f, sep='\n', format="%13.6e")
                     f.write('\n')
+
+
+
         if snowline is True:
             d = readData(dtemp=True, ddens=True)
             T_read  = d.dusttemp[:, :, :, 0] 
