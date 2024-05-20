@@ -14,7 +14,7 @@ rs  = 6.96e10        # Solar radius            [cm]
 #
 # Monte Carlo parameters
 #
-nphot    = 100000000  # Depend on computer's efficiency
+nphot    = 1000000  # Depend on computer's efficiency
 #
 # Disk Model
 #
@@ -187,33 +187,65 @@ class problem_setup:
 
         
         if mctherm is True:
-            if floor is True:
-                os.system('radmc3d mctherm')  # Ignore viscous heating calculated by Xu's disk model
-                d = readData(dtemp=True, ddens=True)
-                T_read  = d.dusttemp[:, :, :, 0]
-                rho_read = d.rhodust[:, :, :, 0]
-                T = np.where(np.log10(rho_read)<-18, 5, T_read)
-                T = np.where(T<5, 5, T)
-                with open('dust_temperature.dat', "w+") as f:
-                    f.write(str(iformat)+'\n')
-                    f.write('%d\n'%(nr*ntheta*nphi))
-                    f.write(str(nspec)+'\n')
-                    data = T.ravel(order='F')         # Create a 1-D view, fortran-style indexing
-                    data.tofile(f, sep='\n', format="%13.6e")
-                    f.write('\n')
-            elif floor is False:
-                os.system('radmc3d mctherm')
-                d = readData(dtemp=True)
-                T_read  = d.dusttemp[:, :, :, 0]
-                T = np.where(T<5, 5, T)
-                with open('dust_temperature.dat', "w+") as f:
-                    f.write(str(iformat)+'\n')
-                    f.write('%d\n'%(nr*ntheta*nphi))
-                    f.write(str(nspec)+'\n')
-                    data = T.ravel(order='F')         # Create a 1-D view, fortran-style indexing
-                    data.tofile(f, sep='\n', format="%13.6e")
-                    f.write('\n')
-    
+            if combine is False:
+                if floor is True:
+                    os.system('radmc3d mctherm')  # Ignore viscous heating calculated by Xu's disk model
+                    d = readData(dtemp=True, ddens=True)
+                    T_read  = d.dusttemp[:, :, :, 0]
+                    rho_read = d.rhodust[:, :, :, 0]
+                    T = np.where(np.log10(rho_read)<-18, 5, T_read)
+                    T = np.where(T<5, 5, T)
+                    with open('dust_temperature.dat', "w+") as f:
+                        f.write(str(iformat)+'\n')
+                        f.write('%d\n'%(nr*ntheta*nphi))
+                        f.write(str(nspec)+'\n')
+                        data = T.ravel(order='F')         # Create a 1-D view, fortran-style indexing
+                        data.tofile(f, sep='\n', format="%13.6e")
+                        f.write('\n')
+                elif floor is False:
+                    os.system('radmc3d mctherm')
+                    d = readData(dtemp=True)
+                    T_read  = d.dusttemp[:, :, :, 0]
+                    T = np.where(T<5, 5, T)
+                    with open('dust_temperature.dat', "w+") as f:
+                        f.write(str(iformat)+'\n')
+                        f.write('%d\n'%(nr*ntheta*nphi))
+                        f.write(str(nspec)+'\n')
+                        data = T.ravel(order='F')         # Create a 1-D view, fortran-style indexing
+                        data.tofile(f, sep='\n', format="%13.6e")
+                        f.write('\n')
+            elif combine is True:
+                if floor is True:
+                    xu_T = DM.T_sph
+                    
+                    os.system('radmc3d mctherm')  # Ignore viscous heating calculated by Xu's disk model
+                    d = readData(dtemp=True, ddens=True)
+                    T_read  = d.dusttemp[:, :, :, 0]
+                    rho_read = d.rhodust[:, :, :, 0]
+                    T = np.where(np.log10(rho_read)<-18, 5, (T_read**4+xu_T**4)**(1/4))
+                    T = np.where(T<5, 5, T)
+                    with open('dust_temperature.dat', "w+") as f:
+                        f.write(str(iformat)+'\n')
+                        f.write('%d\n'%(nr*ntheta*nphi))
+                        f.write(str(nspec)+'\n')
+                        data = T.ravel(order='F')         # Create a 1-D view, fortran-style indexing
+                        data.tofile(f, sep='\n', format="%13.6e")
+                        f.write('\n')
+                elif floor is False:
+                    xu_T = DM.T_sph
+
+                    os.system('radmc3d mctherm')
+                    d = readData(dtemp=True)
+                    T_read  = d.dusttemp[:, :, :, 0]
+                    T = (T_read**4+xu_T**4)**(1/4)
+                    T = np.where(T<5, 5, T)
+                    with open('dust_temperature.dat', "w+") as f:
+                        f.write(str(iformat)+'\n')
+                        f.write('%d\n'%(nr*ntheta*nphi))
+                        f.write(str(nspec)+'\n')
+                        data = T.ravel(order='F')         # Create a 1-D view, fortran-style indexing
+                        data.tofile(f, sep='\n', format="%13.6e")
+                        f.write('\n')
         elif mctherm is False:
             if floor is True:
                 d = readData(ddens=True)
@@ -235,7 +267,6 @@ class problem_setup:
                     data = T.ravel(order='F')         # Create a 1-D view, fortran-style indexing
                     data.tofile(f, sep='\n', format="%13.6e")
                     f.write('\n')
-
 
 
         if snowline is True:
