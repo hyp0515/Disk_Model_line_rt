@@ -103,13 +103,13 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11, tworow=T
         else:
             fig, ax = plt.subplots(2, (nlam//2)+1, figsize=(15, 8), sharex=True, sharey=True, gridspec_kw={'wspace': 0, 'hspace': 0})
 
-            os.system(f"radmc3d image npix 100 sizeau 60 incl {incl} iline {line} vkms {vkm} widthkms {v_width} linenlam {nlam} nphot_scat 1000000")
+            os.system(f"radmc3d image npix 100 sizeau 60 incl {incl} iline {line} vkms {vkm} widthkms {v_width} linenlam {nlam} nphot_scat 10000000")
             os.system('mv image.out image_gas.out')
             im_gas = readImage('image_gas.out')
             freq0 = im_gas.freq[nlam//2]
             v = cc / 1e5 * (freq0 - im_gas.freq) / freq0
 
-            os.system(f"radmc3d image npix 100 sizeau 60 incl {incl} lambdarange {im_gas.wav[0]} {im_gas.wav[-1]} nlam {nlam} nphot_scat 1000000 noline")
+            os.system(f"radmc3d image npix 100 sizeau 60 incl {incl} lambdarange {im_gas.wav[0]} {im_gas.wav[-1]} nlam {nlam} nphot_scat 10000000 noline")
             os.system('mv image.out image_dust.out')
             im_dust = readImage('image_dust.out')
 
@@ -146,32 +146,63 @@ for idx_mc, mcth in enumerate([True, False]):
         problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
                       pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True)
 
-        plot_gas_channel_maps(v_width=5, nlam=11, nodust=True, scat=False)
+        # plot_gas_channel_maps(v_width=5, nlam=11, nodust=True, scat=False)
+        # if mcth is True:
+        #     plt.savefig(f'./figures/mctherm/nodust_snowline_{str(snow)}.png')
+        # elif mcth is False:
+        #     plt.savefig(f'./figures/x22/nodust_snowline_{str(snow)}.png')
+        # plt.close()
+
+        # plot_gas_channel_maps(v_width=5, nlam=11, nodust=False, scat=False)
+        # if mcth is True:
+        #     plt.savefig(f'./figures/mctherm/noscat_snowline_{str(snow)}.png')
+        # elif mcth is False:
+        #     plt.savefig(f'./figures/x22/noscat_snowline_{str(snow)}.png')
+        # plt.close()
+
+        # plot_gas_channel_maps(v_width=5, nlam=11, nodust=False, scat=True)
+        # if mcth is True:
+        #     plt.savefig(f'./figures/mctherm/scat_snowline_{str(snow)}.png')
+        # elif mcth is False:
+        #     plt.savefig(f'./figures/x22/scat_snowline_{str(snow)}.png')
+        # plt.close()
+
+        plot_gas_channel_maps(incl=0, v_width=5, nlam=11, extract_gas=True)
         if mcth is True:
-            plt.savefig(f'./figures/mctherm/nodust_snowline_{str(snow)}.png')
+            plt.savefig(f'./figures/mctherm/extracted_gas_snowline_{str(snow)}_incl_0.png')
         elif mcth is False:
-            plt.savefig(f'./figures/x22/nodust_snowline_{str(snow)}.png')
+            plt.savefig(f'./figures/x22/extracted_gas_snowline_{str(snow)}_incl_0.png')
         plt.close()
 
-        plot_gas_channel_maps(v_width=5, nlam=11, nodust=False, scat=False)
-        if mcth is True:
-            plt.savefig(f'./figures/mctherm/noscat_snowline_{str(snow)}.png')
-        elif mcth is False:
-            plt.savefig(f'./figures/x22/noscat_snowline_{str(snow)}.png')
-        plt.close()
+        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=0, 
+                      pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True)
 
-        plot_gas_channel_maps(v_width=5, nlam=11, nodust=False, scat=True)
-        if mcth is True:
-            plt.savefig(f'./figures/mctherm/scat_snowline_{str(snow)}.png')
-        elif mcth is False:
-            plt.savefig(f'./figures/x22/scat_snowline_{str(snow)}.png')
-        plt.close()
+        # plot_gas_channel_maps(v_width=5, nlam=11, nodust=True, scat=False)
+        # if mcth is True:
+        #     plt.savefig(f'./figures/mctherm/nodust_snowline_{str(snow)}.png')
+        # elif mcth is False:
+        #     plt.savefig(f'./figures/x22/nodust_snowline_{str(snow)}.png')
+        # plt.close()
 
-        plot_gas_channel_maps(v_width=5, nlam=11, extract_gas=True)
+        # plot_gas_channel_maps(v_width=5, nlam=11, nodust=False, scat=False)
+        # if mcth is True:
+        #     plt.savefig(f'./figures/mctherm/noscat_snowline_{str(snow)}.png')
+        # elif mcth is False:
+        #     plt.savefig(f'./figures/x22/noscat_snowline_{str(snow)}.png')
+        # plt.close()
+
+        # plot_gas_channel_maps(v_width=5, nlam=11, nodust=False, scat=True)
+        # if mcth is True:
+        #     plt.savefig(f'./figures/mctherm/scat_snowline_{str(snow)}.png')
+        # elif mcth is False:
+        #     plt.savefig(f'./figures/x22/scat_snowline_{str(snow)}.png')
+        # plt.close()
+
+        plot_gas_channel_maps(incl=0, v_width=5, nlam=11, extract_gas=True)
         if mcth is True:
-            plt.savefig(f'./figures/mctherm/extracted_gas_snowline_{str(snow)}_neg.png')
+            plt.savefig(f'./figures/mctherm/extracted_gas_snowline_{str(snow)}_incl_0_noinfall.png')
         elif mcth is False:
-            plt.savefig(f'./figures/x22/extracted_gas_snowline_{str(snow)}_neg.png')
+            plt.savefig(f'./figures/x22/extracted_gas_snowline_{str(snow)}_incl_0_noinfall.png')
         plt.close()
 
 os.system('make cleanall')
