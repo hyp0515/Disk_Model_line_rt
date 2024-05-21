@@ -141,10 +141,9 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11, tworow=T
             plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0, hspace=0)
     return
 ###############################################################################
-for idx_mc, mcth in enumerate([True, False]):
-    for idx_snow, snow in enumerate([True, False]):
+for idx_snow, snow in enumerate([True, False]):
         problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                      pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True)
+                      pancake=False, mctherm=True, snowline=snow, floor=True, kep=True, combine=True)
 
         # plot_gas_channel_maps(v_width=5, nlam=11, nodust=True, scat=False)
         # if mcth is True:
@@ -167,15 +166,16 @@ for idx_mc, mcth in enumerate([True, False]):
         #     plt.savefig(f'./figures/x22/scat_snowline_{str(snow)}.png')
         # plt.close()
 
-        plot_gas_channel_maps(incl=0, v_width=5, nlam=11, extract_gas=True)
-        if mcth is True:
-            plt.savefig(f'./figures/mctherm/extracted_gas_snowline_{str(snow)}_incl_0.png')
-        elif mcth is False:
-            plt.savefig(f'./figures/x22/extracted_gas_snowline_{str(snow)}_incl_0.png')
+        plot_gas_channel_maps(incl=70, v_width=5, nlam=11, extract_gas=True)
+        # if mcth is True:
+        #     plt.savefig(f'./figures/mctherm/extracted_gas_snowline_{str(snow)}_incl_0.png')
+        # elif mcth is False:
+        #     plt.savefig(f'./figures/x22/extracted_gas_snowline_{str(snow)}_incl_0.png')
+        plt.savefig(f'./figures/combine/extracted_gas_snowline_{str(snow)}_incl_70.png')
         plt.close()
 
         problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=0, 
-                      pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True)
+                      pancake=False, mctherm=True, snowline=snow, floor=True, kep=True)
 
         # plot_gas_channel_maps(v_width=5, nlam=11, nodust=True, scat=False)
         # if mcth is True:
@@ -198,12 +198,14 @@ for idx_mc, mcth in enumerate([True, False]):
         #     plt.savefig(f'./figures/x22/scat_snowline_{str(snow)}.png')
         # plt.close()
 
-        plot_gas_channel_maps(incl=0, v_width=5, nlam=11, extract_gas=True)
-        if mcth is True:
-            plt.savefig(f'./figures/mctherm/extracted_gas_snowline_{str(snow)}_incl_0_noinfall.png')
-        elif mcth is False:
-            plt.savefig(f'./figures/x22/extracted_gas_snowline_{str(snow)}_incl_0_noinfall.png')
+        plot_gas_channel_maps(incl=70, v_width=5, nlam=11, extract_gas=True)
+        # if mcth is True:
+        #     plt.savefig(f'./figures/mctherm/extracted_gas_snowline_{str(snow)}_incl_0_noinfall.png')
+        # elif mcth is False:
+        #     plt.savefig(f'./figures/x22/extracted_gas_snowline_{str(snow)}_incl_0_noinfall.png')
+        plt.savefig(f'./figures/combine/extracted_gas_snowline_{str(snow)}_incl_70_noinfall.png')
         plt.close()
+    
 
 os.system('make cleanall')
 ###############################################################################

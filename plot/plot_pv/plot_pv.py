@@ -19,8 +19,8 @@ Distance      : 140       pc
 """
 Plot Position-velocity (PV) diagrams
 """
-def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=51, 
-            nodust=False, scat=True, extract_gas=False):
+def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=51,
+            nodust=False, scat=True, extract_gas=False, npix = 30):
     if extract_gas is False:
         if nodust is True:
             prompt = ' noscat nodust'
@@ -30,13 +30,15 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=51,
             elif scat is False:
                 prompt = ' noscat'
         
-        os.system(f"radmc3d image npix 100 sizeau 60 incl {incl} iline {line} vkms {vkm} widthkms {v_width} linenlam {nlam}"+prompt)
+        os.system(f"radmc3d image npix {npix} sizeau 60 incl {incl} iline {line} vkms 0 widthkms {v_width} linenlam {nlam}"+prompt)
         im = readImage('image.out')
+
         freq0 = im.freq[nlam//2]
         v = cc / 1e5 * (freq0 - im.freq) / freq0
         center = int(len(im.y)//2)
+
         fig, ax = plt.subplots()
-        c = ax.pcolormesh(im.x/au, v, (im.imageJyppix[:, center, :].T)*1e3/(140**2), shading="nearest", rasterized=True, cmap='jet')
+        c = ax.pcolormesh(im.x/au, v+vkm, (im.imageJyppix[:, center, :].T)*1e3/(140**2), shading="nearest", rasterized=True, cmap='jet')
         cbar = fig.colorbar(c, ax=ax)
         cbar.set_label('mJy/pixel')
         ax.set_xlabel("Offset [au]")
@@ -45,10 +47,10 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=51,
         ax.plot([-30, 30], [vkm, vkm], 'w:')
 
     elif extract_gas is True:
-        os.system(f"radmc3d image npix 100 sizeau 60 incl {incl} iline {line} vkms {vkm} widthkms {v_width} linenlam {nlam} nphot_scat 1000000")
+        os.system(f"radmc3d image npix 30 sizeau 60 incl {incl} iline {line} vkms 0 widthkms {v_width} linenlam {nlam} nphot_scat 1000000")
         os.system('mv image.out image_gas.out')
         im_gas = readImage('image_gas.out')
-        os.system(f"radmc3d image npix 100 sizeau 60 incl {incl} lambdarange {im_gas.wav[0]} {im_gas.wav[-1]} nlam {nlam} nphot_scat 1000000 noline")
+        os.system(f"radmc3d image npix 30 sizeau 60 incl {incl} lambdarange {im_gas.wav[0]} {im_gas.wav[-1]} nlam {nlam} nphot_scat 1000000 noline")
         os.system('mv image.out image_dust.out')
         im_dust = readImage('image_dust.out')
 
@@ -61,7 +63,7 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=51,
         extracted_gas = data_gas-data_dust
 
         fig, ax = plt.subplots()
-        c = ax.pcolormesh(im_gas.x/au, v, (extracted_gas[:, center, :].T)*1e3/(140**2), shading="nearest", rasterized=True, cmap='jet')
+        c = ax.pcolormesh(im_gas.x/au, v+vkm, (extracted_gas[:, center, :].T)*1e3/(140**2), shading="nearest", rasterized=True, cmap='jet')
         cbar = fig.colorbar(c, ax=ax)
         cbar.set_label('mJy/pixel')
         ax.set_xlabel("Offset [au]")
@@ -71,83 +73,62 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=51,
     return
 
 ###############################################################################
-for idx_mc, mcth in enumerate([True, False]):
-    for idx_snow, snow in enumerate([True, False]):
-        """
-        Accretion/Mstar = 1e-5/yr
-        """
-        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                      pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True)
+# for idx_vin, vin in enumerate([1, 0]):
 
-        # nodust
-        plot_pv(v_width=20, nlam=51, nodust=True, scat=False)
-        if mcth is True:
-            plt.savefig(f'./figures/mctherm/nodust_snowline_{str(snow)}_5.png')
-        elif mcth is False:
-            plt.savefig(f'./figures/x22/nodust_snowline_{str(snow)}_5.png')
-        plt.close()
-        
-        # noscat
-        plot_pv(v_width=20, nlam=51, nodust=False, scat=False)
-        if mcth is True:
-            plt.savefig(f'./figures/mctherm/noscat_snowline_{str(snow)}_5.png')
-        elif mcth is False:
-            plt.savefig(f'./figures/x22/noscat_snowline_{str(snow)}_5.png')
-        plt.close()
+#     for idx_mc, mcth in enumerate([True, False]):
+#         for idx_snow, snow in enumerate([True, False]):
+#             """
+#             Accretion/Mstar = 1e-5/yr
+#             """
+#             problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=vin, 
+#                         pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True)
+            
+#             # extracted_gas
+#             plot_pv(vkm=5, v_width=20, nlam=51, extract_gas=True)
+#             if mcth is True:
+#                 plt.savefig(f'./figures/mctherm/mock_CB68_snowline_{str(snow)}_mdot_5_vinfall_{str(vin)}_20.png')
+#             elif mcth is False:
+#                 plt.savefig(f'./figures/x22/mock_CB68_snowline_{str(snow)}_mdot_5_vinfall_{str(vin)}_20.png')
+#             plt.close()
 
-        # scat
-        plot_pv(v_width=20, nlam=51, nodust=False, scat=True)
-        if mcth is True:
-            plt.savefig(f'./figures/mctherm/scat_snowline_{str(snow)}_5.png')
-        elif mcth is False:
-            plt.savefig(f'./figures/x22/scat_snowline_{str(snow)}_5.png')
-        plt.close()
-        
-        # extracted_gas
-        plot_pv(v_width=20, nlam=51, extract_gas=True)
-        if mcth is True:
-            plt.savefig(f'./figures/mctherm/extracted_gas_snowline_{str(snow)}_5.png')
-        elif mcth is False:
-            plt.savefig(f'./figures/x22/extracted_gas_snowline_{str(snow)}_5.png')
-        plt.close()
+#             """
+#             Accretion/Mstar = 1e-7/yr
+#             """
 
-        """
-        Accretion/Mstar = 1e-7/yr
-        """
+#             problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-7*Msun/yr, Radius_of_disk=30*au, v_infall=vin, 
+#                         pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True)
 
-        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-7*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                      pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True)
+#             # extracted_gas
+#             plot_pv(vkm=5, v_width=20, nlam=51, extract_gas=True)
+#             if mcth is True:
+#                 plt.savefig(f'./figures/mctherm/mock_CB68_snowline_{str(snow)}_mdot_7_vinfall_{str(vin)}_20.png')
+#             elif mcth is False:
+#                 plt.savefig(f'./figures/x22/mock_CB68_snowline_{str(snow)}_mdot_7_vinfall_{str(vin)}_20.png')
+#             plt.close()
 
-        # nodust
-        plot_pv(v_width=20, nlam=51, nodust=True, scat=False)
-        if mcth is True:
-            plt.savefig(f'./figures/mctherm/nodust_snowline_{str(snow)}_7.png')
-        elif mcth is False:
-            plt.savefig(f'./figures/x22/nodust_snowline_{str(snow)}_7.png')
-        plt.close()
-        
-        # noscat
-        plot_pv(v_width=20, nlam=51, nodust=False, scat=False)
-        if mcth is True:
-            plt.savefig(f'./figures/mctherm/noscat_snowline_{str(snow)}_7.png')
-        elif mcth is False:
-            plt.savefig(f'./figures/x22/noscat_snowline_{str(snow)}_7.png')
-        plt.close()
+problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
+                        pancake=False, mctherm=True, snowline=True, floor=True, kep=True)
+plot_pv(vkm=5, v_width=10, nlam=21, extract_gas=True, npix=20)
+plt.savefig(f'./figures/mock/mock_CB68_mctherm_nlam_21_npix_20_width_10.png')
+plt.close()
 
-        # scat
-        plot_pv(v_width=20, nlam=51, nodust=False, scat=True)
-        if mcth is True:
-            plt.savefig(f'./figures/mctherm/scat_snowline_{str(snow)}_7.png')
-        elif mcth is False:
-            plt.savefig(f'./figures/x22/scat_snowline_{str(snow)}_7.png')
-        plt.close()
-        
-        # extracted_gas
-        plot_pv(v_width=20, nlam=51, extract_gas=True)
-        if mcth is True:
-            plt.savefig(f'./figures/mctherm/extracted_gas_snowline_{str(snow)}_7.png')
-        elif mcth is False:
-            plt.savefig(f'./figures/x22/extracted_gas_snowline_{str(snow)}_7.png')
-        plt.close()
+# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
+#                         pancake=False, mctherm=False, snowline=True, floor=True, kep=True)
+# plot_pv(vkm=5, v_width=5, nlam=21, extract_gas=True, npix=20)
+# plt.savefig(f'./figures/mock/mock_CB68_x22_nlam_21_npix_20_width_5.png')
+# plt.close()
+
+problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
+                        pancake=False, mctherm=True, snowline=True, floor=True, kep=True)
+plot_pv(vkm=5, v_width=10, nlam=41, extract_gas=True, npix=40)
+plt.savefig(f'./figures/mock/mock_CB68_mctherm_nlam_41_npix_40_width_10.png')
+plt.close()
+
+# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
+#                         pancake=False, mctherm=False, snowline=True, floor=True, kep=True)
+# plot_pv(vkm=5, v_width=5, nlam=41, extract_gas=True, npix=40)
+# plt.savefig(f'./figures/mock/mock_CB68_x22_nlam_41_npix_40_width_5.png')
+plt.close()
+
 
 os.system('make cleanall')
