@@ -62,145 +62,25 @@ def plot_spectra(incl=70, line=240, vkm=0, v_width=20, nlam=51,
         plt.ylabel('Intensity (mJy/beam)')
     return
 ###############################################################################
-a_list = [1, 0.1, 0.01, 0.001]
-incl_list = [0, 30, 60, 90]
-for idx_mc, mcth in enumerate([True]):
-    for idx_snow, snow in enumerate([True, False]):
-        """
-        Different a_max
-        """    
-        # nodust
-        for idx_amax, amax in enumerate(a_list):
 
-            problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                      pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True, combine=True)
+rcb_list = [1,5,10,20,30]
+
+for idx_rcb, rcb in enumerate(rcb_list):
             
-            plot_spectra(v_width=20, nlam=51, nodust=True, scat=False)
-
-        label = [str(a*10)+' mm' for a in a_list]
-        plt.legend(label)
-        plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
-        
-        # if mcth is True:
-        #     plt.savefig(f'./figures/mctherm/different_amax/nodust_snowline_{str(snow)}.png')
-        # elif mcth is False:
-        #     plt.savefig(f'./figures/x22/different_amax/nodust_snowline_{str(snow)}.png')
-        plt.savefig(f'./figures/combine/different_amax/nodust_snowline_{str(snow)}.png')
-        plt.close()
-        
-        # noscat
-        # for idx_amax, amax in enumerate(a_list):
-
-        #     problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-        #               pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True, combine=True)
+    problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                      pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=rcb)
             
-        #     plot_spectra(v_width=20, nlam=51, nodust=False, scat=False)
+    plot_spectra(v_width=20, nlam=31, extract_gas=True)
 
-        # label = [str(a*10)+' mm' for a in a_list]
-        # plt.legend(label)
-        # plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
-        # # if mcth is True:
-        # #     plt.savefig(f'./figures/mctherm/different_amax/noscat_snowline_{str(snow)}.png')
-        # # elif mcth is False:
-        # #     plt.savefig(f'./figures/x22/different_amax/noscat_snowline_{str(snow)}.png')
-        # plt.savefig(f'./figures/combine/different_amax/noscat_snowline_{str(snow)}.png')
-        # plt.close()
+    label = [str(r)+' AU' for r in rcb_list]
+    plt.legend(label)
+    plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
 
-        # scat
-        # for idx_amax, amax in enumerate(a_list):
-
-        #     problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-        #               pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True, combine=True)
-            
-        #     plot_spectra(v_width=20, nlam=51, nodust=False, scat=True)
-
-        # label = [str(a*10)+' mm' for a in a_list]
-        # plt.legend(label)
-        # plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
-        # # if mcth is True:
-        # #     plt.savefig(f'./figures/mctherm/different_amax/scat_snowline_{str(snow)}.png')
-        # # elif mcth is False:
-        # #     plt.savefig(f'./figures/x22/different_amax/scat_snowline_{str(snow)}.png')
-        # plt.savefig(f'./figures/combine/different_amax/scat_snowline_{str(snow)}.png')
-        # plt.close()
-
-        # extracted_gas
-        for idx_amax, amax in enumerate(a_list):
-
-            problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                      pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True, combine=True)
-            
-            plot_spectra(v_width=20, nlam=51, extract_gas=True)
-
-        label = [str(a*10)+' mm' for a in a_list]
-        plt.legend(label)
-        plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
-        # if mcth is True:
-        #     plt.savefig(f'./figures/mctherm/different_amax/extracted_gas_snowline_{str(snow)}.png')
-        # elif mcth is False:
-        #     plt.savefig(f'./figures/x22/different_amax/extracted_gas_snowline_{str(snow)}.png')
-        plt.savefig(f'./figures/combine/different_amax/extracted_gas_snowline_{str(snow)}.png')
-        plt.close()
+plt.savefig(f'./figures/mctherm/rcb/amax_01.png')
+plt.close()    
 
 
 
-        """
-        Different inclination
-        """    
-        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                      pancake=False, mctherm=mcth, snowline=snow, floor=True, kep=True, combine=True)
-        # nodust
-        for idx_incl, angle in enumerate(incl_list):
-            plot_spectra(incl=angle, v_width=20, nlam=51, nodust=True, scat=False)
         
-        label = [str(i)+r'$^\circ$' for i in incl_list]
-        plt.legend(label)
-        plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
-        # if mcth is True:
-        #     plt.savefig(f'./figures/mctherm/different_incl/nodust_snowline_{str(snow)}.png')
-        # elif mcth is False:
-        #     plt.savefig(f'./figures/x22/different_incl/nodust_snowline_{str(snow)}.png')
-        plt.savefig(f'./figures/combine/different_incl/nodust_snowline_{str(snow)}.png')
-        plt.close()
-
-        # # noscat
-        # for idx_incl, angle in enumerate(incl_list):
-        #     plot_spectra(incl=angle, v_width=20, nlam=51, nodust=False, scat=False)
-        
-        # label = [str(i)+r'$^\circ$' for i in incl_list]
-        # plt.legend(label)
-        # plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
-        # if mcth is True:
-        #     plt.savefig(f'./figures/mctherm/different_incl/noscat_snowline_{str(snow)}.png')
-        # elif mcth is False:
-        #     plt.savefig(f'./figures/x22/different_incl/noscat_snowline_{str(snow)}.png')
-        # plt.close()
-
-        # # scat
-        # for idx_incl, angle in enumerate(incl_list):
-        #     plot_spectra(incl=angle, v_width=20, nlam=51, nodust=False, scat=True)
-        
-        # label = [str(i)+r'$^\circ$' for i in incl_list]
-        # plt.legend(label)
-        # plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
-        # if mcth is True:
-        #     plt.savefig(f'./figures/mctherm/different_incl/scat_snowline_{str(snow)}.png')
-        # elif mcth is False:
-        #     plt.savefig(f'./figures/x22/different_incl/scat_snowline_{str(snow)}.png')
-        # plt.close()
-
-        # extracted_gas
-        for idx_incl, angle in enumerate(incl_list):
-            plot_spectra(incl=angle, v_width=20, nlam=51, extract_gas=True)
-        
-        label = [str(i)+r'$^\circ$' for i in incl_list]
-        plt.legend(label)
-        plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
-        # if mcth is True:
-        #     plt.savefig(f'./figures/mctherm/different_incl/extracted_gas_snowline_{str(snow)}.png')
-        # elif mcth is False:
-        #     plt.savefig(f'./figures/x22/different_incl/extracted_gas_snowline_{str(snow)}.png')
-        plt.savefig(f'./figures/combine/different_incl/extracted_gas_snowline_{str(snow)}.png')
-        plt.close()
 
 os.system('make cleanall')

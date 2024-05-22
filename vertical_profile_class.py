@@ -65,7 +65,7 @@ class DiskModel_vertical:
     
     def precompute_property(self, miu=2.3, factor=1):
         """
-        To calculate the gas pressure scale height and the radiation pressure scale height
+        To calculate the gas pressure scale height
         """
         def cg(miu, factor,  T):  # (5.4) sound speed assiciated with the gas pressure
             """
@@ -81,59 +81,15 @@ class DiskModel_vertical:
         def H_g(cg, Q):  # (4.4) gas pressure scale height
             H_g = (2*cg**2/Q)**0.5
             return H_g/au        
-
-        def H_r(T, Q):  # (4.5) radiation pressure scale height
-            get_kappa = self.DM_horizontal.get_kappa_r
-            kappa_r = get_kappa(T)
-            H_r = (sigma_SB/c_light)*(kappa_r/Q)*T**4
-            return H_r/au, kappa_r
-
+        
         self.cg = cg(miu, factor, self.T_eff)
         self.H_g = H_g(self.cg, self.Q)
-        self.H_r, self.kappa_r = H_r(self.T_eff, self.Q)
         self.make_rho_and_m_map()
         return
         
-    # def make_rho_and_m_map(self):
-    #     """
-    #     Calculate volumn density and mass-depth scale
-    #     !! This is the original version !!
-    #     """
-    #     M = self.M*1
-    #     h_grid = np.empty((self.NR))
-    #     rho_map = np.empty((self.NR, self.NZ))
-    #     m_map = np.empty((self.NR, self.NZ))
-    #     for r in range(self.NR):
-    #         z_grid = self.Z_grid
-    #         h_g = self.H_g[r]
-    #         h_itr = np.linspace(0.01, 100, 1000000)
-    #         err = 1
-    #         h_index = 0
-
-    #         while err > 0.01:
-    #             h = h_itr[h_index]
-    #             rho_0 = M[r]/h
-    #             rho_grid = rho_0*np.exp(-(z_grid**2/h_g**2))
-    #             rho_grid = np.maximum(rho_grid, 1e-10)  # set lower limit of density
-    #             dz = np.diff(z_grid, prepend=z_grid[0])  # calculate grid spacing
-    #             m_grid = np.cumsum(rho_grid * dz)  # cumulative mass distribution
-    #             err = np.abs(1-m_grid[-1]/M[r])
-    #             h_index +=1                
-
-    #         h_grid[r] = h_itr[h_index-1]
-    #         rho_map[r, :] = rho_grid/au
-    #         m_map[r, :] = m_grid[::-1]
-
-    #     self.rho_map = rho_map
-    #     self.m_map = m_map
-    #     self.H = h_grid
-    #     self.make_tau_and_T_map()
-    #     return
-
     def make_rho_and_m_map(self):
         """
         Calculate volume density and mass-depth scale
-        !! This is the faster modification by ChatGPT !!
         """
         M = self.M * 1
         h_grid = np.empty((self.NR))
@@ -177,7 +133,6 @@ class DiskModel_vertical:
     def make_tau_and_T_map(self):
         """
         Using disk_property_table to calculate kappa_r from T, and further calculating tau_r and T
-        (Faster)
         """
         # t_start = time.time()
         def get_kappa_from_T(T):  # 2(d)

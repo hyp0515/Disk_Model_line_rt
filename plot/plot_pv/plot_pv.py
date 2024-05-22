@@ -47,10 +47,10 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=51,
         ax.plot([-30, 30], [vkm, vkm], 'w:')
 
     elif extract_gas is True:
-        os.system(f"radmc3d image npix 30 sizeau 60 incl {incl} iline {line} vkms 0 widthkms {v_width} linenlam {nlam} nphot_scat 1000000")
+        os.system(f"radmc3d image npix {npix} sizeau 100 incl {incl} iline {line} vkms 0 widthkms {v_width} linenlam {nlam} nphot_scat 1000000")
         os.system('mv image.out image_gas.out')
         im_gas = readImage('image_gas.out')
-        os.system(f"radmc3d image npix 30 sizeau 60 incl {incl} lambdarange {im_gas.wav[0]} {im_gas.wav[-1]} nlam {nlam} nphot_scat 1000000 noline")
+        os.system(f"radmc3d image npix {npix} sizeau 100 incl {incl} lambdarange {im_gas.wav[0]} {im_gas.wav[-1]} nlam {nlam} nphot_scat 1000000 noline")
         os.system('mv image.out image_dust.out')
         im_dust = readImage('image_dust.out')
 
@@ -69,7 +69,7 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=51,
         ax.set_xlabel("Offset [au]")
         ax.set_ylabel("Velocity [km/s]")
         ax.plot([0, 0], [-v_width+vkm, v_width+vkm], 'w:')
-        ax.plot([-30, 30], [vkm, vkm], 'w:')
+        ax.plot([-50, 50], [vkm, vkm], 'w:')
     return
 
 ###############################################################################
@@ -118,29 +118,23 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=51,
 # plt.savefig(f'./figures/mock/mock_CB68_x22_nlam_21_npix_20_width_5.png')
 # plt.close()
 
-problem_setup(a_max=0.01, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                        pancake=False, mctherm=True, snowline=True, floor=True, kep=True)
-plot_pv(vkm=5, v_width=10, nlam=41, extract_gas=True, npix=40)
-plt.savefig(f'./figures/mock/mock_CB68_mctherm_nlam_41_npix_40_width_10_amax_001.png')
-plt.close()
-
-problem_setup(a_max=1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                        pancake=False, mctherm=True, snowline=True, floor=True, kep=True)
-plot_pv(vkm=5, v_width=10, nlam=41, extract_gas=True, npix=40)
-plt.savefig(f'./figures/mock/mock_CB68_mctherm_nlam_41_npix_40_width_10_amax_1.png')
-plt.close()
-
-problem_setup(a_max=0.001, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                        pancake=False, mctherm=True, snowline=True, floor=True, kep=True)
-plot_pv(vkm=5, v_width=10, nlam=41, extract_gas=True, npix=40)
-plt.savefig(f'./figures/mock/mock_CB68_mctherm_nlam_41_npix_40_width_10_amax_0001.png')
-plt.close()
-
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-#                         pancake=False, mctherm=False, snowline=True, floor=True, kep=True)
-# plot_pv(vkm=5, v_width=5, nlam=41, extract_gas=True, npix=40)
-# plt.savefig(f'./figures/mock/mock_CB68_x22_nlam_41_npix_40_width_5.png')
+# problem_setup(a_max=0.01, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
+#                         pancake=False, mctherm=True, snowline=True, floor=True, kep=True)
+# plot_pv(vkm=5, v_width=10, nlam=41, extract_gas=True, npix=40)
+# plt.savefig(f'./figures/mock/mock_CB68_mctherm_nlam_41_npix_40_width_10_amax_001.png')
 # plt.close()
+
+
+
+for idx_rcb, rcb in enumerate([30,20,10,5,1]):
+    for idx_a, a in enumerate([1, 0.1, 0.01, 0.001]):
+        problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                        pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=rcb)
+        plot_pv(vkm=5, v_width=10, nlam=41, extract_gas=True, npix=40)
+        plt.savefig(f'./figures/mock/rcb/amax_{a*10}_rcb_{rcb}.png')
+        plt.close()
+        os.system('make cleanall')
+
 
 
 os.system('make cleanall')

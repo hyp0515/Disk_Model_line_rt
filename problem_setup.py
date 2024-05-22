@@ -23,7 +23,7 @@ from vertical_profile_class import DiskModel_vertical
 
 class problem_setup:
     def __init__(self, a_max, Mass_of_star, Accretion_rate, Radius_of_disk, v_infall, 
-                 pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False):
+                 pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None):
         """
         pancake  : simple slab model
         mctherm  : temperature calculated by radmc3d (stellar heating)
@@ -92,7 +92,7 @@ class problem_setup:
 
         DM = DiskModel_vertical(opacity_table, disk_property_table)
         DM.input_disk_parameter(Mstar=Mass_of_star, Mdot=Accretion_rate,
-                                Rd=Radius_of_disk, Q=1.5, N_R=200)
+                                Rd=Radius_of_disk, Q=1.5, N_R=500)
         if pancake is True:
             DM.pancake_model()
         DM.extend_to_spherical(NTheta=200, NPhi=200)
@@ -161,30 +161,44 @@ class problem_setup:
             f.write(str(1)+'\n')
             f.write('%d\n'%(nr*ntheta*nphi))
             f.write(str(nspec)+'\n')
-            data = 0.01*rho.ravel(order='F')         # Create a 1-D view, fortran-style indexing
+            data = .01*rho.ravel(order='F')         # Create a 1-D view, fortran-style indexing
             data.tofile(f, sep='\n', format="%13.6e")
             f.write('\n')
         #
         # Write velocity field
         #
         iformat = 1
-        vr      = 0
-        vr      = -v_infall*np.sqrt(G*Mass_of_star/(DM.r_sph*au)) # Infall velocity
-        vtheta  = 0
-        if kep is True:
-            vphi    = np.sqrt(G*Mass_of_star/(DM.r_sph*au))    # Keplerian velocity
-        elif kep is False:
-            vphi    = np.zeros(vphi.shape)
+        if Rcb is None:
+            vr      = -v_infall*np.sqrt(G*Mass_of_star/(DM.r_sph*au)) # Infall velocity
+            vtheta  = 0
+            if kep is True:
+                vphi    = np.sqrt(G*Mass_of_star/(DM.r_sph*au))    # Keplerian velocity
+            elif kep is False:
+                vphi    = np.zeros(vphi.shape)
+            with open('gas_velocity.inp','w+') as f:
+                f.write(str(iformat)+'\n')
+                f.write('%d\n'%(nr*ntheta*nphi))
+                for idx_phi in range(nphi):
+                    for idx_theta in range(ntheta):
+                        for idx_r in range(nr):
+                            f.write('%13.6e %13.6e %13.6e \n'%(vr[idx_r],vtheta,vphi[idx_r]))
+                f.write('\n')
+        elif Rcb is not None:
+            rcb_idx = np.searchsorted(DM.r_sph, Rcb)
+            vr_kep = np.zeros(DM.r_sph[:rcb_idx].shape)
+            # vr_kep = +np.sqrt(G*Mass_of_star/(DM.r_sph[:rcb_idx]*au))
+            vr_infall = -np.sqrt(G*Mass_of_star/(DM.r_sph[rcb_idx:]*au))
 
-        with open('gas_velocity.inp','w+') as f:
-            f.write(str(iformat)+'\n')
-            f.write('%d\n'%(nr*ntheta*nphi))
-            for idx_phi in range(nphi):
-                for idx_theta in range(ntheta):
-                    for idx_r in range(nr):
-                        f.write('%13.6e %13.6e %13.6e \n'%(vr[idx_r],vtheta,vphi[idx_r]))
-            f.write('\n')
-
+            vr = np.concatenate((vr_kep, vr_infall))
+            vtheta = 0
+            vphi = np.sqrt(G*Mass_of_star/(DM.r_sph*au))
+            with open('gas_velocity.inp','w+') as f:
+                f.write(str(iformat)+'\n')
+                f.write('%d\n'%(nr*ntheta*nphi))
+                for idx_phi in range(nphi):
+                    for idx_theta in range(ntheta):
+                        for idx_r in range(nr):
+                            f.write('%13.6e %13.6e %13.6e \n'%(vr[idx_r],vtheta,vphi[idx_r]))
         
         if mctherm is True:
             if combine is False:
