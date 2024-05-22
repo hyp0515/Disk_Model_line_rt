@@ -106,11 +106,11 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=51,
 #                 plt.savefig(f'./figures/x22/mock_CB68_snowline_{str(snow)}_mdot_7_vinfall_{str(vin)}_20.png')
 #             plt.close()
 
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                        pancake=False, mctherm=True, snowline=True, floor=True, kep=True)
-plot_pv(vkm=5, v_width=10, nlam=21, extract_gas=True, npix=20)
-plt.savefig(f'./figures/mock/mock_CB68_mctherm_nlam_21_npix_20_width_10.png')
-plt.close()
+# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
+#                         pancake=False, mctherm=True, snowline=True, floor=True, kep=True)
+# plot_pv(vkm=5, v_width=10, nlam=21, extract_gas=True, npix=20)
+# plt.savefig(f'./figures/mock/mock_CB68_mctherm_nlam_21_npix_20_width_10.png')
+# plt.close()
 
 # problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
 #                         pancake=False, mctherm=False, snowline=True, floor=True, kep=True)
@@ -118,17 +118,29 @@ plt.close()
 # plt.savefig(f'./figures/mock/mock_CB68_x22_nlam_21_npix_20_width_5.png')
 # plt.close()
 
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
+problem_setup(a_max=0.01, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
                         pancake=False, mctherm=True, snowline=True, floor=True, kep=True)
 plot_pv(vkm=5, v_width=10, nlam=41, extract_gas=True, npix=40)
-plt.savefig(f'./figures/mock/mock_CB68_mctherm_nlam_41_npix_40_width_10.png')
+plt.savefig(f'./figures/mock/mock_CB68_mctherm_nlam_41_npix_40_width_10_amax_001.png')
+plt.close()
+
+problem_setup(a_max=1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
+                        pancake=False, mctherm=True, snowline=True, floor=True, kep=True)
+plot_pv(vkm=5, v_width=10, nlam=41, extract_gas=True, npix=40)
+plt.savefig(f'./figures/mock/mock_CB68_mctherm_nlam_41_npix_40_width_10_amax_1.png')
+plt.close()
+
+problem_setup(a_max=0.001, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
+                        pancake=False, mctherm=True, snowline=True, floor=True, kep=True)
+plot_pv(vkm=5, v_width=10, nlam=41, extract_gas=True, npix=40)
+plt.savefig(f'./figures/mock/mock_CB68_mctherm_nlam_41_npix_40_width_10_amax_0001.png')
 plt.close()
 
 # problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
 #                         pancake=False, mctherm=False, snowline=True, floor=True, kep=True)
 # plot_pv(vkm=5, v_width=5, nlam=41, extract_gas=True, npix=40)
 # plt.savefig(f'./figures/mock/mock_CB68_x22_nlam_41_npix_40_width_5.png')
-plt.close()
+# plt.close()
 
 
 os.system('make cleanall')
