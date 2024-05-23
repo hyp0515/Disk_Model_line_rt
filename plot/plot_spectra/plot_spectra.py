@@ -63,23 +63,24 @@ def plot_spectra(incl=70, line=240, vkm=0, v_width=20, nlam=51,
     return
 ###############################################################################
 
-rcb_list = [1,5,10,20,30]
+# rcb_list = [1,5,10,20,30]
 
-for idx_rcb, rcb in enumerate(rcb_list):
+# for idx_rcb, rcb in enumerate(rcb_list):
             
-    problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                      pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=rcb)
+#     problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+#                       pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=rcb)
             
-    plot_spectra(v_width=20, nlam=31, extract_gas=True)
+#     plot_spectra(v_width=20, nlam=31, extract_gas=True)
 
-    label = [str(r)+' AU' for r in rcb_list]
-    plt.legend(label)
-    plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
+#     label = [str(r)+' AU' for r in rcb_list]
+#     plt.legend(label)
+#     plt.title('Spectra of $\mathregular{CH_3OH}$ with different maximum grain size')
 
-plt.savefig(f'./figures/mctherm/rcb/amax_01.png')
-plt.close()    
-
-
+# plt.savefig(f'./figures/mctherm/rcb/amax_01.png')
+# plt.close()    
+problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                      pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None)
+plot_spectra(v_width=20, nlam=31, nodust=True, scat=False)
 
         
 
