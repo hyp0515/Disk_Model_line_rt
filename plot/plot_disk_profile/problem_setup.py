@@ -14,7 +14,7 @@ rs  = 6.96e10        # Solar radius            [cm]
 #
 # Monte Carlo parameters
 #
-nphot    = 1000000  # Depend on computer's efficiency
+nphot    = 200000000  # Depend on computer's efficiency
 #
 # Disk Model
 #
@@ -92,10 +92,10 @@ class problem_setup:
 
         DM = DiskModel_vertical(opacity_table, disk_property_table)
         DM.input_disk_parameter(Mstar=Mass_of_star, Mdot=Accretion_rate,
-                                Rd=Radius_of_disk, Q=1.5, N_R=200)
+                                Rd=Radius_of_disk, Q=1.5, N_R=1000)
         if pancake is True:
             DM.pancake_model()
-        DM.extend_to_spherical(NTheta=200, NPhi=200)
+        DM.extend_to_spherical(NTheta=1000, NPhi=10)
         self.DM = DM
         #
         # Write the grid file
@@ -275,7 +275,7 @@ class problem_setup:
             abunch3oh = np.where(T_read<100, 1e-10, 1e-5)
             rho_read = d.rhodust[:, :, :, 0]
             factch3oh = abunch3oh/(2.3*mp)
-            nch3oh    = rho_read*factch3oh
+            nch3oh    = 100*rho_read*factch3oh  # 100 is gas-to-dust ratio
             with open('numberdens_ch3oh.inp','w+') as f:
                 f.write('1\n')                       # Format number
                 f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
@@ -288,7 +288,7 @@ class problem_setup:
             d = readData(ddens=True)
             rho_read = d.rhodust[:, :, :, 0]
             factch3oh = abunch3oh/(2.3*mp)
-            nch3oh    = rho_read*factch3oh
+            nch3oh    = 100*rho_read*factch3oh  # 100 is gas-to-dust ratio
             with open('numberdens_ch3oh.inp','w+') as f:
                 f.write('1\n')                       # Format number
                 f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells

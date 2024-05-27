@@ -23,7 +23,8 @@ from vertical_profile_class import DiskModel_vertical
 
 class problem_setup:
     def __init__(self, a_max, Mass_of_star, Accretion_rate, Radius_of_disk, v_infall, 
-                 pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None):
+                 pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None,
+                 abundance_enhancement=1e-5):
         """
         pancake  : simple slab model
         mctherm  : temperature calculated by radmc3d (stellar heating)
@@ -39,7 +40,7 @@ class problem_setup:
             # f.write('iranfreqmode = 1\n')
             f.write('istar_sphere = 1\n')
             f.write('tgas_eq_tdust = 1\n')
-            f.write('setthreads = 7\n') # Depending on the number of cores in the computer
+            f.write('setthreads = 9\n') # Depending on the number of cores in the computer
         #
         # Write the lines.inp control file
         #
@@ -87,12 +88,13 @@ class problem_setup:
         #
         # Disk Model
         #
-        opacity_table = generate_opacity_table(a_min=0, a_max=a_max, q=-3.5, dust_to_gas=0.01)
+        d_g_ratio = 0.01
+        opacity_table = generate_opacity_table(a_min=0, a_max=a_max, q=-3.5, dust_to_gas=d_g_ratio)
         disk_property_table = generate_disk_property_table(opacity_table)
 
         DM = DiskModel_vertical(opacity_table, disk_property_table)
         DM.input_disk_parameter(Mstar=Mass_of_star, Mdot=Accretion_rate,
-                                Rd=Radius_of_disk, Q=1.5, N_R=500)
+                                Rd=Radius_of_disk, Q=1.5, N_R=200)
         if pancake is True:
             DM.pancake_model()
         DM.extend_to_spherical(NTheta=200, NPhi=200)
@@ -161,7 +163,7 @@ class problem_setup:
             f.write(str(1)+'\n')
             f.write('%d\n'%(nr*ntheta*nphi))
             f.write(str(nspec)+'\n')
-            data = .01*rho.ravel(order='F')         # Create a 1-D view, fortran-style indexing
+            data = d_g_ratio*rho.ravel(order='F')         # Create a 1-D view, fortran-style indexing
             data.tofile(f, sep='\n', format="%13.6e")
             f.write('\n')
         #
@@ -283,34 +285,67 @@ class problem_setup:
                     data.tofile(f, sep='\n', format="%13.6e")
                     f.write('\n')
 
+        if Rcb is None:
 
 
-        if snowline is True:
-            d = readData(dtemp=True, ddens=True)
-            T_read  = d.dusttemp[:, :, :, 0] 
-            abunch3oh = np.where(T_read<100, 1e-10, 1e-5)
-            rho_read = d.rhodust[:, :, :, 0]
-            factch3oh = abunch3oh/(2.3*mp)
-            nch3oh    = rho_read*factch3oh
-            with open('numberdens_ch3oh.inp','w+') as f:
-                f.write('1\n')                       # Format number
-                f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
-                data = nch3oh.ravel(order='F')          # Create a 1-D view, fortran-style indexing
-                data.tofile(f, sep='\n', format="%13.6e")
-                f.write('\n')
+            if snowline is True:
+                d = readData(dtemp=True, ddens=True)
+                T_read  = d.dusttemp[:, :, :, 0] 
+                abunch3oh = np.where(T_read<100, 1e-10, abundance_enhancement)
+                rho_read = d.rhodust[:, :, :, 0]
+                factch3oh = abunch3oh/(2.3*mp)
+                nch3oh    = rho_read*factch3oh/d_g_ratio
+                with open('numberdens_ch3oh.inp','w+') as f:
+                    f.write('1\n')                       # Format number
+                    f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
+                    data = nch3oh.ravel(order='F')          # Create a 1-D view, fortran-style indexing
+                    data.tofile(f, sep='\n', format="%13.6e")
+                    f.write('\n')
 
-        elif snowline is False:
-            abunch3oh = 1e-10
-            d = readData(ddens=True)
-            rho_read = d.rhodust[:, :, :, 0]
-            factch3oh = abunch3oh/(2.3*mp)
-            nch3oh    = rho_read*factch3oh
-            with open('numberdens_ch3oh.inp','w+') as f:
-                f.write('1\n')                       # Format number
-                f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
-                data = nch3oh.ravel(order='F')          # Create a 1-D view, fortran-style indexing
-                data.tofile(f, sep='\n', format="%13.6e")
-                f.write('\n')
+            elif snowline is False:
+                abunch3oh = 1e-10
+                d = readData(ddens=True)
+                rho_read = d.rhodust[:, :, :, 0]
+                factch3oh = abunch3oh/(2.3*mp)
+                nch3oh    = rho_read*factch3oh/d_g_ratio  
+                with open('numberdens_ch3oh.inp','w+') as f:
+                    f.write('1\n')                       # Format number
+                    f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
+                    data = nch3oh.ravel(order='F')          # Create a 1-D view, fortran-style indexing
+                    data.tofile(f, sep='\n', format="%13.6e")
+                    f.write('\n')
+        elif Rcb is not None:
+            rcb_idx = np.searchsorted(DM.r_sph, Rcb)
+            if snowline is True:
+                d = readData(dtemp=True, ddens=True)
+                T_read  = d.dusttemp[:, :, :, 0] 
+                abunch3oh = np.where(T_read<100, 1e-10, abundance_enhancement)
+                rho_read = d.rhodust[:, :, :, 0]
+                # rho_read[:rcb_idx, :, :] = 1e-20
+                factch3oh = abunch3oh/(2.3*mp)
+                nch3oh    = rho_read*factch3oh/d_g_ratio 
+                with open('numberdens_ch3oh.inp','w+') as f:
+                    f.write('1\n')                       # Format number
+                    f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
+                    data = nch3oh.ravel(order='F')          # Create a 1-D view, fortran-style indexing
+                    data.tofile(f, sep='\n', format="%13.6e")
+                    f.write('\n')
+
+            elif snowline is False:
+                abunch3oh = 1e-10
+                d = readData(ddens=True)
+                rho_read = d.rhodust[:, :, :, 0]
+                # rho_read[:rcb_idx, :, :] = 1e-20
+                factch3oh = abunch3oh/(2.3*mp)
+                nch3oh    = rho_read*factch3oh/d_g_ratio
+                with open('numberdens_ch3oh.inp','w+') as f:
+                    f.write('1\n')                       # Format number
+                    f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
+                    data = nch3oh.ravel(order='F')          # Create a 1-D view, fortran-style indexing
+                    data.tofile(f, sep='\n', format="%13.6e")
+                    f.write('\n')
+
+        
         
 
         return

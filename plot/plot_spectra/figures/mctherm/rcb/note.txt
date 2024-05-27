@@ -1,0 +1,5 @@
+In Oya et al. 2014, the assumption of the velocity field is that there is no gas inside the centrifugal barrier, i.e.,
+no rotationally supported disk structure is considered.
+
+On the other hand, 'expansion' means that the velocity inside the centrifugal barrier is outflowing (namely, there is gas inside the cb),
+and the value of the speed is the same as inflow.
