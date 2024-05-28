@@ -40,7 +40,7 @@ class problem_setup:
             # f.write('iranfreqmode = 1\n')
             f.write('istar_sphere = 1\n')
             f.write('tgas_eq_tdust = 1\n')
-            f.write('setthreads = 9\n') # Depending on the number of cores in the computer
+            f.write('setthreads = 15\n') # Depending on the number of cores in the computer
         #
         # Write the lines.inp control file
         #
@@ -321,7 +321,7 @@ class problem_setup:
                 T_read  = d.dusttemp[:, :, :, 0] 
                 abunch3oh = np.where(T_read<100, 1e-10, abundance_enhancement)
                 rho_read = d.rhodust[:, :, :, 0]
-                # rho_read[:rcb_idx, :, :] = 1e-20
+                rho_read[:rcb_idx, :, :] = 1e-20
                 factch3oh = abunch3oh/(2.3*mp)
                 nch3oh    = rho_read*factch3oh/d_g_ratio 
                 with open('numberdens_ch3oh.inp','w+') as f:
@@ -335,7 +335,7 @@ class problem_setup:
                 abunch3oh = 1e-10
                 d = readData(ddens=True)
                 rho_read = d.rhodust[:, :, :, 0]
-                # rho_read[:rcb_idx, :, :] = 1e-20
+                rho_read[:rcb_idx, :, :] = 1e-20
                 factch3oh = abunch3oh/(2.3*mp)
                 nch3oh    = rho_read*factch3oh/d_g_ratio
                 with open('numberdens_ch3oh.inp','w+') as f:

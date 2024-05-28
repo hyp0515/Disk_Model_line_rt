@@ -20,7 +20,7 @@ Distance      : 140       pc
 Plot Position-velocity (PV) diagrams
 """
 def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
-            nodust=False, scat=True, extract_gas=False, npix = 30):
+            nodust=False, scat=True, extract_gas=False, npix = 30, sizeau=100):
     if extract_gas is False:
         if nodust is True:
             prompt = ' noscat nodust'
@@ -30,7 +30,7 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
             elif scat is False:
                 prompt = ' noscat'
         
-        os.system(f"radmc3d image npix {npix} sizeau 200 incl {incl} iline {line} vkms 0 widthkms {v_width} linenlam {nlam}"+prompt)
+        os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} iline {line} vkms 0 widthkms {v_width} linenlam {nlam}"+prompt)
         im = readImage('image.out')
 
         freq0 = (im.freq[nlam//2] + im.freq[(nlam//2)-1])/2
@@ -44,13 +44,13 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
         ax.set_xlabel("Offset [au]",fontsize = 16)
         ax.set_ylabel("Velocity [km/s]",fontsize = 16)
         ax.plot([0, 0], [-v_width+vkm, v_width+vkm], 'w:')
-        ax.plot([-100, 100], [vkm, vkm], 'w:')
+        ax.plot([-(sizeau//2), (sizeau//2)], [vkm, vkm], 'w:')
 
     elif extract_gas is True:
-        os.system(f"radmc3d image npix {npix} sizeau 200 incl {incl} iline {line} vkms 0 widthkms {v_width} linenlam {nlam} nphot_scat 1000000")
+        os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} iline {line} vkms 0 widthkms {v_width} linenlam {nlam} nphot_scat 1000000")
         os.system('mv image.out image_gas.out')
         im_gas = readImage('image_gas.out')
-        os.system(f"radmc3d image npix {npix} sizeau 200 incl {incl} lambdarange {im_gas.wav[0]} {im_gas.wav[-1]} nlam {nlam} nphot_scat 1000000 noline")
+        os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} lambdarange {im_gas.wav[0]} {im_gas.wav[-1]} nlam {nlam} nphot_scat 1000000 noline")
         os.system('mv image.out image_dust.out')
         im_dust = readImage('image_dust.out')
 
@@ -69,106 +69,79 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
         ax.set_xlabel("Offset [au]",fontsize = 16)
         ax.set_ylabel("Velocity [km/s]",fontsize = 16)
         ax.plot([0, 0], [-v_width+vkm, v_width+vkm], 'w:')
-        ax.plot([-100, 100], [vkm, vkm], 'w:')
+        ax.plot([-(sizeau//2), (sizeau//2)], [vkm, vkm], 'w:')
 
     return ax
 
 ###############################################################################
+heat_list = ['Accretion', 'Irradiation']
+snowline = ['w/o snowline', 'w/ snowline']
+dust = ['w/o dust', 'w/ dust']
 
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-              pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=None)
-p = plot_pv(incl=70,vkm=5, v_width=5, nlam=40, extract_gas=True, npix=20)
-p.set_title('Accretion heating',fontsize = 16)
-plt.savefig('./figures/x22.png')
-plt.close()
-os.system('make cleanall')
-
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-              pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None)
-p = plot_pv(incl=70,vkm=5, v_width=5, nlam=40, extract_gas=True, npix=20)
-p.set_title('Irradiation heating',fontsize = 16)
-plt.savefig('./figures/mctherm.png')
-plt.close()
-os.system('make cleanall')
+def multiple_plots(amax, rcb, nlam, npix, sizeau):
+    for idx_h, heat in enumerate(heat_list):
+        for idx_s, snow in enumerate(snowline):
+            if heat == 'Accretion' and snow =='w/o snowline':
+                problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                            pancake=False, mctherm=False, snowline=False, floor=True, kep=True, Rcb=rcb)
+                t = 'Accretion + w/o snowline'
+                f = 'Accretion + wo snowline'
+            elif heat == 'Accretion' and snow =='w/ snowline':
+                problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                            pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=rcb)
+                t = 'Accretion + w/ snowline'
+                f = 'Accretion + w snowline'
+            elif heat == 'Irradiation' and snow =='w/o snowline':
+                problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                            pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=rcb)
+                t = 'Irradiation + w/o snowline'
+                f = 'Irradiation + wo snowline'
+            elif heat == 'Irradiation' and snow =='w/ snowline':
+                problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                            pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=rcb)
+                t = 'Irradiation + w/ snowline'
+                f = 'Irradiation + w snowline'
+            
+            for idx_d, d in enumerate(dust):
+                if d == 'w/o dust':
+                    p = plot_pv(incl=70,vkm=0, v_width=5, nlam=nlam, nodust=True, npix=npix, sizeau=sizeau)
+                    title = t + ' + w/o dust'
+                    fname = f + ' + wo dust'
+                elif d == 'w/ dust':
+                    p = plot_pv(incl=70,vkm=0, v_width=5, nlam=nlam, extract_gas=True, npix=npix, sizeau=sizeau)
+                    title = t + ' + w/ dust'
+                    fname = f + ' + w dust'
+                p.set_title(title, fontsize = 16)
+                if sizeau == 200:
+                    plt.savefig(f'./figures/larger_scale(200au)/amax_{amax}/Rcb_{rcb}/nlam_{nlam}_npix_{npix}/'+fname+'.png')
+                elif sizeau == 100:
+                    plt.savefig(f'./figures/smaller_scale(100au)/amax_{amax}/Rcb_{rcb}/nlam_{nlam}_npix_{npix}/'+fname+'.png')
+                plt.close()
+    return
 ###############################################################################
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-              pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None)
-p = plot_pv(incl=70,vkm=5, v_width=5, nlam=40, extract_gas=True, npix=20)
-p.set_title('w/ snowline',fontsize = 16)
-plt.savefig('./figures/w_snowline.png')
-plt.close()
-os.system('make cleanall')
+multiple_plots(amax=0.1, rcb=5, nlam=20, npix=20, sizeau=200)
+multiple_plots(amax=0.1, rcb=10, nlam=20, npix=20, sizeau=200)
+multiple_plots(amax=0.1, rcb=None, nlam=20, npix=20, sizeau=200)
 
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-              pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=None)
-p = plot_pv(incl=70,vkm=5, v_width=5, nlam=40, extract_gas=True, npix=20)
-p.set_title('w/o snowline',fontsize = 16)
-plt.savefig('./figures/wo_snowline.png')
-plt.close()
-os.system('make cleanall')
+multiple_plots(amax=0.1, rcb=5, nlam=40, npix=40, sizeau=200)
+multiple_plots(amax=0.1, rcb=10, nlam=40, npix=40, sizeau=200)
+# multiple_plots(amax=0.1, rcb=None, nlam=40, npix=40, sizeau=100)
 ###############################################################################
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-              pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None)
-p = plot_pv(incl=70,vkm=5, v_width=5, nlam=40, extract_gas=True, npix=20)
-p.set_title('w/ dust',fontsize = 16)
-plt.savefig('./figures/w_dust.png')
-plt.close()
-os.system('make cleanall')
+multiple_plots(amax=10, rcb=5, nlam=20, npix=20, sizeau=200)
+multiple_plots(amax=10, rcb=10, nlam=20, npix=20, sizeau=200)
+multiple_plots(amax=10, rcb=None, nlam=20, npix=20, sizeau=200)
 
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-              pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None)
-p = plot_pv(incl=70,vkm=5, v_width=5, nlam=40, nodust=True, npix=20)
-p.set_title('w/o dust',fontsize = 16)
-plt.savefig('./figures/wo_dust.png')
-plt.close()
-os.system('make cleanall')
-
+multiple_plots(amax=10, rcb=5, nlam=40, npix=40, sizeau=200)
+multiple_plots(amax=10, rcb=10, nlam=40, npix=40, sizeau=200)
+multiple_plots(amax=10, rcb=None, nlam=40, npix=40, sizeau=200)
 ###############################################################################
-###############################################################################
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-              pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=None,abundance_enhancement=1e-7)
-p = plot_pv(incl=70,vkm=5, v_width=5, nlam=40, extract_gas=True, npix=20)
-p.set_title('Accretion heating',fontsize = 16)
-plt.savefig('./figures/x22_abundance_7.png')
-plt.close()
-os.system('make cleanall')
+multiple_plots(amax=0.001, rcb=5, nlam=20, npix=20, sizeau=200)
+multiple_plots(amax=0.001, rcb=10, nlam=20, npix=20, sizeau=200)
+multiple_plots(amax=0.001, rcb=None, nlam=20, npix=20, sizeau=200)
 
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-              pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None,abundance_enhancement=1e-7)
-p = plot_pv(incl=70,vkm=5, v_width=5, nlam=40, extract_gas=True, npix=20)
-p.set_title('Irradiation heating',fontsize = 16)
-plt.savefig('./figures/mctherm_abundance_7.png')
-plt.close()
-os.system('make cleanall')
+multiple_plots(amax=0.001, rcb=5, nlam=40, npix=40, sizeau=200)
+multiple_plots(amax=0.001, rcb=10, nlam=40, npix=40, sizeau=200)
+multiple_plots(amax=0.001, rcb=None, nlam=40, npix=40, sizeau=200)
 ###############################################################################
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-              pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None,abundance_enhancement=1e-7)
-p = plot_pv(incl=70,vkm=5, v_width=5, nlam=40, extract_gas=True, npix=20)
-p.set_title('w/ snowline',fontsize = 16)
-plt.savefig('./figures/w_snowline_abundance_7.png')
-plt.close()
-os.system('make cleanall')
 
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-              pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=None,abundance_enhancement=1e-7)
-p = plot_pv(incl=70,vkm=5, v_width=5, nlam=40, extract_gas=True, npix=20)
-p.set_title('w/o snowline',fontsize = 16)
-plt.savefig('./figures/wo_snowline_abundance_7.png')
-plt.close()
-os.system('make cleanall')
-###############################################################################
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-              pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None,abundance_enhancement=1e-7)
-p = plot_pv(incl=70,vkm=5, v_width=5, nlam=40, extract_gas=True, npix=20)
-p.set_title('w/ dust',fontsize = 16)
-plt.savefig('./figures/w_dust_abundance_7.png')
-plt.close()
-os.system('make cleanall')
-
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-              pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None,abundance_enhancement=1e-7)
-p = plot_pv(incl=70,vkm=5, v_width=5, nlam=40, nodust=True, npix=20)
-p.set_title('w/o dust',fontsize = 16)
-plt.savefig('./figures/wo_dust_abundance_7.png')
-plt.close()
 os.system('make cleanall')
