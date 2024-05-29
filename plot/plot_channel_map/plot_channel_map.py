@@ -32,7 +32,7 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
                 prompt = ' noscat'
 
         fig, ax = plt.subplots(2, (nlam//2)+1, figsize=(12, 6), sharex='all', sharey='all', gridspec_kw={'wspace': 0, 'hspace': 0})
-        os.system(f"radmc3d image npix 100 sizeau 100 incl {incl} iline {line} vkms {vkm} widthkms {v_width} linenlam {nlam}"+prompt)
+        os.system(f"radmc3d image npix 100 sizeau 50 incl {incl} iline {line} vkms {vkm} widthkms {v_width} linenlam {nlam}"+prompt)
         im = readImage('image.out')
         freq0 = im.freq[nlam//2]
         v = cc / 1e5 * (freq0 - im.freq) / freq0
@@ -40,7 +40,7 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
         vmi = np.min(im.imageJyppix/(140*140))
         vma = np.max(im.imageJyppix/(140*140))
         cm = 'hot'
-        tc = 'white'
+        tc = 'w'
         for idx in range(nlam):
             data = np.transpose(im.imageJyppix[:, ::-1, idx])/(140*140)
             if idx == nlam//2:
@@ -50,37 +50,37 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
                 ax[1, idx].text(90,10,f'{v[idx]:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
                 ax[1, idx].set_xlabel('AU',fontsize=16)
                 if idx == 0:
-                    ax[1, idx].set_yticks([25, 50, 75])
-                    ax[1, idx].set_yticklabels(['-25', '0', '25'], fontsize=14)
+                    ax[1, idx].set_yticks([10, 50, 90])
+                    ax[1, idx].set_yticklabels(['-20', '0', '20'], fontsize=14)
                     ax[1, idx].set_ylabel('AU',fontsize=16)
             elif idx > nlam//2:
                 ax[1, nlam-1-idx].imshow(data, cmap=cm, vmin=vmi, vmax=vma)
                 ax[1, nlam-1-idx].text(90,10,f'{v[idx]:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
-                ax[1, nlam-1-idx].set_xticks([25, 50, 75])
-                ax[1, nlam-1-idx].set_xticklabels(['-25', '0', '25'], fontsize=14)
+                ax[1, nlam-1-idx].set_xticks([10, 50, 90])
+                ax[1, nlam-1-idx].set_xticklabels(['-20', '0', '20'], fontsize=14)
                 ax[1, nlam-1-idx].set_xlabel('AU',fontsize=16)
                 if nlam-1-idx == 0:
-                    ax[1, nlam-1-idx].set_yticks([25, 50, 75])
-                    ax[1, nlam-1-idx].set_yticklabels(['-25', '0', '25'], fontsize=14)
+                    ax[1, nlam-1-idx].set_yticks([10, 50, 90])
+                    ax[1, nlam-1-idx].set_yticklabels(['-20', '0', '20'], fontsize=14)
                     ax[1, nlam-1-idx].set_ylabel('AU',fontsize=16)
             else:
                 ax[0, idx].imshow(data, cmap=cm, vmin=vmi, vmax=vma)
                 ax[0, idx].text(90,10,f'{v[idx]:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
                 if idx == 0:
-                    ax[0, idx].set_yticks([25, 50, 75])
-                    ax[0, idx].set_yticklabels(['-25', '0', '25'], fontsize=14)
+                    ax[0, idx].set_yticks([10, 50, 90])
+                    ax[0, idx].set_yticklabels(['-20', '0', '20'], fontsize=14)
                     ax[0, idx].set_ylabel('AU',fontsize=16)
         plt.subplots_adjust(left=0, right=1, top=0.9, bottom=0.1, wspace=0, hspace=0)
     elif extract_gas is True:
         fig, ax = plt.subplots(2, (nlam//2)+1, figsize=(12, 6), sharex=True, sharey=True, gridspec_kw={'wspace': 0, 'hspace': 0})
 
-        os.system(f"radmc3d image npix 100 sizeau 100 incl {incl} iline {line} vkms {vkm} widthkms {v_width} linenlam {nlam} nphot_scat 100000")
+        os.system(f"radmc3d image npix 100 sizeau 50 incl {incl} iline {line} vkms {vkm} widthkms {v_width} linenlam {nlam} nphot_scat 100000")
         os.system('mv image.out image_gas.out')
         im_gas = readImage('image_gas.out')
         freq0 = im_gas.freq[nlam//2]
         v = cc / 1e5 * (freq0 - im_gas.freq) / freq0
 
-        os.system(f"radmc3d image npix 100 sizeau 100 incl {incl} lambdarange {im_gas.wav[0]} {im_gas.wav[-1]} nlam {nlam} nphot_scat 100000 noline")
+        os.system(f"radmc3d image npix 100 sizeau 50 incl {incl} lambdarange {im_gas.wav[0]} {im_gas.wav[-1]} nlam {nlam} nphot_scat 100000 noline")
         os.system('mv image.out image_dust.out')
         im_dust = readImage('image_dust.out')
 
@@ -93,7 +93,7 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
         vma = np.max(extracted_gas)
             
         cm = 'hot'
-        tc = 'white'
+        tc = 'w'
         for idx in range(nlam):
             data = np.transpose(extracted_gas[:, ::-1, idx])
             if idx == nlam//2:
@@ -103,25 +103,25 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
                 ax[1, idx].text(90,10,f'{v[idx]:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
                 ax[1, idx].set_xlabel('AU',fontsize=16)
                 if idx == 0:
-                    ax[1, idx].set_yticks([25, 50, 75])
-                    ax[1, idx].set_yticklabels(['-25', '0', '25'], fontsize=14)
+                    ax[1, idx].set_yticks([10, 50, 90])
+                    ax[1, idx].set_yticklabels(['-20', '0', '20'], fontsize=14)
                     ax[1, idx].set_ylabel('AU',fontsize=16)
             elif idx > nlam//2:
                 ax[1, nlam-1-idx].imshow(data, cmap=cm, vmin=vmi, vmax=vma)
                 ax[1, nlam-1-idx].text(90,10,f'{v[idx]:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
-                ax[1, nlam-1-idx].set_xticks([25, 50, 75])
-                ax[1, nlam-1-idx].set_xticklabels(['-25', '0', '25'], fontsize=14)
+                ax[1, nlam-1-idx].set_xticks([10, 50, 90])
+                ax[1, nlam-1-idx].set_xticklabels(['-20', '0', '20'], fontsize=14)
                 ax[1, nlam-1-idx].set_xlabel('AU',fontsize=16)
                 if nlam-1-idx == 0:
-                    ax[1, nlam-1-idx].set_yticks([25, 50, 75])
-                    ax[1, nlam-1-idx].set_yticklabels(['-25', '0', '25'], fontsize=14)
+                    ax[1, nlam-1-idx].set_yticks([10, 50, 90])
+                    ax[1, nlam-1-idx].set_yticklabels(['-20', '0', '20'], fontsize=14)
                     ax[1, nlam-1-idx].set_ylabel('AU',fontsize=16)
             else:
                 ax[0, idx].imshow(data, cmap=cm, vmin=vmi, vmax=vma)
                 ax[0, idx].text(90,10,f'{v[idx]:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
                 if idx == 0:
-                    ax[0, idx].set_yticks([25, 50, 75])
-                    ax[0, idx].set_yticklabels(['-25', '0', '25'], fontsize=14)
+                    ax[0, idx].set_yticks([10, 50, 90])
+                    ax[0, idx].set_yticklabels(['-20', '0', '20'], fontsize=14)
                     ax[0, idx].set_ylabel('AU',fontsize=16)
         plt.subplots_adjust(left=0, right=1, top=0.9, bottom=0.1, wspace=0, hspace=0)
     return
@@ -141,19 +141,19 @@ plt.savefig('channel_map_mctherm_with_dust.png')
 plt.close()
 os.system('make cleanall')
 
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-            pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None, abundance_enhancement=1e-7)
-plot_gas_channel_maps(nodust=True)
-plt.savefig('channel_map_mctherm_nodust.png_abundance_7')
-plt.close()
-os.system('make cleanall')
+# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None, abundance_enhancement=1e-7)
+# plot_gas_channel_maps(nodust=True)
+# plt.savefig('channel_map_mctherm_nodust.png_abundance_7')
+# plt.close()
+# os.system('make cleanall')
 
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-            pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None, abundance_enhancement=1e-7)
-plot_gas_channel_maps(extract_gas=True)
-plt.savefig('channel_map_mctherm_with_dust_abundance_7.png')
-plt.close()
-os.system('make cleanall')
+# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None, abundance_enhancement=1e-7)
+# plot_gas_channel_maps(extract_gas=True)
+# plt.savefig('channel_map_mctherm_with_dust_abundance_7.png')
+# plt.close()
+# os.system('make cleanall')
 
 ###############################################################################
 '''
