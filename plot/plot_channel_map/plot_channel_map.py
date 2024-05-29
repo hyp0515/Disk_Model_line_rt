@@ -126,7 +126,6 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
         plt.subplots_adjust(left=0, right=1, top=0.9, bottom=0.1, wspace=0, hspace=0)
     return
 ###############################################################################
-
 problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None)
 plot_gas_channel_maps(nodust=True)
@@ -140,21 +139,6 @@ plot_gas_channel_maps(extract_gas=True)
 plt.savefig('channel_map_mctherm_with_dust.png')
 plt.close()
 os.system('make cleanall')
-
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None, abundance_enhancement=1e-7)
-# plot_gas_channel_maps(nodust=True)
-# plt.savefig('channel_map_mctherm_nodust.png_abundance_7')
-# plt.close()
-# os.system('make cleanall')
-
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None, abundance_enhancement=1e-7)
-# plot_gas_channel_maps(extract_gas=True)
-# plt.savefig('channel_map_mctherm_with_dust_abundance_7.png')
-# plt.close()
-# os.system('make cleanall')
-
 ###############################################################################
 '''
 Plot dust images

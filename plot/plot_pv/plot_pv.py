@@ -72,13 +72,11 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
         ax.plot([-(sizeau//2), (sizeau//2)], [vkm, vkm], 'w:')
 
     return ax
-
 ###############################################################################
 heat_list = ['Accretion', 'Irradiation']
 snowline = ['w/o snowline', 'w/ snowline']
 dust = ['w/o dust', 'w/ dust']
-
-def multiple_plots(amax, rcb, nlam, npix, sizeau):
+def multiple_plots(amax, rcb, nlam, npix, sizeau, v0=0, vwidth=5):
     for idx_h, heat in enumerate(heat_list):
         for idx_s, snow in enumerate(snowline):
             if heat == 'Accretion' and snow =='w/o snowline':
@@ -104,44 +102,27 @@ def multiple_plots(amax, rcb, nlam, npix, sizeau):
             
             for idx_d, d in enumerate(dust):
                 if d == 'w/o dust':
-                    p = plot_pv(incl=70,vkm=0, v_width=5, nlam=nlam, nodust=True, npix=npix, sizeau=sizeau)
+                    p = plot_pv(incl=70,vkm=v0, v_width=vwidth, nlam=nlam, nodust=True, npix=npix, sizeau=sizeau)
                     title = t + ' + w/o dust'
                     fname = f + ' + wo dust'
                 elif d == 'w/ dust':
-                    p = plot_pv(incl=70,vkm=0, v_width=5, nlam=nlam, extract_gas=True, npix=npix, sizeau=sizeau)
+                    p = plot_pv(incl=70,vkm=v0, v_width=vwidth, nlam=nlam, extract_gas=True, npix=npix, sizeau=sizeau)
                     title = t + ' + w/ dust'
                     fname = f + ' + w dust'
                 p.set_title(title, fontsize = 16)
                 if sizeau == 200:
-                    plt.savefig(f'./figures/larger_scale(200au)/amax_{amax}/Rcb_{rcb}/nlam_{nlam}_npix_{npix}/'+fname+'.png')
+                    plt.savefig(f'./figures/mid_scale(200au)/amax_{amax}/Rcb_{rcb}/nlam_{nlam}_npix_{npix}/'+fname+'.png')
                 elif sizeau == 100:
-                    plt.savefig(f'./figures/smaller_scale(100au)/amax_{amax}/Rcb_{rcb}/nlam_{nlam}_npix_{npix}/'+fname+'.png')
+                    plt.savefig(f'./figures/small_scale(100au)/amax_{amax}/Rcb_{rcb}/nlam_{nlam}_npix_{npix}/'+fname+'.png')
+                elif sizeau == 300:
+                    plt.savefig(f'./figures/large_scale(300au)/amax_{amax}/Rcb_{rcb}/nlam_{nlam}_npix_{npix}/'+fname+'.png')
                 plt.close()
     return
 ###############################################################################
-multiple_plots(amax=0.1, rcb=5, nlam=20, npix=20, sizeau=200)
-multiple_plots(amax=0.1, rcb=10, nlam=20, npix=20, sizeau=200)
-multiple_plots(amax=0.1, rcb=None, nlam=20, npix=20, sizeau=200)
-
-multiple_plots(amax=0.1, rcb=5, nlam=40, npix=40, sizeau=200)
-multiple_plots(amax=0.1, rcb=10, nlam=40, npix=40, sizeau=200)
-# multiple_plots(amax=0.1, rcb=None, nlam=40, npix=40, sizeau=100)
-###############################################################################
-multiple_plots(amax=10, rcb=5, nlam=20, npix=20, sizeau=200)
-multiple_plots(amax=10, rcb=10, nlam=20, npix=20, sizeau=200)
-multiple_plots(amax=10, rcb=None, nlam=20, npix=20, sizeau=200)
-
-multiple_plots(amax=10, rcb=5, nlam=40, npix=40, sizeau=200)
-multiple_plots(amax=10, rcb=10, nlam=40, npix=40, sizeau=200)
-multiple_plots(amax=10, rcb=None, nlam=40, npix=40, sizeau=200)
-###############################################################################
-multiple_plots(amax=0.001, rcb=5, nlam=20, npix=20, sizeau=200)
-multiple_plots(amax=0.001, rcb=10, nlam=20, npix=20, sizeau=200)
-multiple_plots(amax=0.001, rcb=None, nlam=20, npix=20, sizeau=200)
-
-multiple_plots(amax=0.001, rcb=5, nlam=40, npix=40, sizeau=200)
-multiple_plots(amax=0.001, rcb=10, nlam=40, npix=40, sizeau=200)
-multiple_plots(amax=0.001, rcb=None, nlam=40, npix=40, sizeau=200)
-###############################################################################
+for _, size in enumerate([300]):
+    for _, a in enumerate([10, 0.1, 0.001]):
+        for _, r in enumerate([5, 10, None]):
+            for _, n in enumerate([20, 40]):
+                multiple_plots(amax=a, rcb=r, nlam=n, npix=n, sizeau=size)
 
 os.system('make cleanall')
