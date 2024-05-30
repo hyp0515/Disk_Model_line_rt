@@ -1,0 +1,11 @@
+These figures share some common inputs:
+
+d/g     : 0.01
+Mstar   : 0.14 Msun
+Mdot    : Mstar *1e-5/yr
+Radius  : 70 au 
+vinfall : 1 Keplerian velocity
+
+Gas is set to be absent if Rcb is not None, i.e., there is not gas inside the centrifugal barrier.
+The abundances of methanol inside and outside the snowline are 1e-10 and 1e-5, respectively.
+But you can adjust the enhancement by adjusting the input in problem_setup, i.e., 'abundance_enhancement'.
