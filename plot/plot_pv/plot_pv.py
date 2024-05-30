@@ -73,7 +73,7 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
 
     return ax
 ###############################################################################
-heat_list = ['Accretion', 'Irradiation']
+heat_list = ['Accretion', 'Irradiation', 'Combine']
 snowline = ['w/o snowline', 'w/ snowline']
 dust = ['w/o dust', 'w/ dust']
 def multiple_plots(amax, rcb, nlam, npix, sizeau, v0=0, vwidth=5):
@@ -99,7 +99,17 @@ def multiple_plots(amax, rcb, nlam, npix, sizeau, v0=0, vwidth=5):
                             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=rcb)
                 t = 'Irradiation + w/ snowline'
                 f = 'Irradiation + w snowline'
-            
+            elif heat == 'Combine' and snow =='w/o snowline':
+                problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                            pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=rcb, combine=True)
+                t = 'Combine + w/o snowline'
+                f = 'Combine + wo snowline'
+            elif heat == 'Combine' and snow =='w/ snowline':
+                problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                            pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=rcb, combine=True)
+                t = 'Combine + w/ snowline'
+                f = 'Combine + w snowline'        
+
             for idx_d, d in enumerate(dust):
                 if d == 'w/o dust':
                     p = plot_pv(incl=70,vkm=v0, v_width=vwidth, nlam=nlam, nodust=True, npix=npix, sizeau=sizeau)
@@ -119,7 +129,7 @@ def multiple_plots(amax, rcb, nlam, npix, sizeau, v0=0, vwidth=5):
                 plt.close()
     return
 ###############################################################################
-for _, size in enumerate([300]):
+for _, size in enumerate([100, 200, 300]):
     for _, a in enumerate([10, 0.1, 0.001]):
         for _, r in enumerate([5, 10, None]):
             for _, n in enumerate([20, 40]):

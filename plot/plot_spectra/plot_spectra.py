@@ -21,7 +21,7 @@ Distance      : 140       pc
 Plot spectra
 '''
 def plot_spectra(incl=70, line=240, vkm=0, v_width=20, nlam=50,
-                nodust=False, scat=True, extract_gas=False, color='b',a=1):
+                nodust=False, scat=True, extract_gas=False, color='b',label='', linestyle='-'):
     if extract_gas is False:
         if nodust is True:
             prompt = ' noscat nodust'
@@ -37,7 +37,7 @@ def plot_spectra(incl=70, line=240, vkm=0, v_width=20, nlam=50,
         freq0 = (freq[nlam//2] + freq[(nlam//2)-1])/2
         v = cc / 1e5 * (freq0 - freq) / freq0
         I = s[:,1]*1e26/(140*140) # mJy
-        plt.plot(v+vkm, I, ':', color=color, label='w/o dust' +f'{a}cm')
+        plt.plot(v+vkm, I, color=color, linestyle=linestyle, label=label)
 
         plt.xlabel('Velocity (km/s)',fontsize = 16)
         plt.ylabel('Intensity (mJy/beam)',fontsize = 16)
@@ -58,123 +58,26 @@ def plot_spectra(incl=70, line=240, vkm=0, v_width=20, nlam=50,
         I_dust = s_dust[:, 1]*1e26/(140*140) # mJy
         
         I_extracted_gas = I_gas-I_dust
-        plt.plot(v+vkm, I_extracted_gas, color=color, label='w/ dust, '+f'{a}cm')
+        plt.plot(v+vkm, I_extracted_gas, color=color, linestyle=linestyle, label=label)
 
         plt.xlabel('Velocity (km/s)',fontsize = 16)
-        plt.ylabel('Intensity (mJy/beam)',fontsize = 16)
+        plt.ylabel('Intensity (mJy/beam)',fontsize = 14)
+        plt.title('Spectra of $\mathregular{CH_3OH}$')
     return
 ###############################################################################
 color_list = ['b', 'g', 'r', 'c']
-a_list = [10, 1, 0.1, 0.01]
+a_list = [10, 0.1, 0.001]
 
-for idx_a, (a, color) in enumerate(zip(a_list, color_list)):
+for idx_a, a in enumerate(a_list):
+    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                  pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=5)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Accretion + {a}cm', linestyle='-', v_width=10)
 
     problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=None)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, nodust=True, color=color,a=a)
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=None)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, extract_gas=True, color=color, a=a)
+                  pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=5)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Irradiation + {a}cm', linestyle=':', v_width=10)
+plt.title('Different heating mechanism',fontsize = 16)
 plt.legend()
-plt.title('Dust Effect (irradiation + nosnowline)',fontsize = 16)
-plt.savefig('./figures/mctherm_nosnowline')
-os.system('make cleanall')
+plt.savefig('Different_heating.png')
 plt.close()
-
-for idx_a, (a, color) in enumerate(zip(a_list, color_list)):
-
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=False, snowline=False, floor=True, kep=True, Rcb=None)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, nodust=True, color=color,a=a)
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=False, snowline=False, floor=True, kep=True, Rcb=None)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, extract_gas=True, color=color, a=a)
-plt.legend()
-plt.title('Dust Effect (accretion + nosnowline)',fontsize = 16)
-plt.savefig('./figures/x22_nosnowline')
 os.system('make cleanall')
-plt.close()
-
-for idx_a, (a, color) in enumerate(zip(a_list, color_list)):
-
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=None)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, nodust=True, color=color,a=a)
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=None)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, extract_gas=True, color=color, a=a)
-plt.legend()
-plt.title('Dust Effect (irradiation + snowline)',fontsize = 16)
-plt.savefig('./figures/mctherm')
-os.system('make cleanall')
-plt.close()
-
-for idx_a, (a, color) in enumerate(zip(a_list, color_list)):
-
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=None)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, nodust=True, color=color,a=a)
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=None)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, extract_gas=True, color=color, a=a)
-plt.legend()
-plt.title('Dust Effect (accretion + snowline)',fontsize = 16)
-plt.savefig('./figures/x22')
-os.system('make cleanall')
-plt.close()
-###############################################################################
-for idx_a, (a, color) in enumerate(zip(a_list, color_list)):
-
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=None, abundance_enhancement=1e-7)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, nodust=True, color=color,a=a)
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=None, abundance_enhancement=1e-7)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, extract_gas=True, color=color, a=a)
-plt.legend()
-plt.title('Dust Effect (irradiation + nosnowline)',fontsize = 16)
-plt.savefig('./figures/mctherm_nosnowline_abundance_7')
-os.system('make cleanall')
-plt.close()
-
-for idx_a, (a, color) in enumerate(zip(a_list, color_list)):
-
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=False, snowline=False, floor=True, kep=True, Rcb=None, abundance_enhancement=1e-7)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, nodust=True, color=color,a=a)
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=False, snowline=False, floor=True, kep=True, Rcb=None, abundance_enhancement=1e-7)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, extract_gas=True, color=color, a=a)
-plt.legend()
-plt.title('Dust Effect (accretion + nosnowline)',fontsize = 16)
-plt.savefig('./figures/x22_nosnowline_abundance_7')
-os.system('make cleanall')
-plt.close()
-
-for idx_a, (a, color) in enumerate(zip(a_list, color_list)):
-
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=None, abundance_enhancement=1e-7)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, nodust=True, color=color,a=a)
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=None, abundance_enhancement=1e-7)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, extract_gas=True, color=color, a=a)
-plt.legend()
-plt.title('Dust Effect (irradiation + snowline)',fontsize = 16)
-plt.savefig('./figures/mctherm_abundance_7')
-os.system('make cleanall')
-plt.close()
-
-for idx_a, (a, color) in enumerate(zip(a_list, color_list)):
-
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=None, abundance_enhancement=1e-7)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, nodust=True, color=color,a=a)
-    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=None, abundance_enhancement=1e-7)
-    plot_spectra(incl=70, vkm=5, v_width=5, nlam=40, extract_gas=True, color=color, a=a)
-plt.legend()
-plt.title('Dust Effect (accretion + nosnowline)',fontsize = 16)
-plt.savefig('./figures/x22_abundance_7')
-os.system('make cleanall')
-plt.close()
