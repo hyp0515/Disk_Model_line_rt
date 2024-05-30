@@ -136,7 +136,7 @@ class DiskModel_vertical:
         """
         # t_start = time.time()
         def get_kappa_from_T(T):  # 2(d)
-            # using the functions below can avoid using saha equation to calculate n_e, the step described on 2(d)
+            # using the functions below can avoid using saha equation to calculate n_e, the step described on 2(d) hubney 1990
             get_kappa_r = self.DM_horizontal.get_kappa_r  # interpolating function extracted from Wenrui's Disk_Model class
             kappa_r = get_kappa_r(T)
             return kappa_r
@@ -196,7 +196,7 @@ class DiskModel_vertical:
         # print(t_end-t_start)
         return
 
-    def pancake_model(self):
+    def pancake_model(self):  # This is the thin slab model. It can be used when debugging.
         rho_pancake = 1e-18*np.ones((self.NR, 10))
         T_pancake = 100*np.ones((self.NR, 10))
         self.rho_map = np.append(rho_pancake, np.zeros((self.NR, self.NZ-10)), axis=1)
@@ -205,7 +205,7 @@ class DiskModel_vertical:
 
     def extend_to_spherical(self, NTheta, NPhi):
         self.NTheta = NTheta
-        self.NPhi = NPhi  # Since this model is only axisymmetric so the value of NPhi isn't important
+        self.NPhi = NPhi  
 
         pos_map = self.pos_map.copy()        
         r_map = np.sqrt(pos_map[:, :, 0]**2+ pos_map[:, :, 1]**2) # distance map of every points
@@ -224,7 +224,7 @@ class DiskModel_vertical:
     
         """
         using interpolation to project data from cylindrical coordinates to 
-        spherical coordinates
+        spherical coordinates (This alg is about to be modified for better efficiency) 
         """
         z_sph_in_cyl = r_grid[:, np.newaxis] * np.cos(theta_grid) # decreasing when theta increases
         r_sph_in_cyl = r_grid[:, np.newaxis] * np.sin(theta_grid) # increasing when theta increases

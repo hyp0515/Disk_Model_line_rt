@@ -1,6 +1,4 @@
 import numpy as np
-from mpl_toolkits.mplot3d import axes3d
-from matplotlib import pyplot as plt
 from radmc3dPy.analyze import *
 #
 # Some natural constants
@@ -51,7 +49,7 @@ class problem_setup:
         # Write the wavelength_micron.inp file
         #
         lam1     = 0.1e0
-        lam2     = 1.0e3
+        lam2     = 1.0e2
         lam3     = 5.0e3
         lam4     = 1.0e4
         n12      = 100  # this section is quite important when mctherm since it covers the peak of the blackbody emission of the central star.
