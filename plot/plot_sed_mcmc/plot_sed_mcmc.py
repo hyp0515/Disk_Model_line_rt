@@ -21,7 +21,7 @@ Distance      : 140       pc
 ###############################################################################
 def sed_model(theta):
     amax, Mstar, Mdot, incl, d, r = theta
-    problem_setup(a_max=amax, Mass_of_star=Mstar*Msun, Accretion_rate=Mdot*1e-5*Msun/yr, Radius_of_disk=r*au, pancake=False, v_infall=0)
+    problem_setup(a_max=amax, Mass_of_star=Mstar*Msun, Accretion_rate=Mdot*1e-5*Msun/yr, Radius_of_disk=r*au, pancake=False, v_infall=0, mctherm=False)
     os.system(f'radmc3d spectrum incl {incl} lambdarange 300. 3000. nlam 100 noline noscat')
     s = readSpectrum('spectrum.out')
     lam = s[:, 0]
@@ -50,7 +50,7 @@ def log_likelihood(theta, Freq, Flux, err):
 
 def log_prior(theta):
     a_max, Mstar, Mdot, incl, d, r = theta
-    if 0.001 < a_max < 1 and 0.08 < Mstar < 0.50 and 0.02 < Mdot < 2 and 50 < incl < 90 and 130 < d < 150 and 20 < r < 50:
+    if 0.001 < a_max < 1 and 0.08 < Mstar < 0.50 and 0.02 < Mdot < 1 and 50 < incl < 90 and 130 < d < 150 and 20 < r < 100:
         return 0.0
     return -np.inf
 
@@ -97,7 +97,7 @@ def posterior(sampler, label = ['$a_{max}$','$M_{*}$', '$\dot{M}$', '$i^{\circ}$
     fig.savefig('corner_test.pdf')
 
 nwalkers, ndim = 100, 6  # Number of walkers and dimension of the parameter space
-pos = [np.array([0.1, 0.14, 0.14, 70, 140, 30]) + 1e-2 * np.random.randn(ndim) for i in range(nwalkers)]
+pos = [np.array([0.1, 0.14, 0.7, 70, 140, 60]) + 1e-2 * np.random.randn(ndim) for i in range(nwalkers)]
 sampler, pos, prob, state = main(pos,nwalkers,100,ndim,log_probability, (observed_Freq, observed_Flux, err))
 plotter(sampler)
 posterior(sampler)
