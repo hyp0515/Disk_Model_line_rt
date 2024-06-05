@@ -28,6 +28,8 @@ class problem_setup:
         mctherm  : temperature calculated by radmc3d (stellar heating)
         snowline : enhancement of abundance
         floor    : set a floor of rho value to define the boundary of the disk
+        combine  : combine accretion and irradiation heating
+        Rcb      : Centrifugal Barrier (if not 'None', there is no gas inside Rcb)
         """
         #
         # Write the radmc3d.inp control file
@@ -38,13 +40,15 @@ class problem_setup:
             f.write('istar_sphere = 1\n')
             f.write('tgas_eq_tdust = 1\n')
             f.write('setthreads = 10\n') # Depending on the number of cores in the computer
+        
         #
         # Write the lines.inp control file
         #
         with open('lines.inp','w+') as f:
             f.write('1\n')
             f.write('1\n')
-            f.write('ch3oh    leiden    0    0\n')        
+            f.write('ch3oh    leiden    0    0\n')
+                
         #
         # Write the wavelength_micron.inp file
         #
@@ -64,6 +68,7 @@ class problem_setup:
             f.write('%d\n'%(nlam))
             for value in lam:
                 f.write('%13.6e\n'%(value))
+        
         #
         # Star parameters and Write the star.inp file
         #
@@ -78,6 +83,7 @@ class problem_setup:
             for value in lam:
                 f.write('%13.6e\n'%(value))
             f.write('\n%13.6e\n'%(-tstar))
+        
         #
         # Disk Model
         #
@@ -92,6 +98,7 @@ class problem_setup:
             DM.pancake_model()
         DM.extend_to_spherical(NTheta=200, NPhi=200)
         self.DM = DM
+
         #
         # Write the grid file
         #
@@ -116,6 +123,7 @@ class problem_setup:
                 f.write('%13.13e\n'%(value))
             for value in DM.phi_sph_grid:
                 f.write('%13.13e\n'%(value))
+        
         #
         # Dust opacity control file
         #
@@ -126,6 +134,7 @@ class problem_setup:
             f.write('1                          Way in which this dust species is read\n')
             f.write('0                          0=Thermal grain\n')
             f.write('silicate                   Extension of name of dustkappa_***.inp file\n')  # other types of dust are under construction
+        
         #
         # Write dust opacity files
         #
@@ -141,21 +150,23 @@ class problem_setup:
                 f.write(str(nlam)+'\n')
                 for lam_idx in range(nlam):
                     f.write('%13.6e %13.6e %13.6e %13.6e\n'%(lam[lam_idx],kappa_abs[idx,lam_idx],kappa_sca[idx,lam_idx],g[idx,lam_idx]))
+        
         #
         # Write the density file
         #
         nspec       = 1
         if floor is True:
-            rho = np.where(np.log10(DM.rho_sph)<-18, 1e-18, DM.rho_sph)  # setting the boundary of the disk
+            rho_dust = np.where(np.log10(DM.rho_sph)<-18, 1e-18, DM.rho_sph)*d_g_ratio  # setting the boundary of the disk
         elif floor is False:
-            rho = DM.rho_sph
+            rho_dust = DM.rho_sph*d_g_ratio
         with open('dust_density.inp', "w+") as f:
             f.write(str(1)+'\n')
             f.write('%d\n'%(nr*ntheta*nphi))
             f.write(str(nspec)+'\n')
-            data = d_g_ratio*rho.ravel(order='F')         # Create a 1-D view, fortran-style indexing
+            data = rho_dust.ravel(order='F')         # Create a 1-D view, fortran-style indexing
             data.tofile(f, sep='\n', format="%13.6e")
             f.write('\n')
+        
         #
         # Write velocity field
         #
@@ -166,178 +177,102 @@ class problem_setup:
                 vphi    = np.sqrt(G*Mass_of_star/(DM.r_sph*au))    # Keplerian velocity
             elif kep is False:
                 vphi    = np.zeros(vphi.shape)
-            with open('gas_velocity.inp','w+') as f:
-                f.write('1\n')
-                f.write('%d\n'%(nr*ntheta*nphi))
-                for idx_phi in range(nphi):
-                    for idx_theta in range(ntheta):
-                        for idx_r in range(nr):
-                            f.write('%13.6e %13.6e %13.6e \n'%(vr[idx_r],vtheta,vphi[idx_r]))
-                f.write('\n')
+
         elif Rcb is not None:  # velocity field in Oya et al. 2014
             rcb_idx = np.searchsorted(DM.r_sph, Rcb)
             vr_kep = np.zeros(DM.r_sph[:rcb_idx].shape)  # no infall compoonent inside the centrifugal barrier
             # vr_kep = +np.sqrt(G*Mass_of_star/(DM.r_sph[:rcb_idx]*au))  # if expanding
             vr_infall = -np.sqrt(G*Mass_of_star/(DM.r_sph[rcb_idx:]*au))
-
             vr = np.concatenate((vr_kep, vr_infall))
             vtheta = 0
             vphi = np.sqrt(G*Mass_of_star/(DM.r_sph*au))
-            with open('gas_velocity.inp','w+') as f:
-                f.write('1\n')
-                f.write('%d\n'%(nr*ntheta*nphi))
-                for idx_phi in range(nphi):
-                    for idx_theta in range(ntheta):
-                        for idx_r in range(nr):
-                            f.write('%13.6e %13.6e %13.6e \n'%(vr[idx_r],vtheta,vphi[idx_r]))
+        with open('gas_velocity.inp','w+') as f:
+            f.write('1\n')
+            f.write('%d\n'%(nr*ntheta*nphi))
+            for idx_phi in range(nphi):
+                for idx_theta in range(ntheta):
+                    for idx_r in range(nr):
+                        f.write('%13.6e %13.6e %13.6e \n'%(vr[idx_r],vtheta,vphi[idx_r]))
         
+        #
+        # Write temperature profile
+        #
         if mctherm is True:  # Irradiation heating calculated by RADMC-3D
             if combine is False:
                 if floor is True:
                     os.system('radmc3d mctherm')  # Ignore viscous heating calculated by Xu's disk model
-                    d = readData(dtemp=True, ddens=True)
-                    T_read  = d.dusttemp[:, :, :, 0]
-                    rho_read = d.rhodust[:, :, :, 0]
-                    T = np.where(np.log10(rho_read)<-18, 5, T_read)
+                    d = readData(dtemp=True)
+                    T = np.where(np.log10(rho_dust)<-20, 5, d.dusttemp[:, :, :, 0])
                     T = np.where(T<5, 5, T)
-                    with open('dust_temperature.dat', "w+") as f:
-                        f.write('1\n')
-                        f.write('%d\n'%(nr*ntheta*nphi))
-                        f.write(str(nspec)+'\n')
-                        data = T.ravel(order='F')
-                        data.tofile(f, sep='\n', format="%13.6e")
-                        f.write('\n')
+
                 elif floor is False:
                     os.system('radmc3d mctherm')
                     d = readData(dtemp=True)
-                    T_read  = d.dusttemp[:, :, :, 0]
-                    T = np.where(T<5, 5, T)
-                    with open('dust_temperature.dat', "w+") as f:
-                        f.write('1\n')
-                        f.write('%d\n'%(nr*ntheta*nphi))
-                        f.write(str(nspec)+'\n')
-                        data = T.ravel(order='F')
-                        data.tofile(f, sep='\n', format="%13.6e")
-                        f.write('\n')
+                    T = np.where(d.dusttemp[:, :, :, 0]<5, 5, d.dusttemp[:, :, :, 0])
+
             elif combine is True:  # Combination of two heating mechanisms, irradiation and accretion
                 if floor is True:
                     xu_T = DM.T_sph
-                    
                     os.system('radmc3d mctherm')  # Ignore viscous heating calculated by Xu's disk model
-                    d = readData(dtemp=True, ddens=True)
-                    T_read  = d.dusttemp[:, :, :, 0]
-                    rho_read = d.rhodust[:, :, :, 0]
-                    T = np.where(np.log10(rho_read)<-18, 5, (T_read**4+xu_T**4)**(1/4))  # To be validated
+                    d = readData(dtemp=True)
+                    T_irr  = d.dusttemp[:, :, :, 0]
+                    T = np.where(np.log10(rho_dust)<-20, 5, (T_irr**4+xu_T**4)**(1/4))  # To be validated
                     T = np.where(T<5, 5, T)  # setting the minimum temperature to maintain consistency and prevernt 0 K
-                    with open('dust_temperature.dat', "w+") as f:
-                        f.write('1\n')
-                        f.write('%d\n'%(nr*ntheta*nphi))
-                        f.write(str(nspec)+'\n')
-                        data = T.ravel(order='F')
-                        data.tofile(f, sep='\n', format="%13.6e")
-                        f.write('\n')
+
                 elif floor is False:
                     xu_T = DM.T_sph
                     os.system('radmc3d mctherm')
                     d = readData(dtemp=True)
-                    T_read  = d.dusttemp[:, :, :, 0]
-                    T = (T_read**4+xu_T**4)**(1/4)
+                    T_irr  = d.dusttemp[:, :, :, 0]
+                    T = (T_irr**4+xu_T**4)**(1/4)
                     T = np.where(T<5, 5, T)
-                    with open('dust_temperature.dat', "w+") as f:
-                        f.write('1\n')
-                        f.write('%d\n'%(nr*ntheta*nphi))
-                        f.write(str(nspec)+'\n')
-                        data = T.ravel(order='F')
-                        data.tofile(f, sep='\n', format="%13.6e")
-                        f.write('\n')
-    
         elif mctherm is False:  # Accretion heating calculated by Wenrui's Disk Model
             if floor is True:
-                d = readData(ddens=True)
-                rho_read = d.rhodust[:, :, :, 0]
-                T = np.where(np.log10(rho_read)<-18, 5, DM.T_sph)
-                with open('dust_temperature.dat', "w+") as f:
-                    f.write('1\n')
-                    f.write('%d\n'%(nr*ntheta*nphi))
-                    f.write(str(nspec)+'\n')
-                    data = T.ravel(order='F')
-                    data.tofile(f, sep='\n', format="%13.6e")
-                    f.write('\n')
+                T = np.where(np.log10(rho_dust)<-20, 5, DM.T_sph)
             elif floor is False:
                 T = DM.T_sph
-                with open('dust_temperature.dat', "w+") as f:
-                    f.write('1\n')
-                    f.write('%d\n'%(nr*ntheta*nphi))
-                    f.write(str(nspec)+'\n')
-                    data = T.ravel(order='F')
-                    data.tofile(f, sep='\n', format="%13.6e")
-                    f.write('\n')
-
+        
+        with open('dust_temperature.dat', "w+") as f:
+            f.write('1\n')
+            f.write('%d\n'%(nr*ntheta*nphi))
+            f.write(str(nspec)+'\n')
+            data = T.ravel(order='F')
+            data.tofile(f, sep='\n', format="%13.6e")
+            f.write('\n')
+        
+        #
+        # Write molecule abundance profile
+        #
         if Rcb is None:  
             if snowline is True:
-                d = readData(dtemp=True, ddens=True)
-                T_read  = d.dusttemp[:, :, :, 0] 
-                abunch3oh = np.where(T_read<100, 1e-10, abundance_enhancement)
+                abunch3oh = np.where(T<100, 1e-10, abundance_enhancement)
                 """
-                This is over simplied to determine how the abundance is enhanced
+                This is over simplied to determine how the abundance is enhanced.
                 Realistic chemical configuration is required.
                 """
-                rho_read = d.rhodust[:, :, :, 0]
-                factch3oh = abunch3oh/(2.3*mp)
-                nch3oh    = rho_read*factch3oh/d_g_ratio
-                with open('numberdens_ch3oh.inp','w+') as f:
-                    f.write('1\n')                       # Format number
-                    f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
-                    data = nch3oh.ravel(order='F')          # Create a 1-D view, fortran-style indexing
-                    data.tofile(f, sep='\n', format="%13.6e")
-                    f.write('\n')
-
+                rho_gas = rho_dust/d_g_ratio
             elif snowline is False:
                 abunch3oh = 1e-10
-                d = readData(ddens=True)
-                rho_read = d.rhodust[:, :, :, 0]
-                factch3oh = abunch3oh/(2.3*mp)
-                nch3oh    = rho_read*factch3oh/d_g_ratio  
-                with open('numberdens_ch3oh.inp','w+') as f:
-                    f.write('1\n')                       # Format number
-                    f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
-                    data = nch3oh.ravel(order='F')          # Create a 1-D view, fortran-style indexing
-                    data.tofile(f, sep='\n', format="%13.6e")
-                    f.write('\n')
+                rho_gas = rho_dust/d_g_ratio  
         elif Rcb is not None:  # The main assumption of Oya's velocity field is that there is no gas inside the centrifugal barrier.
             rcb_idx = np.searchsorted(DM.r_sph, Rcb)
             if snowline is True:
-                d = readData(dtemp=True, ddens=True)
-                T_read  = d.dusttemp[:, :, :, 0] 
-                abunch3oh = np.where(T_read<100, 1e-10, abundance_enhancement)
-                rho_read = d.rhodust[:, :, :, 0]
-                rho_read[:rcb_idx, :, :] = 1e-20
-                factch3oh = abunch3oh/(2.3*mp)
-                nch3oh    = rho_read*factch3oh/d_g_ratio 
-                with open('numberdens_ch3oh.inp','w+') as f:
-                    f.write('1\n')                       # Format number
-                    f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
-                    data = nch3oh.ravel(order='F')          # Create a 1-D view, fortran-style indexing
-                    data.tofile(f, sep='\n', format="%13.6e")
-                    f.write('\n')
-
+                abunch3oh = np.where(T<100, 1e-10, abundance_enhancement)
+                rho_gas = rho_dust/d_g_ratio 
+                rho_gas[:rcb_idx, :, :] = 1e-18
             elif snowline is False:
                 abunch3oh = 1e-10
-                d = readData(ddens=True)
-                rho_read = d.rhodust[:, :, :, 0]
-                rho_read[:rcb_idx, :, :] = 1e-20
-                factch3oh = abunch3oh/(2.3*mp)
-                nch3oh    = rho_read*factch3oh/d_g_ratio
-                with open('numberdens_ch3oh.inp','w+') as f:
-                    f.write('1\n')                       # Format number
-                    f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
-                    data = nch3oh.ravel(order='F')          # Create a 1-D view, fortran-style indexing
-                    data.tofile(f, sep='\n', format="%13.6e")
-                    f.write('\n')
+                rho_gas = rho_dust/d_g_ratio
+                rho_gas[:rcb_idx, :, :] = 1e-18
 
-        
-        
+        factch3oh = abunch3oh/(2.3*mp)
+        nch3oh    = rho_gas*factch3oh
+        with open('numberdens_ch3oh.inp','w+') as f:
+            f.write('1\n')                       # Format number
+            f.write('%d\n'%(nr*ntheta*nphi))           # Nr of cells
+            data = nch3oh.ravel(order='F')          # Create a 1-D view, fortran-style indexing
+            data.tofile(f, sep='\n', format="%13.6e")
+            f.write('\n')
 
         return
-
 

@@ -74,7 +74,6 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
     return ax
 ###############################################################################
 heat_list = ['Accretion', 'Irradiation', 'Combine']
-heat_list = ['Combine']
 snowline = ['w/o snowline', 'w/ snowline']
 dust = ['w/o dust', 'w/ dust']
 def multiple_plots(amax, rcb, nlam, npix, sizeau, v0=0, vwidth=5):
