@@ -38,7 +38,6 @@ class problem_setup:
             f.write('nphot = %d\n'%(nphot))
             f.write('scattering_mode_max = 2\n')   # Put this to 1 for isotropic scattering
             f.write('istar_sphere = 1\n')
-            f.write('tgas_eq_tdust = 1\n')
             f.write('setthreads = 10\n') # Depending on the number of cores in the computer
         
         #
@@ -96,7 +95,7 @@ class problem_setup:
                                 Rd=Radius_of_disk, Q=1.5, N_R=200)
         if pancake is True:
             DM.pancake_model()
-        DM.extend_to_spherical(NTheta=200, NPhi=200)
+        DM.extend_to_spherical(NTheta=200, NPhi=100)
         self.DM = DM
 
         #
@@ -129,11 +128,23 @@ class problem_setup:
         #
         with open('dustopac.inp','w+') as f:
             f.write('2                          Format number of this file\n')
-            f.write('1                          Nr of dust species\n')
+            f.write('4                          Nr of dust species\n')
             f.write('============================================================================\n')
             f.write('1                          Way in which this dust species is read\n')
             f.write('0                          0=Thermal grain\n')
-            f.write('silicate                   Extension of name of dustkappa_***.inp file\n')  # other types of dust are under construction
+            f.write('water                  Extension of name of dustkappa_***.inp file\n')
+            f.write('============================================================================\n')
+            f.write('1                          Way in which this dust species is read\n')
+            f.write('0                          0=Thermal grain\n')
+            f.write('silicate                   Extension of name of dustkappa_***.inp file\n')
+            f.write('============================================================================\n')
+            f.write('1                          Way in which this dust species is read\n')
+            f.write('0                          0=Thermal grain\n')
+            f.write('troilite                   Extension of name of dustkappa_***.inp file\n')
+            f.write('============================================================================\n')
+            f.write('1                          Way in which this dust species is read\n')
+            f.write('0                          0=Thermal grain\n')
+            f.write('refractory_organics        Extension of name of dustkappa_***.inp file\n')
         
         #
         # Write dust opacity files
@@ -143,8 +154,7 @@ class problem_setup:
         kappa_abs = opacity_table['kappa']
         kappa_sca = opacity_table['kappa_s']
         g         = opacity_table['g']
-        # for idx, composition in enumerate(['water','silicate','troilite','refractory_organics']):  # other types of dust are under construction
-        for idx, composition in enumerate(['silicate']): # for now, only silicate is considered
+        for idx, composition in enumerate(['water','silicate','troilite','refractory_organics']):
             with open('dustkappa_'+composition+'.inp', "w+") as f:
                 f.write('3\n')
                 f.write(str(nlam)+'\n')
@@ -154,7 +164,8 @@ class problem_setup:
         #
         # Write the density file
         #
-        nspec       = 1
+        nspec       = 4
+        mass_frac = np.array([0.2, 0.3291, 0.0743, 0.3966])  # quoted from disk_model
         if floor is True:
             rho_dust = np.where(np.log10(DM.rho_sph)<-18, 1e-18, DM.rho_sph)*d_g_ratio  # setting the boundary of the disk
         elif floor is False:
@@ -163,8 +174,10 @@ class problem_setup:
             f.write(str(1)+'\n')
             f.write('%d\n'%(nr*ntheta*nphi))
             f.write(str(nspec)+'\n')
-            data = rho_dust.ravel(order='F')         # Create a 1-D view, fortran-style indexing
-            data.tofile(f, sep='\n', format="%13.6e")
+            for i in range(nspec):
+                data = mass_frac[i]*rho_dust.ravel(order='F')
+                data.tofile(f, sep='\n', format="%13.6e")
+                f.write('\n')
             f.write('\n')
         
         #
@@ -177,7 +190,6 @@ class problem_setup:
                 vphi    = np.sqrt(G*Mass_of_star/(DM.r_sph*au))    # Keplerian velocity
             elif kep is False:
                 vphi    = np.zeros(vphi.shape)
-
         elif Rcb is not None:  # velocity field in Oya et al. 2014
             rcb_idx = np.searchsorted(DM.r_sph, Rcb)
             vr_kep = np.zeros(DM.r_sph[:rcb_idx].shape)  # no infall compoonent inside the centrifugal barrier
@@ -202,50 +214,79 @@ class problem_setup:
                 if floor is True:
                     os.system('radmc3d mctherm')  # Ignore viscous heating calculated by Xu's disk model
                     d = readData(dtemp=True)
-                    T = np.where(np.log10(rho_dust)<-20, 5, d.dusttemp[:, :, :, 0])
-                    T = np.where(T<5, 5, T)
-
+                    T = np.where(np.log10(np.tile(rho_dust[:, :, :, np.newaxis], (1, 1, 1, nspec)))<-20, 5, d.dusttemp)
+                    T = np.where(d.dusttemp<5, 5, d.dusttemp)
                 elif floor is False:
                     os.system('radmc3d mctherm')
                     d = readData(dtemp=True)
-                    T = np.where(d.dusttemp[:, :, :, 0]<5, 5, d.dusttemp[:, :, :, 0])
-
+                    T = np.where(d.dusttemp<5, 5, d.dusttemp)
             elif combine is True:  # Combination of two heating mechanisms, irradiation and accretion
                 if floor is True:
-                    xu_T = DM.T_sph
+                    xu_T = np.tile(DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, nspec))
                     os.system('radmc3d mctherm')  # Ignore viscous heating calculated by Xu's disk model
                     d = readData(dtemp=True)
-                    T_irr  = d.dusttemp[:, :, :, 0]
-                    T = np.where(np.log10(rho_dust)<-20, 5, (T_irr**4+xu_T**4)**(1/4))  # To be validated
+                    T_irr  = d.dusttemp
+                    T = np.where(np.log10(rho_dust)<-20, 5, (T_irr**4+xu_T**4)**(1/4))
                     T = np.where(T<5, 5, T)  # setting the minimum temperature to maintain consistency and prevernt 0 K
 
                 elif floor is False:
-                    xu_T = DM.T_sph
+                    xu_T = np.tile(DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, nspec))
                     os.system('radmc3d mctherm')
                     d = readData(dtemp=True)
-                    T_irr  = d.dusttemp[:, :, :, 0]
+                    T_irr = d.dusttemp
                     T = (T_irr**4+xu_T**4)**(1/4)
                     T = np.where(T<5, 5, T)
+            with open('dust_temperature.dat', "w+") as f:
+                f.write('1\n')
+                f.write('%d\n'%(nr*ntheta*nphi))
+                f.write(str(nspec)+'\n')
+                for i in range(nspec):
+                    data = T[:, :, :, i].ravel(order='F')
+                    data.tofile(f, sep='\n', format="%13.6e")
+                    f.write('\n')
+                f.write('\n')
+            
+            T_avg = (T[:, :, :, 0]+T[:, :, :, 1]+T[:, :, :, 2]+T[:, :, :, 3])/4
+            with open('gas_temperature.inp', "w+") as f:
+                f.write('1\n')
+                f.write('%d\n'%(nr*ntheta*nphi))
+                f.write(str(nspec)+'\n')
+                data = T_avg.ravel(order='F')
+                data.tofile(f, sep='\n', format="%13.6e")
+                f.write('\n')
+
         elif mctherm is False:  # Accretion heating calculated by Wenrui's Disk Model
             if floor is True:
                 T = np.where(np.log10(rho_dust)<-20, 5, DM.T_sph)
             elif floor is False:
                 T = DM.T_sph
-        
-        with open('dust_temperature.dat', "w+") as f:
-            f.write('1\n')
-            f.write('%d\n'%(nr*ntheta*nphi))
-            f.write(str(nspec)+'\n')
-            data = T.ravel(order='F')
-            data.tofile(f, sep='\n', format="%13.6e")
-            f.write('\n')
-        
+            
+
+            with open('dust_temperature.dat', "w+") as f:
+                f.write('1\n')
+                f.write('%d\n'%(nr*ntheta*nphi))
+                f.write(str(nspec)+'\n')
+                for _ in range(nspec):
+                    data = T.ravel(order='F')
+                    data.tofile(f, sep='\n', format="%13.6e")
+                    f.write('\n')
+                f.write('\n')
+            
+            T_avg = T
+            with open('gas_temperature.inp', "w+") as f:
+                f.write('1\n')
+                f.write('%d\n'%(nr*ntheta*nphi))
+                f.write(str(nspec)+'\n')
+                data = T_avg.ravel(order='F')
+                data.tofile(f, sep='\n', format="%13.6e")
+                f.write('\n')
+
         #
         # Write molecule abundance profile
         #
         if Rcb is None:  
             if snowline is True:
-                abunch3oh = np.where(T<100, 1e-10, abundance_enhancement)
+                abunch3oh = np.where(T_avg<100, 1e-10, abundance_enhancement)
                 """
                 This is over simplied to determine how the abundance is enhanced.
                 Realistic chemical configuration is required.
@@ -257,14 +298,13 @@ class problem_setup:
         elif Rcb is not None:  # The main assumption of Oya's velocity field is that there is no gas inside the centrifugal barrier.
             rcb_idx = np.searchsorted(DM.r_sph, Rcb)
             if snowline is True:
-                abunch3oh = np.where(T<100, 1e-10, abundance_enhancement)
+                abunch3oh = np.where(T_avg <100, 1e-10, abundance_enhancement)
                 rho_gas = rho_dust/d_g_ratio 
                 rho_gas[:rcb_idx, :, :] = 1e-18
             elif snowline is False:
                 abunch3oh = 1e-10
                 rho_gas = rho_dust/d_g_ratio
                 rho_gas[:rcb_idx, :, :] = 1e-18
-
         factch3oh = abunch3oh/(2.3*mp)
         nch3oh    = rho_gas*factch3oh
         with open('numberdens_ch3oh.inp','w+') as f:
