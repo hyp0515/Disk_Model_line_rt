@@ -71,13 +71,71 @@ a_list = [10, 0.1, 0.001]
 for idx_a, a in enumerate(a_list):
     problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
                   pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=5)
-    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Accretion + {a}cm', linestyle='-', v_width=10)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Accretion+{a}cm', linestyle='-.', v_width=10)
 
     problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
                   pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=5)
-    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Irradiation + {a}cm', linestyle=':', v_width=10)
-plt.title('Different heating mechanism',fontsize = 16)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Irradiation+{a}cm', linestyle=':', v_width=10)
+
+    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                  pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=5, combine=True)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Combine+{a}cm', linestyle='-', v_width=10)
+plt.title('Different heating mechanism (Oya)',fontsize = 14)
 plt.legend()
-plt.savefig('Different_heating.png')
+plt.savefig('Different_heating_oya.png')
+plt.close()
+os.system('make cleanall')
+
+for idx_a, a in enumerate(a_list):
+    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=0, 
+                  pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=None)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Accretion+{a}cm', linestyle='-.', v_width=10)
+
+    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=0, 
+                  pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Irradiation+{a}cm', linestyle=':', v_width=10)
+
+    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=0, 
+                  pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None, combine=True)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Combine+{a}cm', linestyle='-', v_width=10)
+plt.title('Different heating mechanism (Kep)',fontsize = 14)
+plt.legend()
+plt.savefig('Different_heating_Kep.png')
+plt.close()
+os.system('make cleanall')
+
+for idx_a, a in enumerate(a_list):
+    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                  pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=5, gas_inside_rcb=True)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Accretion+{a}cm', linestyle='-.', v_width=10)
+
+    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                  pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=5, gas_inside_rcb=True)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Irradiation+{a}cm', linestyle=':', v_width=10)
+
+    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                  pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=5, combine=True, gas_inside_rcb=True)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Combine+{a}cm', linestyle='-', v_width=10)
+plt.title('Different heating mechanism (Gas inside Rcb)',fontsize = 14)
+plt.legend()
+plt.savefig('Different_heating_gas.png')
+plt.close()
+os.system('make cleanall')
+
+for idx_a, a in enumerate(a_list):
+    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                  pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=None)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Accretion+{a}cm', linestyle='-.', v_width=10)
+
+    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                  pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Irradiation+{a}cm', linestyle=':', v_width=10)
+
+    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                  pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None, combine=True)
+    plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Combine+{a}cm', linestyle='-', v_width=10)
+plt.title('Different heating mechanism (Infalling)',fontsize = 14)
+plt.legend()
+plt.savefig('Different_heating_infall.png')
 plt.close()
 os.system('make cleanall')

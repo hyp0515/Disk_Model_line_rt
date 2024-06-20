@@ -22,7 +22,7 @@ from vertical_profile_class import DiskModel_vertical
 class problem_setup:
     def __init__(self, a_max, Mass_of_star, Accretion_rate, Radius_of_disk, v_infall, 
                  pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None,
-                 abundance_enhancement=1e-5):
+                 abundance_enhancement=1e-5, gas_inside_rcb=False):
         """
         pancake  : simple slab model
         mctherm  : temperature calculated by radmc3d (stellar heating)
@@ -38,7 +38,7 @@ class problem_setup:
             f.write('nphot = %d\n'%(nphot))
             f.write('scattering_mode_max = 2\n')   # Put this to 1 for isotropic scattering
             f.write('istar_sphere = 1\n')
-            f.write('setthreads = 10\n') # Depending on the number of cores in the computer
+            f.write('setthreads = 7\n') # Depending on the number of cores in the computer
         
         #
         # Write the lines.inp control file
@@ -226,7 +226,7 @@ class problem_setup:
                     os.system('radmc3d mctherm')  # Ignore viscous heating calculated by Xu's disk model
                     d = readData(dtemp=True)
                     T_irr  = d.dusttemp
-                    T = np.where(np.log10(rho_dust)<-20, 5, (T_irr**4+xu_T**4)**(1/4))
+                    T = np.where(np.log10(np.tile(rho_dust[:, :, :, np.newaxis], (1, 1, 1, nspec)))<-20, 5, (T_irr**4+xu_T**4)**(1/4))
                     T = np.where(T<5, 5, T)  # setting the minimum temperature to maintain consistency and prevernt 0 K
 
                 elif floor is False:
@@ -299,12 +299,14 @@ class problem_setup:
             rcb_idx = np.searchsorted(DM.r_sph, Rcb)
             if snowline is True:
                 abunch3oh = np.where(T_avg <100, 1e-10, abundance_enhancement)
-                rho_gas = rho_dust/d_g_ratio 
-                rho_gas[:rcb_idx, :, :] = 1e-18
+                rho_gas = rho_dust/d_g_ratio
+                if gas_inside_rcb is False:
+                    rho_gas[:rcb_idx, :, :] = 1e-18
             elif snowline is False:
                 abunch3oh = 1e-10
                 rho_gas = rho_dust/d_g_ratio
-                rho_gas[:rcb_idx, :, :] = 1e-18
+                if gas_inside_rcb is False:
+                    rho_gas[:rcb_idx, :, :] = 1e-18
         factch3oh = abunch3oh/(2.3*mp)
         nch3oh    = rho_gas*factch3oh
         with open('numberdens_ch3oh.inp','w+') as f:

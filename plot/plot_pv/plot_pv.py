@@ -73,9 +73,11 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
 
     return ax
 ###############################################################################
+
 heat_list = ['Accretion', 'Irradiation', 'Combine']
 snowline = ['w/o snowline', 'w/ snowline']
 dust = ['w/o dust', 'w/ dust']
+
 def multiple_plots(amax, rcb, nlam, npix, sizeau, v0=0, vwidth=5):
     for idx_h, heat in enumerate(heat_list):
         for idx_s, snow in enumerate(snowline):
@@ -112,27 +114,70 @@ def multiple_plots(amax, rcb, nlam, npix, sizeau, v0=0, vwidth=5):
 
             for idx_d, d in enumerate(dust):
                 if d == 'w/o dust':
-                    p = plot_pv(incl=70,vkm=v0, v_width=vwidth, nlam=nlam, nodust=True, npix=npix, sizeau=sizeau)
+                    p = plot_pv(incl=70, vkm=v0, v_width=vwidth, nlam=nlam, nodust=True, npix=npix, sizeau=sizeau)
                     title = t + ' + w/o dust'
                     fname = f + ' + wo dust'
                 elif d == 'w/ dust':
-                    p = plot_pv(incl=70,vkm=v0, v_width=vwidth, nlam=nlam, extract_gas=True, npix=npix, sizeau=sizeau)
+                    p = plot_pv(incl=70, vkm=v0, v_width=vwidth, nlam=nlam, extract_gas=True, npix=npix, sizeau=sizeau)
                     title = t + ' + w/ dust'
                     fname = f + ' + w dust'
                 p.set_title(title, fontsize = 16)
                 if sizeau == 200:
-                    plt.savefig(f'./figures/mid_scale(200au)/amax_{amax}/Rcb_{rcb}/nlam_{nlam}_npix_{npix}/'+fname+'.png')
+                    plt.savefig(f'./figures/v_width_{vwidth}/mid_scale(200au)/amax_{amax}/Rcb_{rcb}/nlam_{nlam}_npix_{npix}/'+fname+'.png')
                 elif sizeau == 100:
-                    plt.savefig(f'./figures/small_scale(100au)/amax_{amax}/Rcb_{rcb}/nlam_{nlam}_npix_{npix}/'+fname+'.png')
+                    plt.savefig(f'./figures/v_width_{vwidth}/small_scale(100au)/amax_{amax}/Rcb_{rcb}/nlam_{nlam}_npix_{npix}/'+fname+'.png')
                 elif sizeau == 300:
-                    plt.savefig(f'./figures/large_scale(300au)/amax_{amax}/Rcb_{rcb}/nlam_{nlam}_npix_{npix}/'+fname+'.png')
+                    plt.savefig(f'./figures/v_width_{vwidth}/large_scale(300au)/amax_{amax}/Rcb_{rcb}/nlam_{nlam}_npix_{npix}/'+fname+'.png')
                 plt.close()
     return
 ###############################################################################
-for _, size in enumerate([100, 200, 300]):
-    for _, a in enumerate([10, 0.1, 0.001]):
-        for _, r in enumerate([5, 10, None]):
-            for _, n in enumerate([20, 40]):
-                multiple_plots(amax=a, rcb=r, nlam=n, npix=n, sizeau=size)
+# for _, size in enumerate([100, 200, 300]):
+#     for _, a in enumerate([10, 0.1, 0.001]):
+#         for _, r in enumerate([5, 10, None]):
+#             for _, n in enumerate([20, 40]):
+#                 multiple_plots(amax=a, rcb=r, nlam=n, npix=n, sizeau=size)
+# for _, size in enumerate([100]):
+#     for _, a in enumerate([10, 0.1, 0.001]):
+#         for _, r in enumerate([5, 10, None]):
+#             for _, n in enumerate([40]):
+#                 multiple_plots(amax=a, rcb=r, nlam=n, npix=n, sizeau=size)
 
+# Kep
+for idx_mc, mctherm in enumerate([True, False]):
+    for idx_snow, snow in enumerate([True, False]):
+
+        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=0, 
+                      pancake=False, mctherm=mctherm, snowline=snow, floor=True, kep=True, Rcb=None)
+        plot_pv(incl=70, vkm=0, v_width=5, nlam=40, extract_gas=True, npix=40, sizeau=200)
+        plt.savefig(f'mctherm_{mctherm}_snowline_{snow}_kep.png')
+os.system('make cleanall')
+
+# Pure Infalling
+for idx_mc, mctherm in enumerate([True, False]):
+    for idx_snow, snow in enumerate([True, False]):
+
+        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                      pancake=False, mctherm=mctherm, snowline=snow, floor=True, kep=True, Rcb=None)
+        plot_pv(incl=70, vkm=0, v_width=5, nlam=40, extract_gas=True, npix=40, sizeau=200)
+        plt.savefig(f'mctherm_{mctherm}_snowline_{snow}_infalling.png')
+os.system('make cleanall')
+
+# Gas inside Rcb
+for idx_mc, mctherm in enumerate([True, False]):
+    for idx_snow, snow in enumerate([True, False]):
+
+        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                      pancake=False, mctherm=mctherm, snowline=snow, floor=True, kep=True, Rcb=5, gas_inside_rcb=True)
+        plot_pv(incl=70, vkm=0, v_width=5, nlam=40, extract_gas=True, npix=40, sizeau=200)
+        plt.savefig(f'mctherm_{mctherm}_snowline_{snow}_gas_inside.png')
+os.system('make cleanall')
+
+# Oya
+for idx_mc, mctherm in enumerate([True, False]):
+    for idx_snow, snow in enumerate([True, False]):
+
+        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                      pancake=False, mctherm=mctherm, snowline=snow, floor=True, kep=True, Rcb=5, gas_inside_rcb=False)
+        plot_pv(incl=70, vkm=0, v_width=5, nlam=40, extract_gas=True, npix=40, sizeau=200)
+        plt.savefig(f'mctherm_{mctherm}_snowline_{snow}_oya.png')
 os.system('make cleanall')

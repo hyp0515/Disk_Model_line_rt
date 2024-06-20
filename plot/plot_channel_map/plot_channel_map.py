@@ -126,19 +126,33 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
         plt.subplots_adjust(left=0, right=1, top=0.9, bottom=0.1, wspace=0, hspace=0)
     return
 ###############################################################################
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-            pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None)
-plot_gas_channel_maps(nodust=True)
-plt.savefig('channel_map_mctherm_nodust.png')
-plt.close()
-os.system('make cleanall')
+# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=None)
+# plot_gas_channel_maps(nodust=True)
+# plt.savefig('wo dust.png')
+# plt.close()
+# os.system('make cleanall')
 
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-            pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None)
-plot_gas_channel_maps(extract_gas=True)
-plt.savefig('channel_map_mctherm_with_dust.png')
-plt.close()
-os.system('make cleanall')
+# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=None)
+# plot_gas_channel_maps(extract_gas=True)
+# plt.savefig('w dust.png')
+# plt.close()
+# os.system('make cleanall')
+
+# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=5)
+# plot_gas_channel_maps(nodust=True)
+# plt.savefig('wo dust + rcb 5.png')
+# plt.close()
+# os.system('make cleanall')
+
+# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=5)
+# plot_gas_channel_maps(extract_gas=True)
+# plt.savefig('w dust + rcb 5.png')
+# plt.close()
+# os.system('make cleanall')
 ###############################################################################
 '''
 Plot dust images
@@ -146,23 +160,41 @@ Plot dust images
 def plot_dust(incl=None):
     incl_angle = incl
     if incl is None:
-        incl_angle = [0, 15, 30, 45, 60, 75, 90]
+        incl_angle = [0, 15, 30, 45, 60, 75,90]
     fig, ax = plt.subplots(1, len(incl_angle), figsize=(40, 10), sharex=True, sharey=True, gridspec_kw={'wspace': 0, 'hspace': 0})
     data_min = []
     data_max = []
+    integrated = []
     for idx, icl in enumerate(incl_angle):
-        os.system(f"radmc3d image npix 25 incl {icl} lambda 1300 sizeau 70 nphot_scat 1000000 noline")
+        os.system(f"radmc3d image npix 50 incl {icl} lambda 1300 sizeau 70 nphot_scat 1000000 noline")
         os.system(f'mv image.out image_{idx}.out')
         im_dust = readImage(f'image_{idx}.out')
         data_dust = np.transpose(im_dust.imageJyppix[:, ::-1, 0])/(140*140)
         data_min.append(np.min(data_dust))
         data_max.append(np.max(data_dust))
+        integrated.append(np.sum(data_dust))
     for idx, icl in enumerate(incl_angle):
         im_dust = readImage(f'image_{idx}.out')
         data_dust = np.transpose(im_dust.imageJyppix[:, ::-1, 0])/(140*140)
         c = ax[idx].imshow(data_dust, cmap='hot',extent=[-35, 35,-35,35],vmin = min(data_min), vmax = max(data_max))
         ax[idx].set_title(f'{icl}'+'$^{\circ}$')
-    cbar = fig.colorbar(c, ax=ax)
-    cbar.set_label('Jy/pixel')
+    print('peak intensity (Jy/pix):'+ str(data_max))
+    print('integrated intensity (Jy/pix):'+ str(integrated))
     return
 
+
+problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+              pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=5)
+plot_dust()
+plt.savefig('dust_mctherm.png')
+os.system('make cleanall')
+problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+              pancake=False, mctherm=False, snowline=True, floor=True, kep=True, combine=False, Rcb=5)
+plot_dust()
+plt.savefig('dust_x22.png')
+os.system('make cleanall')
+problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+              pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=5)
+plot_dust()
+plt.savefig('dust_combine.png')
+os.system('make cleanall')

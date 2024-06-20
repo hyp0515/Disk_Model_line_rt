@@ -51,7 +51,7 @@ def plot_sed(incl=70, scat=True, plot_nu=True, GHz=True, mjy=True, color='b', la
         if scat is True:
             fig = plt.plot(nu, fnu, color=color, label=label)
         elif scat is False:
-            fig = plt.plot(nu, fnu, ':', color=color, label=label)
+            fig = plt.plot(nu, fnu, color=color, label=label)
         plt.yscale('log')
         plt.xscale('log')
         plt.xlim((1e2, 1e3))
@@ -64,68 +64,47 @@ def plot_sed(incl=70, scat=True, plot_nu=True, GHz=True, mjy=True, color='b', la
     return 
 ###############################################################################
 
-# a_list = [1, 0.1, 0.01, 0.001]
-# incl_list = [0, 30, 60, 90]
-# for idx_mc, mcth in enumerate([True, False]):
-#     for idx_scat, scat in enumerate([False, True]):
+# color_list = ['b', 'g', 'r']
+# heat_list = ['Accretion', 'Irradiation', 'Combine']
+# for idx, (heat, color) in enumerate(zip(heat_list, color_list)):
+#     for idx_scat, scat in enumerate([True, False]):
 
-#         for idx_a, amax in enumerate(a_list):
+#         if heat == 'Accretion':
+#             problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+#                             pancake=False, mctherm=False, snowline=False, floor=True, kep=True)
 
-#             problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-#                         pancake=False, mctherm=mcth, snowline=False, floor=True, kep=True)
-#             plot_sed(scat=scat)
-#         plt.legend([str(a)+" mm" for a in a_list])
+#         elif heat == 'Irradiation':
+#             problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+#                             pancake=False, mctherm=True, snowline=False, floor=True, kep=True, combine=False)
+#         elif heat == 'Combine':
+#             problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+#                             pancake=False, mctherm=True, snowline=False, floor=True, kep=True, combine=True)
+#         if scat is True:
+#             l = heat + ', scat'
+#         elif scat is False:
+#             l = heat + ', noscat'
+#         plot_sed(scat=scat, label=l, color=color, incl=70)
 #         observed_Freq = [233.8, 233.8, 233.8, 246.7, 246.7, 246.7, 246.7, 246.7]
 #         observed_Flux = [   56,    55,    59,    62,    60,    60,    61,    66]
 #         plt.scatter(observed_Freq, observed_Flux, color='black')
-#         if mcth is True:
-#             plt.savefig(f'./figures/mctherm/different_amax_scat_{str(scat)}.png')
-#         elif mcth is False:
-#             plt.savefig(f'./figures/x22/different_amax_scat_{str(scat)}.png')
-#         plt.close()
-
-
-#         problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-#                         pancake=False, mctherm=mcth, snowline=False, floor=True, kep=True)
-#         for idx_incl, angle in enumerate(incl_list):
-#             plot_sed(incl=angle, scat=scat)
-#         plt.legend([str(i)+r'$^\circ$' for i in incl_list])
-#         observed_Freq = [233.8, 233.8, 233.8, 246.7, 246.7, 246.7, 246.7, 246.7]
-#         observed_Flux = [   56,    55,    59,    62,    60,    60,    61,    66]
-#         plt.scatter(observed_Freq, observed_Flux, color='black')
-#         if mcth is True:
-#             plt.savefig(f'./figures/mctherm/different_incl_scat_{str(scat)}.png')
-#         elif mcth is False:
-#             plt.savefig(f'./figures/x22/different_incl_scat_{str(scat)}.png')
-#         plt.close()
-
+# plt.legend()
+# plt.savefig('./figures/compare_heating.png')
+# plt.close()
 # os.system('make cleanall')
 
 
-color_list = ['b', 'g', 'r', 'c']
-heat_list = ['Accretion', 'Irradiation', 'Combine']
-for idx, (heat, color) in enumerate(zip(heat_list, color_list)):
-    for idx_scat, scat in enumerate([True, False]):
+color_list = ['b', 'g', 'r']
+a_list = [10, 0.1, 0.001]
+for idx, (a, color) in enumerate(zip(a_list, color_list)):
+    
+    problem_setup(a_max=a, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+                      pancake=False, mctherm=False, snowline=False, floor=True, kep=True, combine=False)
 
-        if heat == 'Accretion':
-            problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                            pancake=False, mctherm=False, snowline=False, floor=True, kep=True)
-
-        elif heat == 'Irradiation':
-            problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                            pancake=False, mctherm=True, snowline=False, floor=True, kep=True, combine=False)
-        elif heat == 'Combine':
-            problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=30*au, v_infall=1, 
-                            pancake=False, mctherm=True, snowline=False, floor=True, kep=True, combine=True)
-        if scat is True:
-            l = heat + ', scat'
-        elif scat is False:
-            l = heat + ', noscat'
-        plot_sed(scat=scat, label=l, color=color, incl=45)
-        observed_Freq = [233.8, 233.8, 233.8, 246.7, 246.7, 246.7, 246.7, 246.7]
-        observed_Flux = [   56,    55,    59,    62,    60,    60,    61,    66]
-        plt.scatter(observed_Freq, observed_Flux, color='black')
+    plot_sed(scat=False, label=f"{a}cm", color=color, incl=70)
+    observed_Freq = [233.8, 233.8, 233.8, 246.7, 246.7, 246.7, 246.7, 246.7]
+    observed_Flux = [   56,    55,    59,    62,    60,    60,    61,    66]
+    plt.scatter(observed_Freq, observed_Flux, color='black')
 plt.legend()
-plt.savefig('test.png')
+plt.savefig('./figures/compare_amax.png')
 plt.close()
 os.system('make cleanall')
