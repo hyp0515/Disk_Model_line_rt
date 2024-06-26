@@ -146,38 +146,50 @@ def multiple_plots(amax, rcb, nlam, npix, sizeau, v0=0, vwidth=5):
 for idx_mc, mctherm in enumerate([True, False]):
     for idx_snow, snow in enumerate([True, False]):
 
-        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=0, 
+        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=100*au, v_infall=0, 
                       pancake=False, mctherm=mctherm, snowline=snow, floor=True, kep=True, Rcb=None)
-        plot_pv(incl=70, vkm=0, v_width=5, nlam=40, extract_gas=True, npix=40, sizeau=200)
-        plt.savefig(f'mctherm_{mctherm}_snowline_{snow}_kep.png')
+        plot_pv(incl=70, vkm=0, v_width=5, nlam=50, extract_gas=True, npix=40, sizeau=300)
+        plt.savefig(f'./rcb_30/mctherm_{mctherm}_snowline_{snow}_kep.png')
+
+        plot_pv(incl=70, vkm=0, v_width=5, nlam=50, nodust=True, npix=40, sizeau=300)
+        plt.savefig(f'./rcb_30/mctherm_{mctherm}_snowline_{snow}_nodust_kep.png')
 os.system('make cleanall')
 
-# Pure Infalling
+# Infalling
 for idx_mc, mctherm in enumerate([True, False]):
     for idx_snow, snow in enumerate([True, False]):
 
-        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
+        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=100*au, v_infall=1, 
                       pancake=False, mctherm=mctherm, snowline=snow, floor=True, kep=True, Rcb=None)
-        plot_pv(incl=70, vkm=0, v_width=5, nlam=40, extract_gas=True, npix=40, sizeau=200)
-        plt.savefig(f'mctherm_{mctherm}_snowline_{snow}_infalling.png')
+        plot_pv(incl=70, vkm=0, v_width=5, nlam=50, extract_gas=True, npix=40, sizeau=300)
+        plt.savefig(f'./rcb_30/mctherm_{mctherm}_snowline_{snow}_infalling.png')
+
+        plot_pv(incl=70, vkm=0, v_width=5, nlam=50, nodust=True, npix=40, sizeau=300)
+        plt.savefig(f'./rcb_30/mctherm_{mctherm}_snowline_{snow}_nodust_infalling.png')
 os.system('make cleanall')
 
 # Gas inside Rcb
 for idx_mc, mctherm in enumerate([True, False]):
     for idx_snow, snow in enumerate([True, False]):
 
-        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                      pancake=False, mctherm=mctherm, snowline=snow, floor=True, kep=True, Rcb=5, gas_inside_rcb=True)
-        plot_pv(incl=70, vkm=0, v_width=5, nlam=40, extract_gas=True, npix=40, sizeau=200)
-        plt.savefig(f'mctherm_{mctherm}_snowline_{snow}_gas_inside.png')
+        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=100*au, v_infall=1, 
+                      pancake=False, mctherm=mctherm, snowline=snow, floor=True, kep=True, Rcb=30, gas_inside_rcb=True)
+        plot_pv(incl=70, vkm=0, v_width=5, nlam=50, extract_gas=True, npix=40, sizeau=300)
+        plt.savefig(f'./rcb_30/mctherm_{mctherm}_snowline_{snow}_gas_inside.png')
+
+        plot_pv(incl=70, vkm=0, v_width=5, nlam=50, nodust=True, npix=40, sizeau=300)
+        plt.savefig(f'./rcb_30/mctherm_{mctherm}_snowline_{snow}_nodust_gas_inside.png')
 os.system('make cleanall')
 
 # Oya
 for idx_mc, mctherm in enumerate([True, False]):
     for idx_snow, snow in enumerate([True, False]):
 
-        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-                      pancake=False, mctherm=mctherm, snowline=snow, floor=True, kep=True, Rcb=5, gas_inside_rcb=False)
-        plot_pv(incl=70, vkm=0, v_width=5, nlam=40, extract_gas=True, npix=40, sizeau=200)
-        plt.savefig(f'mctherm_{mctherm}_snowline_{snow}_oya.png')
+        problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=100*au, v_infall=1, 
+                      pancake=False, mctherm=mctherm, snowline=snow, floor=True, kep=True, Rcb=30, gas_inside_rcb=False)
+        plot_pv(incl=70, vkm=0, v_width=5, nlam=50, extract_gas=True, npix=40, sizeau=300)
+        plt.savefig(f'./rcb_30/mctherm_{mctherm}_snowline_{snow}_oya.png')
+
+        plot_pv(incl=70, vkm=0, v_width=5, nlam=50, nodust=True, npix=40, sizeau=300)
+        plt.savefig(f'./rcb_30/mctherm_{mctherm}_snowline_{snow}_nodust_oya.png')
 os.system('make cleanall')
