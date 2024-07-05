@@ -38,7 +38,7 @@ class problem_setup:
             f.write('nphot = %d\n'%(nphot))
             f.write('scattering_mode_max = 2\n')   # Put this to 1 for isotropic scattering
             f.write('istar_sphere = 1\n')
-            f.write('setthreads = 20\n') # Depending on the number of cores in the computer
+            f.write('setthreads = 10\n') # Depending on the number of cores in the computer
         
         #
         # Write the lines.inp control file
