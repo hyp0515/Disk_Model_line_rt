@@ -82,7 +82,7 @@ for idx_a, a in enumerate(a_list):
     plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Combine+{a}cm', linestyle='-', v_width=10)
 plt.title('Different heating mechanism (Oya)',fontsize = 14)
 plt.legend()
-plt.savefig('Different_heating_oya_rcb_30.png')
+plt.savefig('Different_heating_oya_rcb_30.png', transparent=True)
 plt.close()
 os.system('make cleanall')
 
@@ -100,7 +100,7 @@ for idx_a, a in enumerate(a_list):
     plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Combine+{a}cm', linestyle='-', v_width=10)
 plt.title('Different heating mechanism (Kep)',fontsize = 14)
 plt.legend()
-plt.savefig('Different_heating_Kep.png')
+plt.savefig('Different_heating_Kep.png', transparent=True)
 plt.close()
 os.system('make cleanall')
 
@@ -118,7 +118,7 @@ for idx_a, a in enumerate(a_list):
     plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Combine+{a}cm', linestyle='-', v_width=10)
 plt.title('Different heating mechanism (Gas inside Rcb)',fontsize = 14)
 plt.legend()
-plt.savefig('Different_heating_gas_rcb_30.png')
+plt.savefig('Different_heating_gas_rcb_30.png', transparent=True)
 plt.close()
 os.system('make cleanall')
 
@@ -136,6 +136,6 @@ for idx_a, a in enumerate(a_list):
     plot_spectra(incl=70, line=240, extract_gas=True, color=color_list[idx_a], label=f'Combine+{a}cm', linestyle='-', v_width=10)
 plt.title('Different heating mechanism (Infalling)',fontsize = 14)
 plt.legend()
-plt.savefig('Different_heating_infall.png')
+plt.savefig('Different_heating_infall.pdf', transparent=True)
 plt.close()
 os.system('make cleanall')
