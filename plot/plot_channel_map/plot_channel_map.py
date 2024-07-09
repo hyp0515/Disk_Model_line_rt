@@ -23,24 +23,29 @@ Plot gas channel maps (with different assumption)
 '''
 def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
                           nodust=False, scat=True, extract_gas=False, npix=100, sizeau=100,
-                          convolve=True, fwhm=50):
+                          convolve=True, fwhm=50,
+                          precomputed_data_gas=None, precomputed_data_dust=None, precomputed_data=None):
     """
     Note: The unit of fwhm is the same with npix not sizeau.
+    
+    'precomputed_data' is for extract_gas=False
+    'precomputed_data_gas' and 'precomputed_data_dust' is for extract_gas=True
     """
     if extract_gas is False:
-        if nodust is True:
-            prompt = ' noscat nodust'
-        elif nodust is False:
-            if scat is True:
-                prompt = ' nphot_scat 1000000'
-            elif scat is False:
-                prompt = ' noscat'
-
-        fig, ax = plt.subplots(2, (nlam // 2) + 1, figsize=(18, 6), constrained_layout=True, sharex=True, sharey=True,
-                               gridspec_kw={'wspace': 0.1, 'hspace': 0.1}, layout="constrained")
-        os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} iline {line} vkms {vkm} widthkms {v_width} linenlam {nlam}"+prompt)
-        im = readImage('image.out')
-        
+        if precomputed_data is None:
+            if nodust is True:
+                prompt = ' noscat nodust'
+            elif nodust is False:
+                if scat is True:
+                    prompt = ' nphot_scat 1000000'
+                elif scat is False:
+                    prompt = ' noscat'
+            os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} iline {line} vkms {vkm} widthkms {v_width} linenlam {nlam}"+prompt)
+            im = readImage('image.out')
+            os.system('mv image.out image.img')
+            
+        elif precomputed_data is not None:
+            im = readImage(precomputed_data)
         freq0 = im.freq[nlam//2]
         v = cc / 1e5 * (freq0 - im.freq) / freq0
         
@@ -62,22 +67,23 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
             dust_conti = convolved_conti
         
     elif extract_gas is True:
-        fig, ax = plt.subplots(2, (nlam // 2) + 1, figsize=(18, 6), constrained_layout=True, sharex=True, sharey=True,
-                               gridspec_kw={'wspace': 0.1, 'hspace': 0.1}, layout="constrained")
-
-        os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} iline {line} vkms {vkm} widthkms {v_width} linenlam {nlam} nphot_scat 1000000")
-        os.system('mv image.out image_gas.out')
-        im_gas = readImage('image_gas.out')
+        if (precomputed_data_gas is None) and (precomputed_data_dust is None):
+            os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} iline {line} vkms {vkm} widthkms {v_width} linenlam {nlam} nphot_scat 1000000")
+            os.system('mv image.out image_gas.img')
+            im_gas = readImage('image_gas.img')
+            os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} lambdarange {im_gas.wav[0]} {im_gas.wav[-1]} nlam {nlam} nphot_scat 1000000 noline")
+            os.system('mv image.out image_dust.img')
+            im_dust = readImage('image_dust.img')
+            
+        if (precomputed_data_gas is not None) and (precomputed_data_dust is not None):
+            im_gas = readImage(precomputed_data_gas)
+            im_dust = readImage(precomputed_data_dust)
         freq0 = im_gas.freq[nlam//2]
         v = cc / 1e5 * (freq0 - im_gas.freq) / freq0
-
-        os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} lambdarange {im_gas.wav[0]} {im_gas.wav[-1]} nlam {nlam} nphot_scat 1000000 noline")
-        os.system('mv image.out image_dust.out')
-        im_dust = readImage('image_dust.out')
-
         data_gas  = im_gas.imageJyppix/(140*140)*1000
         dust_conti = im_dust.imageJyppix/(140*140)*1000
         data = data_gas-dust_conti
+        absorption = np.where(data<0, data, 0)
         
         if convolve is True:
             convolved_data = np.zeros(shape=data.shape)
@@ -89,7 +95,8 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
                 convolved_conti[:, :, i] = gaussian_filter(dust_conti[:, :, i], sigma=sigma)
             data = convolved_data
             dust_conti = convolved_conti
-        
+    fig, ax = plt.subplots(2, (nlam // 2) + 1, figsize=(18, 6), constrained_layout=True, sharex=True, sharey=True,
+                gridspec_kw={'wspace': 0.1, 'hspace': 0.1}, layout="constrained")
     vmi = np.min(data)
     vma = np.max(data)
             
@@ -101,10 +108,11 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
     contour_level = np.linspace(0, np.max(dust_conti), 5)
     for idx in range(nlam):
         d = np.transpose(data[:, ::-1, idx])
+        
         if idx == nlam//2:
             image = ax[0, idx].imshow(d, cmap=cm, vmin=vmi, vmax=vma)
             ax[0, idx].contour(Y, X, dust_conti[:, :, idx], levels=contour_level, colors='w', linewidths=1)
-            # ax[0, idx].imshow(np.transpose(dust_conti[:, ::-1, idx]), cmap='nipy_spectral', vmin=np.min(dust_conti), vmax=np.max(dust_conti), alpha=0.5)
+            ax[0, idx].imshow(absorption, cmap='nipy_spectral', vmin=np.min(dust_conti), vmax=np.max(dust_conti), alpha=0.5)
             ax[0, idx].text(int(npix*0.9),int(npix*0.1),f'{v[idx]:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
             
             ax[1, idx].imshow(d, cmap=cm, vmin=vmi, vmax=vma)
