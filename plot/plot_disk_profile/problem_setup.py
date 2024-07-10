@@ -14,7 +14,7 @@ rs  = 6.96e10        # Solar radius            [cm]
 #
 # Monte Carlo parameters
 #
-nphot    = 200000000  # Depend on computer's efficiency
+nphot    = 200000000  # This is extremely high
 #
 # Disk Model
 #
@@ -29,6 +29,7 @@ class problem_setup:
         mctherm  : temperature calculated by radmc3d (stellar heating)
         snowline : enhancement of abundance
         floor    : set a floor of rho value to define the boundary of the disk
+        combine  : combine two heating mechanisms
         """
         #
         # Write the radmc3d.inp control file

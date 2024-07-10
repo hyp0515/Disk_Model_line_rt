@@ -24,12 +24,13 @@ class problem_setup:
                  pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None,
                  abundance_enhancement=1e-5, gas_inside_rcb=False):
         """
-        pancake  : simple slab model
-        mctherm  : temperature calculated by radmc3d (stellar heating)
-        snowline : enhancement of abundance
-        floor    : set a floor of rho value to define the boundary of the disk
-        combine  : combine accretion and irradiation heating
-        Rcb      : Centrifugal Barrier (if not 'None', there is no gas inside Rcb)
+        pancake        : Simple slab model
+        mctherm        : Temperature calculated by radmc3d (stellar heating)
+        snowline       : Enhancement of abundance
+        floor          : Set a floor of rho value to define the boundary of the disk
+        combine        : Combine accretion and irradiation heating
+        Rcb            : Centrifugal Barrier (if not 'None', there is no gas inside Rcb)
+        gas_inside_rcb : If True, gas is absent inside Rcb
         """
         #
         # Write the radmc3d.inp control file
@@ -38,7 +39,7 @@ class problem_setup:
             f.write('nphot = %d\n'%(nphot))
             f.write('scattering_mode_max = 2\n')   # Put this to 1 for isotropic scattering
             f.write('istar_sphere = 1\n')
-            f.write('setthreads = 10\n') # Depending on the number of cores in the computer
+            f.write('setthreads = 7\n') # Depending on the number of cores in the computer
         
         #
         # Write the lines.inp control file
@@ -73,7 +74,7 @@ class problem_setup:
         #
         mstar    = ms  # This is useless in the current version.
         rstar    = rs
-        tstar    = ts
+        tstar    = ts*(0.1)**(1/4)  # 0.1 L_sun
         pstar    = np.array([0.,0.,0.])
         with open('stars.inp','w+') as f:
             f.write('2\n')

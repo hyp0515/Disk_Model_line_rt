@@ -19,17 +19,28 @@ Distance      : 140       pc
 """
 ###############################################################################
 '''
-Plot gas channel maps (with different assumption)
+Plot gas channel maps ('problem_setup' is required before plot_gas_channel_maps)
 '''
 def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
                           nodust=False, scat=True, extract_gas=False, npix=100, sizeau=100,
                           convolve=True, fwhm=50,
                           precomputed_data_gas=None, precomputed_data_dust=None, precomputed_data=None):
     """
-    Note: The unit of fwhm is the same with npix not sizeau.
-    
-    'precomputed_data' is for extract_gas=False
-    'precomputed_data_gas' and 'precomputed_data_dust' is for extract_gas=True
+    incl               : Inclination angle of the disk
+    line               : Transistion level (see 'molecule_ch3oh.inp')
+    vkm                : Systematic velocity
+    v_width            : Range of velocity to simulate
+    nlam               : Number of velocities
+    nodust             : If False, dust effect is included
+    scat               : If True and nodust=False, scattering is included. (Time-consuming)
+    extracted_gas      : If True, spectral line is extracted (I_{dust+gas}-I{dust})
+    npix               : Number of map's pixels
+    sizeau             : Map's span
+    convolve + fwhm    : Generate two images, with and without convolution
+                         (The unit of fwhm is pixel)
+    precomputed_data_* : File's name if images have been generated beforehand
+        'precomputed_data' is for extract_gas=False
+        'precomputed_data_gas' and 'precomputed_data_dust' is for extract_gas=True
     """
     if extract_gas is False:
         if precomputed_data is None:
@@ -51,7 +62,7 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
         
         os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} lambdarange {im.wav[0]} {im.wav[-1]} nlam {nlam} noscat noline")
         os.system('mv image.out image_dust.out')
-        im_dust = readImage('image_dust.out')
+        im_dust = readImage('image_dust.out')  # This is to plot the contour of dust continuum
         data = im.imageJyppix/(140*140)*1000  # unit : mJy
         dust_conti = im_dust.imageJyppix/(140*140)*1000  # unit : mJy
 
@@ -153,93 +164,16 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
     return
 
 ###############################################################################
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=100*au, v_infall=1, 
-#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=None)
-# plot_gas_channel_maps(nodust=True, convolve=False)
-# plt.savefig('./figures/combine/wo dust.pdf')
-# plt.close()
-# os.system('make cleanall')
-
 problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=100*au, v_infall=1, 
             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=None)
 plot_gas_channel_maps(nodust=True, convolve=True)
 plt.savefig('./figures/combine/wo dust_convolved_fwhm_50.pdf')
 plt.close()
-os.system('make cleanall')
+os.system('make cleanall') # image data won't be cleaned.
 
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=100*au, v_infall=1, 
-#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=None)
-# plot_gas_channel_maps(nodust=True, convolve=True, fwhm=10)
-# plt.savefig('./figures/combine/wo dust_convolved_fwhm_10.pdf')
-# plt.close()
-# os.system('make cleanall')
-###############################################################################
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=None)
-# plot_gas_channel_maps(extract_gas=True, convolve=False)
-# plt.savefig('./figures/combine/w dust.pdf')
-# plt.close()
-# os.system('make cleanall')
-
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-            pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=None)
-plot_gas_channel_maps(extract_gas=True, convolve=True)
-plt.savefig('./figures/combine/w dust_convolved_fwhm_50.pdf')
-plt.close()
-os.system('make cleanall')
-
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=None)
-# plot_gas_channel_maps(extract_gas=True, convolve=True, fwhm=10)
-# plt.savefig('./figures/combine/w dust_convolved_fwhm_10.pdf')
-# plt.close()
-# os.system('make cleanall')
-###############################################################################
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=5)
-# plot_gas_channel_maps(nodust=True)
-# plt.savefig('./figures/combine/wo dust + rcb 5.pdf')
-# plt.close()
-# os.system('make cleanall')
-
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=5)
-# plot_gas_channel_maps(nodust=True, convolve=True)
-# plt.savefig('./figures/combine/wo dust + rcb 5_convolved_fwhm_50.pdf')
-# plt.close()
-# os.system('make cleanall')
-
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=5)
-# plot_gas_channel_maps(nodust=True, convolve=True, fwhm=10)
-# plt.savefig('./figures/combine/wo dust + rcb 5_convolved_fwhm_10.pdf')
-# plt.close()
-# os.system('make cleanall')
-###############################################################################
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=5)
-# plot_gas_channel_maps(extract_gas=True, convolve=False)
-# plt.savefig('./figures/combine/w dust + rcb 5.pdf')
-# plt.close()
-# os.system('make cleanall')
-
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=5)
-# plot_gas_channel_maps(extract_gas=True,convolve=True)
-# plt.savefig('./figures/combine/w dust + rcb 5_convolved_fwhm_50.pdf')
-# plt.close()
-# os.system('make cleanall')
-
-# problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=70*au, v_infall=1, 
-#             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=5)
-# plot_gas_channel_maps(extract_gas=True,convolve=True, fwhm=10)
-# plt.savefig('./figures/combine/w dust + rcb 5_convolved_fwhm_10.pdf')
-# plt.close()
-# os.system('make cleanall')
-###############################################################################
 ###############################################################################
 '''
-Plot dust images
+Plot dust images (under construction)
 '''
 def plot_dust(incl=None):
     incl_angle = incl

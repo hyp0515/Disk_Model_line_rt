@@ -31,15 +31,28 @@ Distance      : 140       pc
 # contour_levels = np.linspace(0.01, pvdiagram.data[207:267, 36:86].max(), 4)
 ###############################################################################
 """
-Plot Position-velocity (PV) diagrams
+Plot Position-velocity (PV) diagrams ('problem_setup' is required before plot_pv)
 """
 def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
             nodust=False, scat=True, extract_gas=True, npix=30, sizeau=100,
             convolve=True, fwhm=50,
             precomputed_data_gas=None, precomputed_data_dust=None, precomputed_data=None):
     """
-    'precomputed_data' is for extract_gas=False
-    'precomputed_data_gas' and 'precomputed_data_dust' is for extract_gas=True
+    incl               : Inclination angle of the disk
+    line               : Transistion level (see 'molecule_ch3oh.inp')
+    vkm                : Systematic velocity
+    v_width            : Range of velocity to simulate
+    nlam               : Number of velocities
+    nodust             : If False, dust effect is included
+    scat               : If True and nodust=False, scattering is included. (Time-consuming)
+    extracted_gas      : If True, spectral line is extracted (I_{dust+gas}-I{dust})
+    npix               : Number of map's pixels
+    sizeau             : Map's span
+    convolve + fwhm    : Generate two images, with and without convolution
+                         (The unit of fwhm is pixel)
+    precomputed_data_* : File's name if images have been generated beforehand
+        'precomputed_data' is for extract_gas=False
+        'precomputed_data_gas' and 'precomputed_data_dust' is for extract_gas=True
     """
     if extract_gas is False:
         if precomputed_data is None:
@@ -83,7 +96,8 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
         data = (data_gas-data_dust)*1e3/(140**2)
         
     if convolve is not True: 
-        fig, ax = plt.subplots() 
+        fig, ax = plt.subplots()
+        
         c = ax.pcolormesh(im.x/au, v+vkm, data[:, center, :].T, shading="nearest", rasterized=True, cmap='jet', vmin=0., vmax=0.4)
         cbar = fig.colorbar(c, ax=ax)
         cbar.set_label('mJy/pixel',fontsize = 16)
@@ -139,8 +153,20 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
         
 
 ###############################################################################
+"""
+This generates various plots if 'heat_list', 'snowline', and 'dust' are given. 
+('problem_setup' is built-in)
+"""
+# This generates various plots if 'heat_list', 'snowline', and 'dust' are given.
 def multiple_plots(amax, rcb, nlam, npix, sizeau, v0=0, vwidth=5, gas_inside=True, vinfall=1, convolve=True, fwhm=50, filename=None,
                    precomputed_data_gas=None, precomputed_data_dust=None, precomputed_data=None):
+    """
+    amax     : maximum grain size
+    rcb      : centrifugal barrier
+    v0       : vkm
+    vinfall  : infall velocity in terms of Keplerian velocity
+    filename : save plots
+    """
     for idx_h, heat in enumerate(heat_list):
         for idx_s, snow in enumerate(snowline):
             if heat == 'Accretion' and snow =='w/o snowline':
@@ -244,13 +270,11 @@ for _, a in enumerate([0.01, 0.03, 0.05,0.1, 0.3, 0.5, 1, 3, 10]):
 #                 filename=f"./figures/colorbar_rescaled/amax_{a}/",
 #                 precomputed_data_gas=f"./precomputed_data/amax_{a}/image_gas_Accretion.img",
 #                 precomputed_data_dust=f"./precomputed_data/amax_{a}/image_dust_Accretion.img")
-#     os.system('make cleanall')
 #     heat_list = ['Irradiation']
 #     multiple_plots(amax=0.01*0.1, rcb=5, nlam=100, npix=300, sizeau=300, v0=5, vwidth=10, gas_inside=False, convolve=True, fwhm=50, vinfall=1,
 #                 filename=f"./figures/colorbar_rescaled/amax_{a}/",
 #                 precomputed_data_gas=f"./precomputed_data/amax_{a}/image_gas_Irradiation.img",
 #                 precomputed_data_dust=f"./precomputed_data/amax_{a}/image_dust_Irradiation.img")
-#     os.system('make cleanall')
 #     heat_list = ['Combine']
 #     multiple_plots(amax=0.01*0.1, rcb=5, nlam=100, npix=300, sizeau=300, v0=5, vwidth=10, gas_inside=False, convolve=True, fwhm=50, vinfall=1,
 #                 filename=f"./figures/colorbar_rescaled/amax_{a}/",
