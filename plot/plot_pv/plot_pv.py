@@ -84,7 +84,7 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
         
     if convolve is not True: 
         fig, ax = plt.subplots() 
-        c = ax.pcolormesh(im.x/au, v+vkm, data[:, center, :].T, shading="nearest", rasterized=True, cmap='jet', vmin=0., vmax=0.5)
+        c = ax.pcolormesh(im.x/au, v+vkm, data[:, center, :].T, shading="nearest", rasterized=True, cmap='jet', vmin=0., vmax=0.4)
         cbar = fig.colorbar(c, ax=ax)
         cbar.set_label('mJy/pixel',fontsize = 16)
         ax.set_xlabel("Offset [au]",fontsize = 16)
@@ -99,10 +99,10 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
         Save the images without convolution
         """
         fig, ax = plt.subplots()
-        c = ax.pcolormesh(im.x/au, v+vkm, data[:, center, :].T, shading="nearest", rasterized=True, cmap='jet', vmin=0., vmax=0.5)
+        c = ax.pcolormesh(im.x/au, v+vkm, data[:, center, :].T, shading="nearest", rasterized=True, cmap='jet', vmin=0., vmax=0.4)
         
         absorption = np.where(data[:, center, :].T<0, data[:, center, :].T, 0)
-        contour_levels = np.linspace(np.min(absorption), 0, 5)
+        contour_levels = np.linspace(np.min(absorption), 0, 3)
         x = np.linspace(-sizeau//2, sizeau//2, npix, endpoint=True)
         y = np.linspace(-v_width+vkm, v_width+vkm, nlam, endpoint=True)
         X, Y = np.meshgrid(x, y)
@@ -231,11 +231,29 @@ def multiple_plots(amax, rcb, nlam, npix, sizeau, v0=0, vwidth=5, gas_inside=Tru
 # snowline = ['w/ snowline', 'w/o snowline']
 # dust = ['w/o dust', 'w/ dust']
 heat_list = ['Irradiation', 'Combine', 'Accretion']
-snowline = ['w/ snowline']
+snowline = ['w/o snowline']
 dust = ['w/ dust']
 for _, a in enumerate([0.01, 0.03, 0.05,0.1, 0.3, 0.5, 1, 3, 10]):
     multiple_plots(amax=a*0.1, rcb=5, nlam=100, npix=300, sizeau=300, v0=5, vwidth=10, gas_inside=False, convolve=True, fwhm=50, vinfall=1,
                 filename=f"./figures/colorbar_rescaled/amax_{a}/",
                 precomputed_data_gas=None, precomputed_data_dust=None)
-os.system('make cleanall')
+
+# for _, a in enumerate([0.01, 0.03, 0.05,0.1, 0.3, 0.5, 1, 3, 10]):
+#     heat_list = ['Accretion']
+#     multiple_plots(amax=0.01*0.1, rcb=5, nlam=100, npix=300, sizeau=300, v0=5, vwidth=10, gas_inside=False, convolve=True, fwhm=50, vinfall=1,
+#                 filename=f"./figures/colorbar_rescaled/amax_{a}/",
+#                 precomputed_data_gas=f"./precomputed_data/amax_{a}/image_gas_Accretion.img",
+#                 precomputed_data_dust=f"./precomputed_data/amax_{a}/image_dust_Accretion.img")
+#     os.system('make cleanall')
+#     heat_list = ['Irradiation']
+#     multiple_plots(amax=0.01*0.1, rcb=5, nlam=100, npix=300, sizeau=300, v0=5, vwidth=10, gas_inside=False, convolve=True, fwhm=50, vinfall=1,
+#                 filename=f"./figures/colorbar_rescaled/amax_{a}/",
+#                 precomputed_data_gas=f"./precomputed_data/amax_{a}/image_gas_Irradiation.img",
+#                 precomputed_data_dust=f"./precomputed_data/amax_{a}/image_dust_Irradiation.img")
+#     os.system('make cleanall')
+#     heat_list = ['Combine']
+#     multiple_plots(amax=0.01*0.1, rcb=5, nlam=100, npix=300, sizeau=300, v0=5, vwidth=10, gas_inside=False, convolve=True, fwhm=50, vinfall=1,
+#                 filename=f"./figures/colorbar_rescaled/amax_{a}/",
+#                 precomputed_data_gas=f"./precomputed_data/amax_{a}/image_gas_Combine.img",
+#                 precomputed_data_dust=f"./precomputed_data/amax_{a}/image_dust_Combine.img")
 
