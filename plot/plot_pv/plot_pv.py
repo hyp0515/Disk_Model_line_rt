@@ -16,10 +16,11 @@ Accretion rate: 4-7e-7    Msun/yr
 Radius        : 20-40     au
 Distance      : 140       pc
 """
+###############################################################################
 # from spectral_cube import SpectralCube
 # from pvextractor import extract_pv_slice, Path
 # cube = SpectralCube.read(
-#     '/mnt/storage/CB68_setup1/CB68-Setup1-cube-products/CB68_218.440GHz_CH3OH_joint_0.5_clean.image.pbcor.common.fits'
+#     '/run/media/hyp0515/storage/CB68_setup1/CB68-Setup1-cube-products/CB68_218.440GHz_CH3OH_joint_0.5_clean.image.pbcor.common.fits'
 #     )
 # freq0 = 218.440063 * 1e9
 # v = cc / 1e5 * (freq0 - cube.spectral_axis.value) / freq0
@@ -29,6 +30,17 @@ Distance      : 140       pc
 # offset = np.linspace(-150, 150, 50, endpoint=True)
 # O, V = np.meshgrid(offset, v_axis)
 # contour_levels = np.linspace(0.01, pvdiagram.data[207:267, 36:86].max(), 4)
+###############################################################################
+CB68_PV = np.load('../../CB68_PV.npy')
+'''
+Shape of 'CB68_PV' is (60, 50)
+The first dimension is velocity channel (0 - 10km/s)
+The second dimension is offest (-150 - 150 AU)
+'''
+v_axis = np.linspace(0, 10, 60, endpoint=True)
+offset = np.linspace(-150, 150, 50, endpoint=True)
+O, V = np.meshgrid(offset, v_axis)
+# contour_levels = np.linspace(0.01, CB68_PV.max(), 4)
 ###############################################################################
 """
 Plot Position-velocity (PV) diagrams ('problem_setup' is required before plot_pv)
@@ -105,8 +117,8 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
         ax.set_ylabel("Velocity [km/s]",fontsize = 16)
         ax.plot([0, 0], [-v_width+vkm, v_width+vkm], 'w:')
         ax.plot([-(sizeau//2), (sizeau//2)], [vkm, vkm], 'w:')
-        # contour_levels = np.linspace(0.01, pvdiagram.data[207:267, 36:86].max(), 4)
-        # contour = ax.contour(O, V, pvdiagram.data[207:267, 36:86][:, ::-1], levels=contour_levels, colors='k', linewidths=1)
+        contour_levels = np.linspace(0.01, CB68_PV.max(), 4)
+        contour = ax.contour(O, V, CB68_PV[:, ::-1], levels=contour_levels, colors='k', linewidths=1)
         return fig, ax
     elif convolve is True:
         """
@@ -128,8 +140,8 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
         ax.set_ylabel("Velocity [km/s]",fontsize = 16)
         ax.plot([0, 0], [-v_width+vkm, v_width+vkm], 'w:')
         ax.plot([-(sizeau//2), (sizeau//2)], [vkm, vkm], 'w:')
-        # contour_levels = np.linspace(0.01, pvdiagram.data[207:267, 36:86].max(), 4)
-        # contour = ax.contour(O, V, pvdiagram.data[207:267, 36:86][:, ::-1], levels=contour_levels, colors='k', linewidths=1)
+        contour_levels = np.linspace(0.01, CB68_PV.max(), 4)
+        contour = ax.contour(O, V, CB68_PV[:, ::-1], levels=contour_levels, colors='k', linewidths=1)
         """
         Save the images with convolution
         """
@@ -147,8 +159,8 @@ def plot_pv(incl=70, line=240, vkm=0, v_width=20, nlam=50,
         ax_convolved.set_ylabel("Velocity [km/s]",fontsize = 16)
         ax_convolved.plot([0, 0], [-v_width+vkm, v_width+vkm], 'w:')
         ax_convolved.plot([-(sizeau//2), (sizeau//2)], [vkm, vkm], 'w:')
-        # contour_levels = np.linspace(0.01, pvdiagram.data[207:267, 36:86].max(), 4)
-        # contour = ax.contour(O, V, pvdiagram.data[207:267, 36:86][:, ::-1], levels=contour_levels, colors='k', linewidths=1)
+        contour_levels = np.linspace(0.01, CB68_PV.max(), 4)
+        contour = ax.contour(O, V, CB68_PV[:, ::-1], levels=contour_levels, colors='k', linewidths=1)
         return fig, ax, fig_convolved, ax_convolved
         
 
@@ -167,6 +179,7 @@ def multiple_plots(amax, rcb, nlam, npix, sizeau, v0=0, vwidth=5, gas_inside=Tru
     vinfall  : infall velocity in terms of Keplerian velocity
     filename : save plots
     """
+    # The following codes are kind of redundant. Modification is required.
     for idx_h, heat in enumerate(heat_list):
         for idx_s, snow in enumerate(snowline):
             if heat == 'Accretion' and snow =='w/o snowline':
@@ -251,6 +264,7 @@ def multiple_plots(amax, rcb, nlam, npix, sizeau, v0=0, vwidth=5, gas_inside=Tru
         if (precomputed_data_gas is None) and (precomputed_data_dust is None):
             os.system(f'mv image_gas.img ./precomputed_data/amax_{a}/image_gas_{heat}.img')
             os.system(f'mv image_dust.img ./precomputed_data/amax_{a}/image_dust_{heat}.img')
+            
     return
 # ###############################################################################
 # heat_list = ['Irradiation', 'Combine', 'Accretion']

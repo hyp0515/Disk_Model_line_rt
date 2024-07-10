@@ -99,19 +99,25 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
         if convolve is True:
             convolved_data = np.zeros(shape=data.shape)
             convolved_conti = np.zeros(shape=dust_conti.shape)
+            convolved_absorption = np.zeros(shape=absorption.shape)
             for i in range(nlam):
                 FWHM = fwhm
                 sigma = FWHM / (2*np.sqrt(2*np.log(2)))
                 convolved_data[:, :, i] = gaussian_filter(data[:, :, i], sigma=sigma)
                 convolved_conti[:, :, i] = gaussian_filter(dust_conti[:, :, i], sigma=sigma)
+                convolved_absorption[:, :, i] = gaussian_filter(absorption[:, :, i], sigma=sigma)
             data = convolved_data
             dust_conti = convolved_conti
-    fig, ax = plt.subplots(2, (nlam // 2) + 1, figsize=(18, 6), constrained_layout=True, sharex=True, sharey=True,
+            absorption = convolved_absorption
+    fig, ax = plt.subplots(2, (nlam // 2) + 1, figsize=(18, 6), sharex=True, sharey=True,
                 gridspec_kw={'wspace': 0.1, 'hspace': 0.1}, layout="constrained")
-    vmi = np.min(data)
+    
+    # vmi = np.min(data)
+    vmi = 0
     vma = np.max(data)
             
     cm = 'hot'
+    abcm = 'pink_r'
     tc = 'w'
     x = np.linspace(1, npix, npix, endpoint=True)
     y = np.linspace(1, npix, npix, endpoint=True)
@@ -123,12 +129,12 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
         if idx == nlam//2:
             image = ax[0, idx].imshow(d, cmap=cm, vmin=vmi, vmax=vma)
             ax[0, idx].contour(Y, X, dust_conti[:, :, idx], levels=contour_level, colors='w', linewidths=1)
-            ax[0, idx].imshow(absorption, cmap='nipy_spectral', vmin=np.min(dust_conti), vmax=np.max(dust_conti), alpha=0.5)
+            ax[0, idx].imshow(absorption[:, :, idx], cmap=abcm, alpha=0.5)
             ax[0, idx].text(int(npix*0.9),int(npix*0.1),f'{v[idx]:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
             
             ax[1, idx].imshow(d, cmap=cm, vmin=vmi, vmax=vma)
             ax[1, idx].contour(Y, X, dust_conti[:, :, idx], levels=contour_level, colors='w', linewidths=1)
-            # ax[1, idx].imshow(np.transpose(dust_conti[:, ::-1, idx]), cmap='nipy_spectral', vmin=np.min(dust_conti), vmax=np.max(dust_conti), alpha=0.5)
+            ax[1, idx].imshow(absorption[:, :, idx], cmap=abcm, alpha=0.5)
             ax[1, idx].text(int(npix*0.9),int(npix*0.1),f'{v[idx]:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
             
             ax[1, idx].set_xlabel('AU',fontsize=16)
@@ -139,7 +145,7 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
         elif idx > nlam//2:
             ax[1, nlam-1-idx].imshow(d, cmap=cm, vmin=vmi, vmax=vma)
             ax[1, nlam-1-idx].contour(Y, X, dust_conti[:, :, idx], levels=contour_level, colors='w', linewidths=1)
-            # ax[1, nlam-1-idx].imshow(np.transpose(dust_conti[:, ::-1, idx]), cmap='nipy_spectral', vmin=np.min(dust_conti), vmax=np.max(dust_conti), alpha=0.5)
+            ax[1, nlam-1-idx].imshow(absorption[:, :, idx], cmap=abcm, alpha=0.5)
             ax[1, nlam-1-idx].text(int(npix*0.9),int(npix*0.1),f'{v[idx]:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
             
             ax[1, nlam-1-idx].set_xticks([int(npix*0.1), npix//2, int(npix*0.9)])
@@ -152,24 +158,56 @@ def plot_gas_channel_maps(incl=70, line=240, vkm=0, v_width=5, nlam=11,
         else:
             ax[0, idx].imshow(d, cmap=cm, vmin=vmi, vmax=vma)
             ax[0, idx].contour(Y, X, dust_conti[:, :, idx], levels=contour_level, colors='w', linewidths=1)
-            # ax[0, idx].imshow(np.transpose(dust_conti[:, ::-1, idx]), cmap='nipy_spectral', vmin=np.min(dust_conti), vmax=np.max(dust_conti), alpha=0.5)
+            ax[0, idx].imshow(absorption[:, :, idx], cmap=abcm, alpha=0.5)
             ax[0, idx].text(int(npix*0.9),int(npix*0.1),f'{v[idx]:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
             if idx == 0:
                 ax[0, idx].set_yticks([int(npix*0.1), npix//2, int(npix*0.9)])
                 ax[0, idx].set_yticklabels([f'-{int((sizeau//2)*0.8)}', '0', f'{int((sizeau//2)*0.8)}'], fontsize=14)
                 ax[0, idx].set_ylabel('AU',fontsize=16)
-    # fig.tight_layout(pad=1.0)
+
     cbar = fig.colorbar(image, ax=ax, orientation='vertical', fraction=0.02, pad=0.04)
     cbar.set_label('Intensity (mJy/pixel)')
     return
 
 ###############################################################################
-problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=100*au, v_infall=1, 
-            pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=None)
-plot_gas_channel_maps(nodust=True, convolve=True)
-plt.savefig('./figures/combine/wo dust_convolved_fwhm_50.pdf')
-plt.close()
+for idx_l, l in enumerate([0.1, 0.86, 1]):
+    # 0.86 L_sun is the luminosity of CB68
+    problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=14e-7*Msun/yr, Radius_of_disk=100*au, v_infall=1, 
+                pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=5, gas_inside_rcb=False, lum=l)
+    plot_gas_channel_maps(extract_gas=True, convolve=False)
+    plt.savefig(f'./figures/compare_luminosity/{l}_Lsun/high_mdot_high_infall.pdf', transparent=True)
+    os.system('mv image_gas.img image_gas_high.img')
+    os.system('mv image_dust.img image_dust_high.img')
+    plt.close()
+    plot_gas_channel_maps(extract_gas=True, convolve=True, fwhm=10, precomputed_data_dust='image_dust_high.img', precomputed_data_gas='image_gas_high.img')
+    plt.savefig(f'./figures/compare_luminosity/{l}_Lsun/high_mdot_high_infall_convolved_fwhm_10.pdf', transparent=True)
+    plt.close()
+
+    plot_gas_channel_maps(extract_gas=True, convolve=True, fwhm=50, precomputed_data_dust='image_dust_high.img', precomputed_data_gas='image_gas_high.img')
+    plt.savefig(f'./figures/compare_luminosity/{l}_Lsun/high_mdot_high_infall_convolved_fwhm_50.pdf', transparent=True)
+    plt.close()
+    os.system(f'mv image_gas_high.img ./precomputed_data/compare_luminosity/{l}_Lsun/image_gas_high.img')
+    os.system(f'mv image_dust_high.img ./precomputed_data/compare_luminosity/{l}_Lsun/image_dust_high.img')
+    
+    problem_setup(a_max=0.1, Mass_of_star=0.14*Msun, Accretion_rate=5e-7*Msun/yr, Radius_of_disk=100*au, v_infall=0.5, 
+                pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=True, Rcb=5, gas_inside_rcb=False, lum=l)
+    plot_gas_channel_maps(extract_gas=True, convolve=False)
+    os.system('mv image_gas.img image_gas_low.img')
+    os.system('mv image_dust.img image_dust_low.img')
+    plt.savefig(f'./figures/compare_luminosity/{l}_Lsun/low_mdot_low_infall.pdf', transparent=True)
+    plt.close()
+
+    plot_gas_channel_maps(extract_gas=True, convolve=True, fwhm=10, precomputed_data_dust='image_dust_low.img', precomputed_data_gas='image_gas_low.img')
+    plt.savefig(f'./figures/compare_luminosity/{l}_Lsun/low_mdot_low_infall_convolved_fwhm_10.pdf', transparent=True)
+    plt.close()
+
+    plot_gas_channel_maps(extract_gas=True, convolve=True, fwhm=50, precomputed_data_dust='image_dust_low.img', precomputed_data_gas='image_gas_low.img')
+    plt.savefig(f'./figures/compare_luminosity/{l}_Lsun/low_mdot_low_infall_convolved_fwhm_50.pdf', transparent=True)
+    plt.close()
+    os.system(f'mv image_gas_low.img ./precomputed_data/compare_luminosity/{l}_Lsun/image_gas_low.img')
+    os.system(f'mv image_dust_low.img ./precomputed_data/compare_luminosity/{l}_Lsun/image_dust_low.img')   
 os.system('make cleanall') # image data won't be cleaned.
+###############################################################################
 
 ###############################################################################
 '''

@@ -22,7 +22,7 @@ from vertical_profile_class import DiskModel_vertical
 class problem_setup:
     def __init__(self, a_max, Mass_of_star, Accretion_rate, Radius_of_disk, v_infall, 
                  pancake=False, mctherm=True, snowline=True, floor=True, kep=True, combine=False, Rcb=None,
-                 abundance_enhancement=1e-5, gas_inside_rcb=False):
+                 abundance_enhancement=1e-5, gas_inside_rcb=False, lum=0.86):
         """
         pancake        : Simple slab model
         mctherm        : Temperature calculated by radmc3d (stellar heating)
@@ -31,6 +31,7 @@ class problem_setup:
         combine        : Combine accretion and irradiation heating
         Rcb            : Centrifugal Barrier (if not 'None', there is no gas inside Rcb)
         gas_inside_rcb : If True, gas is absent inside Rcb
+        lum            : Protostellar luminosity
         """
         #
         # Write the radmc3d.inp control file
@@ -74,7 +75,7 @@ class problem_setup:
         #
         mstar    = ms  # This is useless in the current version.
         rstar    = rs
-        tstar    = ts*(0.1)**(1/4)  # 0.1 L_sun
+        tstar    = ts*(lum**(1/4))
         pstar    = np.array([0.,0.,0.])
         with open('stars.inp','w+') as f:
             f.write('2\n')
