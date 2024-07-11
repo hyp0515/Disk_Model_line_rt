@@ -1,6 +1,4 @@
 import numpy as np
-from mpl_toolkits.mplot3d import axes3d
-from matplotlib import pyplot as plt
 from radmc3dPy.analyze import *
 #
 # Some natural constants
@@ -14,7 +12,7 @@ rs  = 6.96e10        # Solar radius            [cm]
 #
 # Monte Carlo parameters
 #
-nphot    = 200000000  # This is extremely high
+nphot    = 20000000  # This is extremely high
 #
 # Disk Model
 #
@@ -37,7 +35,6 @@ class problem_setup:
         with open('radmc3d.inp','w+') as f:
             f.write('nphot = %d\n'%(nphot))
             f.write('scattering_mode_max = 2\n')   # Put this to 1 for isotropic scattering
-            # f.write('iranfreqmode = 1\n')
             f.write('istar_sphere = 1\n')
             f.write('tgas_eq_tdust = 1\n')
             f.write('setthreads = 7\n') # Depending on the number of cores in the computer
@@ -52,16 +49,12 @@ class problem_setup:
         # Write the wavelength_micron.inp file
         #
         lam1     = 0.1e0
-        lam2     = 7.0e0
-        lam3     = 25.e0
+        lam2     = 1.0e2
+        lam3     = 5.0e3
         lam4     = 1.0e4
-        # lam1     = 3.0e2
-        # lam2     = 3.0e3
-        # lam3     = 3.0e4
-        # lam4     = 3.0e5
-        n12      = 20
-        n23      = 100
-        n34      = 30
+        n12      = 100  # this section is quite important when mctherm since it covers the peak of the blackbody emission of the central star.
+        n23      = 100  # this section focuses on dust and line emission.
+        n34      = 50
         lam12    = np.logspace(np.log10(lam1),np.log10(lam2),n12,endpoint=False)
         lam23    = np.logspace(np.log10(lam2),np.log10(lam3),n23,endpoint=False)
         lam34    = np.logspace(np.log10(lam3),np.log10(lam4),n34,endpoint=True)
@@ -76,7 +69,7 @@ class problem_setup:
         #
         mstar    = ms  # This is useless in the current version.
         rstar    = rs
-        tstar    = ts
+        tstar    = ts *(0.86**(1/4))
         pstar    = np.array([0.,0.,0.])
         with open('stars.inp','w+') as f:
             f.write('2\n')

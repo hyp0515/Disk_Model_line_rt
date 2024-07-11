@@ -40,7 +40,7 @@ class problem_setup:
             f.write('nphot = %d\n'%(nphot))
             f.write('scattering_mode_max = 2\n')   # Put this to 1 for isotropic scattering
             f.write('istar_sphere = 1\n')
-            f.write('setthreads = 20\n') # Depending on the number of cores in the computer
+            f.write('setthreads = 10\n') # Depending on the number of cores in the computer
         
         #
         # Write the lines.inp control file
@@ -196,7 +196,7 @@ class problem_setup:
             rcb_idx = np.searchsorted(DM.r_sph, Rcb)
             vr_kep = np.zeros(DM.r_sph[:rcb_idx].shape)  # no infall compoonent inside the centrifugal barrier
             # vr_kep = +np.sqrt(G*Mass_of_star/(DM.r_sph[:rcb_idx]*au))  # if expanding
-            vr_infall = -v_infall*np.sqrt(G*Mass_of_star/(DM.r_sph[rcb_idx:]*au))
+            vr_infall = -np.sqrt(G*Mass_of_star/(DM.r_sph[rcb_idx:]*au))
             vr = np.concatenate((vr_kep, vr_infall))
             vtheta = 0
             vphi = np.sqrt(G*Mass_of_star/(DM.r_sph*au))
