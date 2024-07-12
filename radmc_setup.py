@@ -130,6 +130,7 @@ class radmc3d_setup:
         f.write(content)
         f.close()
 
+      self.filename = filename
 
     def get_linecontrol(self, filename = None,
                               **kwargs):
@@ -198,9 +199,9 @@ class radmc3d_setup:
       '''
       if a_max is None:                   a_max = 0.1  # 100 um
       # CB68's properties
-      if Mass_of_star is None:       self.Mstar = 0.14
+      if Mass_of_star is None:     Mass_of_star = 0.14
       if Accretion_rate is None: Accretion_rate = 5e-7
-      if Radius_of_disk is None:        self.Rd = 50
+      if Radius_of_disk is None: Radius_of_disk = 50
         
       # grid's resolution
       if NR is None:                         NR = 200
@@ -215,6 +216,8 @@ class radmc3d_setup:
       disk_property_table = generate_disk_property_table(self.opacity_table)
       DM = DiskModel_vertical(self.opacity_table, disk_property_table)
       
+      self.Mstar = Mass_of_star
+      self.Rd = Radius_of_disk
       DM.input_disk_parameter(Mstar=self.Mstar*Msun,
                               Mdot=Accretion_rate*Msun/yr,
                               Rd=self.Rd*au,
@@ -231,6 +234,16 @@ class radmc3d_setup:
       self.NPhi  = DM.NPhi
       
       self.disk_boundary = disk_boundary
+      
+      # f = open(self.filename, 'r+')
+      # content = f.read()
+      # f.seek(0,0)
+      # f.write(f'# a_max = {a_max} mm \n')
+      # f.write(f'# Mstar = {Mass_of_star} Msun \n')
+      # f.write(f'# Mdot = {Accretion_rate} Msun/yr \n')
+      # f.write(f'# Rd = {Radius_of_disk} AU \n')
+      # f.write(content)
+      # f.close()
       
       self.write_amr_grid()
       self.write_dust_opac()
@@ -363,6 +376,15 @@ class radmc3d_setup:
           for idx_theta in range(self.NTheta):
             for idx_r in range(self.NR):
               f.write('%13.6e %13.6e %13.6e \n'%(vr[idx_r],vtheta,vphi[idx_r]))
+      
+      # f = open(self.filename, 'r+')
+      # content = f.read()
+      # f.seek(0,0)
+      # f.write(f'# Kep = {Kep} \n')
+      # f.write(f'# vinfall = {vinfall} Kep velocity \n')
+      # f.write(f'# Rcb = {Rcb} AU \n')
+      # f.write(content)
+      # f.close()
     
     
     def get_heatcontrol(self, L_star = None,
@@ -422,19 +444,20 @@ class radmc3d_setup:
       
       
       if 'heat' in kwargs:
-        if kwargs['heat'].lower() == 'accretion':
+        heat_type = kwargs['heat'].lower()
+        if heat_type == 'accretion':
           accretion   = True
           irradiation = False
-        if kwargs['heat'].lower() == 'irradiation' or 'radiation':
+        elif heat_type == 'irradiation' or heat_type == 'radiation':
           accretion   = False
           irradiation = True
-        if kwargs['heat'].lower() == 'combine':
+        elif heat_type == 'combine':
           accretion   = True
           irradiation = True
       
       # Heating mechanism
       if irradiation is True:# Irradiation heating calculated by RADMC-3D
-        if (accretion and irradiation) is not True:
+        if accretion is False:
           if self.disk_boundary is not None:
             os.system('radmc3d mctherm')
             d = readData(dtemp=True)
@@ -450,7 +473,7 @@ class radmc3d_setup:
             d = readData(dtemp=True)
             T = np.where(d.dusttemp < 20, 20, d.dusttemp)
             
-        elif (accretion and irradiation) is True:  # Combination of two heating mechanisms, irradiation and accretion
+        elif accretion is True:  # Combination of two heating mechanisms, irradiation and accretion
           if self.disk_boundary is not None:
             T_acc = np.tile(self.DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, 4))
             
@@ -521,7 +544,21 @@ class radmc3d_setup:
           data = self.T_avg.ravel(order='F')
           data.tofile(f, sep='\n', format="%13.6e")
           f.write('\n')
-    
+        
+      # if accretion is True and irradiation is False:
+      #   mechanism = 'accretion'
+      # elif accretion is False and irradiation is True:
+      #   mechanism = 'irradiation'
+      # elif accretion is True and irradiation is True:
+      #   mechanism = 'combine'
+      
+      # f = open(self.filename, 'r+')
+      # content = f.read()
+      # f.seek(0,0)
+      # f.write(f'# L_star = {L_star} \n')
+      # f.write(f'# heating mechanism = '+mechanism+'\n')
+      # f.write(content)
+      # f.close()
     
     def get_gasdensitycontrol(self, 
                                  abundance   = 1e-10,
@@ -587,13 +624,15 @@ class radmc3d_setup:
         data.tofile(f, sep='\n', format="%13.6e")
         f.write('\n')
         
-  
-test = radmc3d_setup(silent = False)
-test.get_mastercontrol(filename = 'radmctest.inp',
-                        comment = 'this is a test', incl_dust=1, nphot=100000, num_cpu=2)
-
-test.get_linecontrol(line1='ch3oh leiden 0 0 0')
-test.get_diskcontrol()
-test.get_vfieldcontrol()
-test.get_heatcontrol()
-test.get_gasdensitycontrol()
+      # f = open(self.filename, 'r+')
+      # content = f.read()
+      # f.seek(0,0)
+      # f.write(f'# initial abundance = {abundance} \n')
+      # if snowline is not None:
+      #   f.write(f'# snowline = {snowline}K\n')
+      #   f.write(f'# enhancement = {enhancement}\n')
+      # elif snowline is None:
+      #   f.write(f'# snowline = no snowline\n')
+      # f.write(f'# gas inside rcb = {gas_inside_rcb} \n')
+      # f.write(content)
+      # f.close()
