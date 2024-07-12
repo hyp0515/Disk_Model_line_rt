@@ -165,7 +165,7 @@ class DiskModel_vertical:
         for z in range(self.NZ):
 
             if z == 0:  # initialize kappa_r_grid
-                T_old = 5*np.ones((self.NR))  # the lowest temperature in Wenrui's code
+                T_old = 20 * np.ones((self.NR))  # the lowest temperature in Wenrui's code
             else:
                 T_old = T_map[:, -1]
 

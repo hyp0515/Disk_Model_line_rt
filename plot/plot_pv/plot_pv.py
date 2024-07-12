@@ -226,30 +226,27 @@ def plot_pv(dir=None, precomputed=False,
         plt.close('all')
         return 
 ###############################################################################
-"""
-
-"""
-d = 'compare_amax'
+d = 'compare_amax_oya_rcb_5'
 for idx_a, a in enumerate([0.01, 0.03, 0.05,0.1, 0.3, 0.5, 1, 3, 10]):
     for idx_mdot, mdot in enumerate([5, 10, 15]):
         
         f = "Accretion"
         problem_setup(a_max=a*0.1, Mass_of_star=0.14*Msun, Accretion_rate=mdot*1e-7*Msun/yr, Radius_of_disk=50*au, v_infall=0.5, 
-                    pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=None, gas_inside_rcb=True)
+                    pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=5, gas_inside_rcb=None)
         generate_cube(fname=f, v_width=10, nlam=50, npix=200, sizeau=200)
         plot_pv(cube_dust='image_dust_'+f+'.img',cube_gas='image_gas_'+f+'.img',
                 dir=d+f'/amax_{a}/mdot_{mdot}', fname=f, title=f+"+ w/ snowline + w/ dust")
 
         f = "Irradiation"
         problem_setup(a_max=a*0.1, Mass_of_star=0.14*Msun, Accretion_rate=mdot*1e-7*Msun/yr, Radius_of_disk=50*au, v_infall=0.5, 
-                    pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None, gas_inside_rcb=True)
+                    pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=5, gas_inside_rcb=None)
         generate_cube(fname=f, v_width=10, nlam=50, npix=200, sizeau=200)
         plot_pv(cube_dust='image_dust_'+f+'.img',cube_gas='image_gas_'+f+'.img',
                 dir=d+f'/amax_{a}/mdot_{mdot}', fname=f, title=f+"+ w/ snowline + w/ dust")
 
         f = "Combine"
         problem_setup(a_max=a*0.1, Mass_of_star=0.14*Msun, Accretion_rate=mdot*1e-7*Msun/yr, Radius_of_disk=50*au, v_infall=0.5, 
-                    pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=None, gas_inside_rcb=True, combine=True)
+                    pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=5, gas_inside_rcb=None, combine=True)
         generate_cube(fname=f, v_width=10, nlam=50, npix=200, sizeau=200)
         plot_pv(cube_dust='image_dust_'+f+'.img',cube_gas='image_gas_'+f+'.img',
                 dir=d+f'/amax_{a}/mdot_{mdot}', fname=f, title=f+"+ w/ snowline + w/ dust")
