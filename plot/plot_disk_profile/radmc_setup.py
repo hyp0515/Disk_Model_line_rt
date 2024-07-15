@@ -361,7 +361,7 @@ class radmc3d_setup:
       
       self.Mstar = Mass_of_star
       self.Rd = Radius_of_disk
-      DM.input_disk_parameter(Mstar=Mass_of_star*Msun,
+      DM.input_disk_parameter(Mstar=self.Mstar*Msun,
                               Mdot=Accretion_rate*Msun/yr,
                               Rd=self.Rd*au,
                               Q=Q,
@@ -498,20 +498,20 @@ class radmc3d_setup:
       
       self.rcb = Rcb
       if Rcb is None:
-        vr        = -vinfall*np.sqrt(G*self.Mstar*Msun/(self.DM.r_sph*au)) # Infall velocity
+        vr        = -vinfall*np.sqrt(G*self.Mstar/(self.DM.r_sph*au)) # Infall velocity
         vtheta    = 0  # No vertical movement in this version
         if Kep is True:
-          vphi    = np.sqrt(G*self.Mstar*Msun/(self.DM.r_sph*au))    # Keplerian velocity
+          vphi    = np.sqrt(G*self.Mstar/(self.DM.r_sph*au))    # Keplerian velocity
         elif Kep is False:
           vphi    = np.zeros(vr.shape)
       elif Rcb is not None:  # velocity field in Oya et al. 2014
         rcb_idx   = np.searchsorted(self.DM.r_sph, Rcb)
         vr_kep    = np.zeros(self.DM.r_sph[:rcb_idx].shape)  # no infall compoonent inside the centrifugal barrier
         # vr_kep    = +np.sqrt(G*self.Mstar/(self.DM.r_sph[:rcb_idx]*au))  # if expanding
-        vr_infall = -vinfall*np.sqrt(G*self.Mstar*Msun/(self.DM.r_sph[rcb_idx:]*au))
+        vr_infall = -vinfall*np.sqrt(G*self.Mstar/(self.DM.r_sph[rcb_idx:]*au))
         vr        = np.concatenate((vr_kep, vr_infall))
         vtheta    = 0
-        vphi      = np.sqrt(G*self.Mstar*Msun/(self.DM.r_sph*au))
+        vphi      = np.sqrt(G*self.Mstar/(self.DM.r_sph*au))
         
       with open('gas_velocity.inp','w+') as f:
         f.write('1\n')
@@ -713,11 +713,11 @@ class radmc3d_setup:
           This is over simplified to determine how the abundance is enhanced.
           Realistic chemical configuration is required.
           """
-          rho_gas   = self.DM.rho_sph
+          rho_gas   = self.rho_dust/self.d_to_gas_ratio
           
         elif snowline is None:
           abunch3oh = abundance
-          rho_gas   = self.DM.rho_sph
+          rho_gas   = self.rho_dust/self.d_to_gas_ratio 
           
       elif self.rcb is not None:  # The main assumption of Oya's velocity field is that there is no gas inside the centrifugal barrier.
         rcb_idx = np.searchsorted(self.DM.r_sph, self.rcb)
@@ -726,14 +726,14 @@ class radmc3d_setup:
                                abundance,
                                abundance * enhancement
                                )
-          rho_gas   = self.DM.rho_sph
+          rho_gas   = self.rho_dust/self.d_to_gas_ratio
           
           if gas_inside_rcb is False:
             rho_gas[:rcb_idx, :, :] = self.disk_boundary
             
         elif snowline is None:
           abunch3oh = abundance
-          rho_gas   = self.DM.rho_sph
+          rho_gas   = self.rho_dust/self.d_to_gas_ratio
             
           if gas_inside_rcb is False:
             rho_gas[:rcb_idx, :, :] = self.disk_boundary

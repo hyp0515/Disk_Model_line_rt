@@ -128,7 +128,7 @@ Opacity
 def generate_opacity_table(
     a_min, a_max, q, dust_to_gas,
     precomputed_grain_properties_fname='data_for_disk_model/opacity_tables/grain_properties.pkl',
-    T_min=5, T_max=2000, N_T=30,
+    T_min=20, T_max=2000, N_T=30,
     ):
     """
     Generate an opacity table for given grain size distribution.
@@ -634,7 +634,7 @@ class DiskModel:
         if Sigma_cs < Sigma_cs_l:
             tau_p_mid, tau_r_mid, Sigma, T_mid = 1e-8, 1e-8, 0, 20
         elif Sigma_cs > Sigma_cs_r:
-            tau_p_mid, tau_r_mid, Sigma, T_mid = 1e-8, 1e-8, 0, 20 # modified the minimum T_mid to be 20K
+            tau_p_mid, tau_r_mid, Sigma, T_mid = 1e-8, 1e-8, 0, 20
             #tau_p_mid = self.f_tau_p_mid(1,T_eff)
             #tau_r_mid = self.f_tau_r_mid(1,T_eff)
             #Sigma_dust = self.f_Sigma(1,T_eff)

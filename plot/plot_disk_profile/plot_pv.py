@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0,'../../')
 from disk_model import *
 from vertical_profile_class import DiskModel_vertical
-# from problem_setup import problem_setup
+from problem_setup import problem_setup
 from radmc_setup import radmc3d_setup
 ###############################################################################
 """
@@ -77,13 +77,12 @@ def generate_cube(fname=None,
             elif scat is False:
                 prompt = ' noscat'
                 f = '_noscat'
-        os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} iline {line} vkms 0 widthkms {v_width} linenlam {nlam}"+prompt)
-        im = readImage('image.out')
-        if fname is None:
-            os.system('mv image.out image.img')
-            print('Be aware of repeating file\'s name')
-        elif fname is not None:
-            os.system(f'mv image.out '+fname+f+'.img')
+            os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} iline {line} vkms 0 widthkms {v_width} linenlam {nlam}"+prompt)
+            im = readImage('image.out')
+            if fname is None:
+                print('Be aware of repeating file\'s name')
+            elif fname is not None:
+                os.system(f'mv image.out '+fname+f+'.img')
         
         return im
     elif extract_gas is True:
@@ -124,15 +123,10 @@ def plot_pv(dir=None, precomputed=False,
     fname              : Plot's name
     title              : Title in the plot
     """
-    if fname is None: fname = 'noname'
-    
-    if dir is None: 
-        dir = 'noname'
-    elif dir is not None:
+    if dir is not None:
         os.makedirs('./figures/'+dir, exist_ok=True)
         os.makedirs('./precomputed_data/'+dir, exist_ok=True)
-
-
+        
     if cube is not None:
         if precomputed is True:
             cube = './precomputed_data/'+dir+'/'+cube
@@ -169,16 +163,6 @@ def plot_pv(dir=None, precomputed=False,
         fig, ax = plt.subplots()
         pv_slice = np.sum(data[:, center-fwhm//2:center+fwhm//2, :], axis=1)
         c = ax.pcolormesh(im.x/au, v+vkm, pv_slice.T, shading="nearest", rasterized=True, cmap='jet', vmin=0., vmax=3)
-        
-        absorption = np.where(pv_slice.T<0, pv_slice.T, 0)
-        contour_levels = np.linspace(np.min(absorption), 0, 3)
-        
-        if cube is not None:
-            x = np.linspace(-sizeau//2, sizeau//2, npix, endpoint=True)
-            y = np.linspace(-v_width+vkm, v_width+vkm, nlam, endpoint=True)
-            X, Y = np.meshgrid(x, y)
-            absorption_contours = ax.contour(X, Y, absorption, levels=contour_levels, colors='w', linewidths=1)
-        
         cbar = fig.colorbar(c, ax=ax)
         cbar.set_label('mJy/pixel',fontsize = 16)
         ax.set_xlabel("Offset [au]",fontsize = 16)
@@ -202,11 +186,10 @@ def plot_pv(dir=None, precomputed=False,
         
         absorption = np.where(pv_slice.T<0, pv_slice.T, 0)
         contour_levels = np.linspace(np.min(absorption), 0, 3)
-        if cube is not None:
-            x = np.linspace(-sizeau//2, sizeau//2, npix, endpoint=True)
-            y = np.linspace(-v_width+vkm, v_width+vkm, nlam, endpoint=True)
-            X, Y = np.meshgrid(x, y)
-            absorption_contours = ax.contour(X, Y, absorption, levels=contour_levels, colors='w', linewidths=1)
+        x = np.linspace(-sizeau//2, sizeau//2, npix, endpoint=True)
+        y = np.linspace(-v_width+vkm, v_width+vkm, nlam, endpoint=True)
+        X, Y = np.meshgrid(x, y)
+        absorption_contours = ax.contour(X, Y, absorption, levels=contour_levels, colors='w', linewidths=1)
         
         cbar = fig.colorbar(c, ax=ax)
         cbar.set_label('mJy/pixel',fontsize = 16)
@@ -255,30 +238,13 @@ model.get_mastercontrol(filename='./figures/compare_rcb/compare_rcb.inp',
                         nphot_scat=1000000,
                         scattering_mode_max=2,
                         istar_sphere=1,
-                        num_cpu=15)
+                        num_cpu=None)
 model.get_linecontrol(filename='./figures/compare_rcb/compare_rcb_line.inp',
                       methanol='ch3oh leiden 0 0 0')
 model.get_continuumlambda(filename=None,
                           comment=None,
                           lambda_micron=None,
                           append=False)
-# model.get_diskcontrol(a_max=0.1, 
-#                       Mass_of_star=0.14, 
-#                       Accretion_rate=5e-7,
-#                       Radius_of_disk=50,
-#                       NR=200,
-#                       NTheta=200,
-#                       NPhi=10,
-#                       disk_boundary=1e-18)
-# model.get_vfieldcontrol(Kep=True,
-#                         vinfall=0.5,
-#                         Rcb=5)
-# model.get_heatcontrol(L_star=0.86,
-#                       heat = 'accretion')
-# model.get_gasdensitycontrol(abundance=1e-10,
-#                             snowline=100,
-#                             enhancement=1e5,
-#                             gas_inside_rcb=True)
 
 for idx_a, a in enumerate([0.01, 0.03, 0.05,0.1, 0.3, 0.5, 1, 3, 10]):
     for idx_r, r in enumerate([None, 5, 10, 20, 30]):
@@ -340,40 +306,137 @@ for idx_a, a in enumerate([0.01, 0.03, 0.05,0.1, 0.3, 0.5, 1, 3, 10]):
                                         title=mechanism+"+ w/o snowline + w/ dust")
 
 ###############################################################################
-# d = 'test'
-# os.makedirs('./figures/'+d, exist_ok=True)
-# model = radmc3d_setup(silent=False)
-# model.get_mastercontrol(filename=None,
-#                         comment=None,
-#                         incl_dust=1,
-#                         incl_lines=1,
-#                         nphot=1000000,
-#                         nphot_scat=1000000,
-#                         scattering_mode_max=2,
-#                         istar_sphere=1,
-#                         num_cpu=None)
-# model.get_linecontrol(filename=None,
-#                       methanol='ch3oh leiden 0 0 0')
-# model.get_continuumlambda(filename=None,
-#                           comment=None,
-#                           lambda_micron=None,
-#                           append=False)
-# model.get_diskcontrol(a_max=0.1, 
-#                         Mass_of_star=0.14, 
-#                         Accretion_rate=5e-7,
-#                         Radius_of_disk=50,
-#                         NR=200,
-#                         NTheta=200,
-#                         NPhi=10,
-#                         disk_boundary=1e-18)
-# model.get_vfieldcontrol(Kep=True,
-#                         vinfall=0.5,
-#                         Rcb=None)
-# model.get_heatcontrol(heat='accretion')
-# model.get_gasdensitycontrol(abundance=1e-10,
-#                             snowline=None,
-#                             enhancement=1e5,
-#                             gas_inside_rcb=True)
+"""
+This generates various plots if 'heat_list', 'snowline', and 'dust' are given. 
+('problem_setup' is built-in)
+"""
+# This generates various plots if 'heat_list', 'snowline', and 'dust' are given.
+# def multiple_plots(amax, rcb, nlam, npix, sizeau, v0=0, vwidth=5, gas_inside=True, vinfall=1, convolve=True, fwhm=50, filename=None,
+#                    precomputed_data_gas=None, precomputed_data_dust=None, precomputed_data=None):
+#     """
+#     amax     : maximum grain size
+#     rcb      : centrifugal barrier
+#     v0       : vkm
+#     vinfall  : infall velocity in terms of Keplerian velocity
+#     filename : save plots
+#     """
+#     # The following codes are kind of redundant. Modification is required.
+#     for idx_h, heat in enumerate(heat_list):
+#         for idx_s, snow in enumerate(snowline):
+#             if heat == 'Accretion' and snow =='w/o snowline':
+#                 problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=5e-7*Msun/yr, Radius_of_disk=100*au, v_infall=vinfall, 
+#                             pancake=False, mctherm=False, snowline=False, floor=True, kep=True, Rcb=rcb, gas_inside_rcb=gas_inside)
+#                 t = 'Accretion + w/o snowline'
+#                 f = 'Accretion + wo snowline'
+#             elif heat == 'Accretion' and snow =='w/ snowline':
+#                 problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=5e-7*Msun/yr, Radius_of_disk=100*au, v_infall=vinfall, 
+#                             pancake=False, mctherm=False, snowline=True, floor=True, kep=True, Rcb=rcb, gas_inside_rcb=gas_inside)
+#                 t = 'Accretion + w/ snowline'
+#                 f = 'Accretion + w snowline'
+#             elif heat == 'Irradiation' and snow =='w/o snowline':
+#                 problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=5e-7*Msun/yr, Radius_of_disk=100*au, v_infall=vinfall, 
+#                             pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=rcb, gas_inside_rcb=gas_inside)
+#                 t = 'Irradiation + w/o snowline'
+#                 f = 'Irradiation + wo snowline'
+#             elif heat == 'Irradiation' and snow =='w/ snowline':
+#                 problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=5e-7*Msun/yr, Radius_of_disk=100*au, v_infall=vinfall, 
+#                             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=rcb, gas_inside_rcb=gas_inside)
+#                 t = 'Irradiation + w/ snowline'
+#                 f = 'Irradiation + w snowline'
+#             elif heat == 'Combine' and snow =='w/o snowline':
+#                 problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=5e-7*Msun/yr, Radius_of_disk=100*au, v_infall=vinfall, 
+#                             pancake=False, mctherm=True, snowline=False, floor=True, kep=True, Rcb=rcb, combine=True, gas_inside_rcb=gas_inside)
+#                 t = 'Combine + w/o snowline'
+#                 f = 'Combine + wo snowline'
+#             elif heat == 'Combine' and snow =='w/ snowline':
+#                 problem_setup(a_max=amax, Mass_of_star=0.14*Msun, Accretion_rate=5e-7*Msun/yr, Radius_of_disk=100*au, v_infall=vinfall, 
+#                             pancake=False, mctherm=True, snowline=True, floor=True, kep=True, Rcb=rcb, combine=True, gas_inside_rcb=gas_inside)
+#                 t = 'Combine + w/ snowline'
+#                 f = 'Combine + w snowline'        
 
-# generate_cube(extract_gas=True)
-# plot_pv(precomputed=True, dir=d, cube=None, cube_gas='image_gas.img', cube_dust='image_dust.img', fname='test')
+#             for idx_d, d in enumerate(dust):
+#                 if convolve is not True:
+#                     if d == 'w/o dust':
+#                         fig, ax = plot_pv(
+#                             incl=70, vkm=v0, v_width=vwidth, nlam=nlam, nodust=True, npix=npix, sizeau=sizeau,
+#                             convolve=convolve, fwhm=fwhm,
+#                             precomputed_data=precomputed_data)
+#                         title = t + ' + w/o dust'
+#                         fname = f + ' + wo dust'
+#                     elif d == 'w/ dust':
+#                         fig, ax = plot_pv(
+#                             incl=70, vkm=v0, v_width=vwidth, nlam=nlam, extract_gas=True, npix=npix, sizeau=sizeau,
+#                             convolve=convolve, fwhm=fwhm,
+#                             precomputed_data_gas=precomputed_data_gas, precomputed_data_dust=precomputed_data_dust)
+#                         title = t + ' + w/ dust'
+#                         fname = f + ' + w dust'
+#                     ax.set_title(title, fontsize = 16)
+#                     if filename is None:
+#                         fig.savefig(f'./figures/high_resol/gas_inside_rcb_{gas_inside}/amax_{amax}/Rcb_{rcb}/'+fname+'.pdf', transparent=True)
+#                         plt.close('all')
+#                     elif filename is not None:
+#                         fig.savefig(filename+'.pdf', transparent=True)
+#                         plt.close('all')
+#                 elif convolve is True:
+#                     if d == 'w/o dust':
+#                         fig, ax, fig_convolved, ax_convolved = plot_pv(
+#                             incl=70, vkm=v0, v_width=vwidth, nlam=nlam, nodust=True, npix=npix, sizeau=sizeau,
+#                             convolve=convolve, fwhm=fwhm,
+#                             precomputed_data=precomputed_data)
+#                         title = t + ' + w/o dust'
+#                         fname = f + ' + wo dust'
+#                     elif d == 'w/ dust':
+#                         fig, ax, fig_convolved, ax_convolved = plot_pv(
+#                             incl=70, vkm=v0, v_width=vwidth, nlam=nlam, extract_gas=True, npix=npix, sizeau=sizeau,
+#                             convolve=convolve, fwhm=fwhm,
+#                             precomputed_data_gas=precomputed_data_gas, precomputed_data_dust=precomputed_data_dust)
+#                         title = t + ' + w/ dust'
+#                         fname = f + ' + w dust'
+#                     ax.set_title(title, fontsize = 16)
+#                     ax_convolved.set_title(title, fontsize = 16)
+#                     if filename is None:
+#                         fig.savefig(f'./figures/high_resol/gas_inside_rcb_{gas_inside}/amax_{amax}/Rcb_{rcb}/'+fname+'.pdf', transparent=True)
+#                         fig_convolved.savefig(f'./figures/high_resol/gas_inside_rcb_{gas_inside}/amax_{amax}/Rcb_{rcb}/'+fname+f'_convolved_fwhm_{fwhm}au.pdf', transparent=True)
+#                         plt.close('all')
+#                     elif filename is not None:
+#                         fig.savefig(filename+fname+'.pdf', transparent=True)
+#                         fig_convolved.savefig(filename+fname+f'_convolved_fwhm_{fwhm}au.pdf', transparent=True)
+#                         plt.close('all')
+#                 if (precomputed_data_gas is None) and (precomputed_data_dust is None):
+#                     os.system(f'mv image_gas.img ./precomputed_data/amax_{a}/vinfall_0.5/image_gas_{fname}.img')
+#                     os.system(f'mv image_dust.img ./precomputed_data/amax_{a}/vinfall_0.5/image_dust_{fname}.img')
+
+            
+#     return
+# ###############################################################################
+# heat_list = ['Irradiation', 'Combine', 'Accretion']
+# snowline = ['w/ snowline', 'w/o snowline']
+# dust = ['w/o dust', 'w/ dust']
+# heat_list = ['Irradiation', 'Combine', 'Accretion']
+# snowline = ['w/ snowline', 'w/o snowline']
+# dust = ['w/ dust', 'w/o dust']
+
+
+
+# for _, a in enumerate([0.01, 0.03, 0.05,0.1, 0.3, 0.5, 1, 3, 10]):
+#     multiple_plots(amax=a*0.1, rcb=5, nlam=100, npix=300, sizeau=300, v0=5, vwidth=10, gas_inside=False, convolve=True, fwhm=50, vinfall=0.5,
+#                 filename=f"./figures/colorbar_rescaled/amax_{a}/vinfall_0.5/",
+#                 precomputed_data_gas=None, precomputed_data_dust=None)
+
+# for _, a in enumerate([0.01, 0.03, 0.05, 0.1]):
+#     heat_list = ['Accretion']
+#     multiple_plots(amax=a*0.1, rcb=5, nlam=100, npix=300, sizeau=300, v0=5, vwidth=10, gas_inside=False, convolve=True, fwhm=50, vinfall=1,
+#                 filename=f"./figures/colorbar_rescaled/amax_{a}/vinfall_0.5/",
+#                 precomputed_data_gas=f"./precomputed_data/amax_{a}/vinfall_0.5/image_gas_Accretion.img",
+#                 precomputed_data_dust=f"./precomputed_data/amax_{a}/vinfall_0.5/image_dust_Accretion.img")
+#     heat_list = ['Irradiation']
+#     multiple_plots(amax=a*0.1, rcb=5, nlam=100, npix=300, sizeau=300, v0=5, vwidth=10, gas_inside=False, convolve=True, fwhm=50, vinfall=1,
+#                 filename=f"./figures/colorbar_rescaled/amax_{a}/vinfall_0.5/",
+#                 precomputed_data_gas=f"./precomputed_data/amax_{a}/vinfall_0.5/image_gas_Irradiation.img",
+#                 precomputed_data_dust=f"./precomputed_data/amax_{a}/vinfall_0.5/image_dust_Irradiation.img")
+#     heat_list = ['Combine']
+#     multiple_plots(amax=a*0.1, rcb=5, nlam=100, npix=300, sizeau=300, v0=5, vwidth=10, gas_inside=False, convolve=True, fwhm=50, vinfall=1,
+#                 filename=f"./figures/colorbar_rescaled/amax_{a}/vinfall_0.5/",
+#                 precomputed_data_gas=f"./precomputed_data/amax_{a}/vinfall_0.5/image_gas_Combine.img",
+#                 precomputed_data_dust=f"./precomputed_data/amax_{a}/vinfall_0.5/image_dust_Combine.img")
+
