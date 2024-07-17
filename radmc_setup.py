@@ -460,14 +460,19 @@ class radmc3d_setup:
       '''
       nspec     = 4
       mass_frac = np.array([0.2, 0.3291, 0.0743, 0.3966])  # quoted from disk_model
-      
+      self.mass_frac = mass_frac
       if self.disk_boundary is not None: # setting the boundary of the disk
         self.rho_dust = self.d_to_gas_ratio * np.where(self.DM.rho_sph<self.disk_boundary,
                                                   self.disk_boundary,
                                                   self.DM.rho_sph
-                                                  ) 
+                                                  )
+        self.rho_gas = np.where(self.DM.rho_sph<self.disk_boundary,
+                                self.disk_boundary,
+                                self.DM.rho_sph
+                                )
       elif self.disk_boundary is None:
         self.rho_dust = self.d_to_gas_ratio * self.DM.rho_sph
+        self.rho_gas = self.DM.rho_sph
   
       with open('dust_density.inp', "w+") as f:
         f.write(str(1)+'\n')
@@ -584,8 +589,9 @@ class radmc3d_setup:
         if accretion is False:
           if self.disk_boundary is not None:
             os.system('radmc3d mctherm')
-            d = readData(dtemp=True)
-            T = np.where(np.tile(self.rho_dust[:, :, :, np.newaxis], (1, 1, 1, 4))<self.disk_boundary,
+            d = readData(dtemp=True, ddens=True)
+            boundary = np.ones(d.rhodust.shape)*self.disk_boundary*self.d_to_gas_ratio
+            T = np.where(d.rhodust<boundary*self.mass_frac,
                          20,
                          d.dusttemp
                          )  # setting disk boundary
@@ -593,7 +599,7 @@ class radmc3d_setup:
             
           elif self.disk_boundary is None:
             os.system('radmc3d mctherm')
-            d = readData(dtemp=True)
+            d = readData(dtemp=True, ddens=True)
             T = np.where(d.dusttemp<20, 20, d.dusttemp)
             
         elif accretion is True:  # Combination of two heating mechanisms, irradiation and accretion
@@ -601,10 +607,11 @@ class radmc3d_setup:
             T_acc = np.tile(self.DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, 4))
             
             os.system('radmc3d mctherm')  # Ignore viscous heating calculated by Xu's disk model
-            d = readData(dtemp=True)
+            d = readData(dtemp=True, ddens=True)
             T_irr  = d.dusttemp
+            boundary = np.ones(d.rhodust.shape)*self.disk_boundary*self.d_to_gas_ratio
             
-            T = np.where(np.tile(self.rho_dust[:, :, :, np.newaxis], (1, 1, 1, 4))<self.disk_boundary,
+            T = np.where(d.rhodust<boundary*self.mass_frac,
                          20,
                          (T_irr**4+T_acc**4)**(1/4)
                          )
@@ -641,26 +648,28 @@ class radmc3d_setup:
 
       elif irradiation is False:  # Accretion heating calculated by Wenrui's Disk Model
         if self.disk_boundary is not None:
-          T = np.where(self.rho_dust< self.disk_boundary,
+          d = readData(ddens=True)
+          boundary = np.ones(d.rhodust.shape)*self.disk_boundary*self.d_to_gas_ratio
+          T = np.where(d.rhodust<boundary*self.mass_frac,
                        20,
-                       self.DM.T_sph
+                       np.tile(self.DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, 4))
                        )
           T = np.where(T<20, 20, T)
         elif self.disk_boundary is None:
-          T = self.DM.T_sph
+          T = np.tile(self.DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, 4))
           T = np.where(T<20, 20, T)
           
         with open('dust_temperature.dat', "w+") as f:
           f.write('1\n')
           f.write('%d\n'%(self.NR*self.NTheta*self.NPhi))
           f.write(str(4)+'\n')
-          for _ in range(4):
-            data = T.ravel(order='F')
+          for i in range(4):
+            data = T[:, :, :, i].ravel(order='F')
             data.tofile(f, sep='\n', format="%13.6e")
             f.write('\n')
           f.write('\n')
             
-        self.T_avg = T
+        self.T_avg = np.sum(T, axis=3)/4 
         with open('gas_temperature.inp', "w+") as f:
           f.write('1\n')
           f.write('%d\n'%(self.NR*self.NTheta*self.NPhi))
@@ -713,11 +722,11 @@ class radmc3d_setup:
           This is over simplified to determine how the abundance is enhanced.
           Realistic chemical configuration is required.
           """
-          rho_gas   = self.DM.rho_sph
+          rho_gas   = self.rho_gas
           
         elif snowline is None:
           abunch3oh = abundance
-          rho_gas   = self.DM.rho_sph
+          rho_gas   = self.rho_gas
           
       elif self.rcb is not None:  # The main assumption of Oya's velocity field is that there is no gas inside the centrifugal barrier.
         rcb_idx = np.searchsorted(self.DM.r_sph, self.rcb)
@@ -726,14 +735,14 @@ class radmc3d_setup:
                                abundance,
                                abundance * enhancement
                                )
-          rho_gas   = self.DM.rho_sph
+          rho_gas   = self.rho_gas
           
           if gas_inside_rcb is False:
             rho_gas[:rcb_idx, :, :] = self.disk_boundary
             
         elif snowline is None:
           abunch3oh = abundance
-          rho_gas   = self.DM.rho_sph
+          rho_gas   = self.rho_gas
             
           if gas_inside_rcb is False:
             rho_gas[:rcb_idx, :, :] = self.disk_boundary
