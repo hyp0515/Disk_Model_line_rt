@@ -156,18 +156,17 @@ def plot_channel(dir=None, precomputed=False,
         
         for idx in range(nlam):
             d = np.transpose(data_to_plot[:, ::-1, idx])
-                
             if idx == nlam//2:
                 image = ax[0, idx].imshow(d, cmap=cm, vmin=vmin, vmax=vmax, extent = extent)
                 ax[0, idx].contour(Y, X, dust_conti[:, :, idx], levels=contour_level, colors='w', linewidths=1)
                 if absorption_data is not None:
-                    ax[0, idx].imshow(absorption_data[:, :, idx], cmap=abcm, alpha=0.5)
+                    ax[0, idx].imshow(absorption_data[:, ::-1, idx].T, cmap=abcm, alpha=0.5)
                 ax[0, idx].text(int(npix*0.9),int(npix*0.1),f'{v[idx]+vkm:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
                     
                 ax[1, idx].imshow(d, cmap=cm, vmin=vmin, vmax=vmax, extent = extent)
                 ax[1, idx].contour(Y, X, dust_conti[:, :, idx], levels=contour_level, colors='w', linewidths=1)
                 if absorption_data is not None:
-                    ax[1, idx].imshow(absorption_data[:, :, idx], cmap=abcm, alpha=0.5)
+                    ax[1, idx].imshow(absorption_data[:, ::-1, idx].T, cmap=abcm, alpha=0.5)
                 ax[1, idx].text(int(npix*0.9),int(npix*0.1),f'{v[idx]+vkm:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
         
                 ax[1, idx].set_xticks([int(npix*0.1), int(npix*0.3), npix//2, int(npix*0.7), int(npix*0.9)])
@@ -181,7 +180,7 @@ def plot_channel(dir=None, precomputed=False,
                 ax[1, nlam-1-idx].imshow(d, cmap=cm, vmin=vmin, vmax=vmax, extent = extent)
                 ax[1, nlam-1-idx].contour(Y, X, dust_conti[:, :, idx], levels=contour_level, colors='w', linewidths=1)
                 if absorption_data is not None:
-                    ax[1, nlam-1-idx].imshow(absorption_data[:, :, idx], cmap=abcm, alpha=0.5)
+                    ax[1, nlam-1-idx].imshow(absorption_data[:, ::-1, idx].T, cmap=abcm, alpha=0.5)
                 ax[1, nlam-1-idx].text(int(npix*0.9),int(npix*0.1),f'{v[idx]+vkm:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
 
                 ax[1, nlam-1-idx].set_xticks([int(npix*0.1), int(npix*0.3), npix//2, int(npix*0.7), int(npix*0.9)])
@@ -196,7 +195,7 @@ def plot_channel(dir=None, precomputed=False,
                 ax[0, idx].imshow(d, cmap=cm, vmin=vmin, vmax=vmax, extent = extent)
                 ax[0, idx].contour(Y, X, dust_conti[:, :, idx], levels=contour_level, colors='w', linewidths=1)
                 if absorption_data is not None:
-                    ax[0, idx].imshow(absorption_data[:, :, idx], cmap=abcm, alpha=0.5)
+                    ax[0, idx].imshow(absorption_data[:, ::-1, idx].T, cmap=abcm, alpha=0.5)
                 ax[0, idx].text(int(npix*0.9),int(npix*0.1),f'{v[idx]+vkm:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
                 if idx == 0:
                     ax[0, idx].set_yticks([int(npix*0.1), npix//2, int(npix*0.9)])
@@ -255,7 +254,7 @@ def plot_channel(dir=None, precomputed=False,
         if precomputed is True:
             cube_gas = './precomputed_data/'+dir+'/'+cube_gas
             cube_dust = './precomputed_data/'+dir+'/'+cube_dust
-        if precomputed is False:
+        elif precomputed is False:
             os.system('mv '+cube_gas+' ./precomputed_data/'+dir+'/'+cube_gas)
             os.system('mv '+cube_dust+' ./precomputed_data/'+dir+'/'+cube_dust)
         im = readImage('./precomputed_data/'+dir+'/'+cube_gas)
@@ -456,7 +455,7 @@ for idx_a, a in enumerate([0.1, 0.01, 0.001]):
         # plot_disk_profile(f'./figures/test/{h}_profile_amax_{a}')
 
         generate_cube(extract_gas=True,v_width=5, nlam=11, sizeau=50, incl=70, fname=f'{h}_amax_{a}')
-        plot_channel(precomputed=False, cube_gas=f'{h}_amax_{a}_gas.img',cube_dust=f'{h}_amax_{a}_dust.img', dir='test/channel', fname=f'channel_{h}_amax_{a}')
+        plot_channel(precomputed=False, cube_gas=f'image_gas_{h}_amax_{a}.img',cube_dust=f'image_dust_{h}_amax_{a}.img', dir='test/channel', fname=f'channel_{h}_amax_{a}', vkm=0)
         # generate_conti(fname=f'{h}_amax_{a}', wav=[1300], sizeau=50, npix=200)
         # plot_conti(precomputed=False, dir='test', img=f'{h}_amax_{a}.img', fwhm=5, title=['1300 um'], fname=f'conti_{h}_amax_{a}')
         # os.system('make cleanall')
