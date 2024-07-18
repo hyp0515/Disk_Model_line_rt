@@ -4,6 +4,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.ndimage import gaussian_filter
 from radmc3dPy.image import *
 from radmc3dPy.analyze import *
+from radmc3dPy.data import *
 import sys
 sys.path.append('../plot_disk_profile/')
 from plot_profile import plot_polar_mesh, plot_disk_profile
@@ -155,18 +156,18 @@ def plot_channel(dir=None, precomputed=False,
         extent = [0, npix, 0, npix]
         
         for idx in range(nlam):
-            d = np.transpose(data_to_plot[:, ::-1, idx])
+            d = np.transpose(data_to_plot[:, :, idx])
             if idx == nlam//2:
                 image = ax[0, idx].imshow(d, cmap=cm, vmin=vmin, vmax=vmax, extent = extent)
-                ax[0, idx].contour(Y, X, dust_conti[:, :, idx], levels=contour_level, colors='w', linewidths=1)
+                ax[0, idx].contour(Y, X, dust_conti[:, ::-1, idx], levels=contour_level, colors='w', linewidths=1)
                 if absorption_data is not None:
-                    ax[0, idx].imshow(absorption_data[:, ::-1, idx].T, cmap=abcm, alpha=0.5)
+                    ax[0, idx].imshow(absorption_data[:, :, idx].T, cmap=abcm, alpha=0.5)
                 ax[0, idx].text(int(npix*0.9),int(npix*0.1),f'{v[idx]+vkm:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
                     
                 ax[1, idx].imshow(d, cmap=cm, vmin=vmin, vmax=vmax, extent = extent)
-                ax[1, idx].contour(Y, X, dust_conti[:, :, idx], levels=contour_level, colors='w', linewidths=1)
+                ax[1, idx].contour(Y, X, dust_conti[:, ::-1, idx], levels=contour_level, colors='w', linewidths=1)
                 if absorption_data is not None:
-                    ax[1, idx].imshow(absorption_data[:, ::-1, idx].T, cmap=abcm, alpha=0.5)
+                    ax[1, idx].imshow(absorption_data[:, :, idx].T, cmap=abcm, alpha=0.5)
                 ax[1, idx].text(int(npix*0.9),int(npix*0.1),f'{v[idx]+vkm:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
         
                 ax[1, idx].set_xticks([int(npix*0.1), int(npix*0.3), npix//2, int(npix*0.7), int(npix*0.9)])
@@ -174,13 +175,13 @@ def plot_channel(dir=None, precomputed=False,
                 ax[1, idx].set_xlabel('AU',fontsize=16)
                 if idx == 0:
                     ax[1, idx].set_yticks([int(npix*0.1), int(npix*0.3), npix//2, int(npix*0.7), int(npix*0.9)])
-                    ax[1, idx].set_yticklabels([f'-{int((sizeau//2)*0.8)}', f'-{int((sizeau//2)*0.4)}', '0', f'{int((sizeau//2)*0.4)}', f'{int((sizeau//2)*0.8)}'], fontsize=14)
+                    ax[1, idx].set_yticklabels([f'{int((sizeau//2)*0.8)}', f'{int((sizeau//2)*0.4)}', '0', f'-{int((sizeau//2)*0.4)}', f'-{int((sizeau//2)*0.8)}'], fontsize=14)
                     ax[1, idx].set_ylabel('AU',fontsize=16)
             elif idx > nlam//2:
                 ax[1, nlam-1-idx].imshow(d, cmap=cm, vmin=vmin, vmax=vmax, extent = extent)
-                ax[1, nlam-1-idx].contour(Y, X, dust_conti[:, :, idx], levels=contour_level, colors='w', linewidths=1)
+                ax[1, nlam-1-idx].contour(Y, X, dust_conti[:, ::-1, idx], levels=contour_level, colors='w', linewidths=1)
                 if absorption_data is not None:
-                    ax[1, nlam-1-idx].imshow(absorption_data[:, ::-1, idx].T, cmap=abcm, alpha=0.5)
+                    ax[1, nlam-1-idx].imshow(absorption_data[:, :, idx].T, cmap=abcm, alpha=0.5)
                 ax[1, nlam-1-idx].text(int(npix*0.9),int(npix*0.1),f'{v[idx]+vkm:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
 
                 ax[1, nlam-1-idx].set_xticks([int(npix*0.1), int(npix*0.3), npix//2, int(npix*0.7), int(npix*0.9)])
@@ -188,21 +189,21 @@ def plot_channel(dir=None, precomputed=False,
                 ax[1, nlam-1-idx].set_xlabel('AU',fontsize=16)
                 if nlam-1-idx == 0:
                     ax[1, nlam-1-idx].set_yticks([int(npix*0.1), int(npix*0.3), npix//2, int(npix*0.7), int(npix*0.9)])
-                    ax[1, nlam-1-idx].set_yticklabels([f'-{int((sizeau//2)*0.8)}', f'-{int((sizeau//2)*0.4)}', '0', f'{int((sizeau//2)*0.4)}', f'{int((sizeau//2)*0.8)}'], fontsize=14)
+                    ax[1, nlam-1-idx].set_yticklabels([f'{int((sizeau//2)*0.8)}', f'{int((sizeau//2)*0.4)}', '0', f'-{int((sizeau//2)*0.4)}', f'-{int((sizeau//2)*0.8)}'], fontsize=14)
                     ax[1, nlam-1-idx].set_ylabel('AU',fontsize=16)
                     
             else:
                 ax[0, idx].imshow(d, cmap=cm, vmin=vmin, vmax=vmax, extent = extent)
-                ax[0, idx].contour(Y, X, dust_conti[:, :, idx], levels=contour_level, colors='w', linewidths=1)
+                ax[0, idx].contour(Y, X, dust_conti[:, ::-1, idx], levels=contour_level, colors='w', linewidths=1)
                 if absorption_data is not None:
-                    ax[0, idx].imshow(absorption_data[:, ::-1, idx].T, cmap=abcm, alpha=0.5)
+                    ax[0, idx].imshow(absorption_data[:, :, idx].T, cmap=abcm, alpha=0.5)
                 ax[0, idx].text(int(npix*0.9),int(npix*0.1),f'{v[idx]+vkm:.1f} $km/s$', ha='right', va='top', color=tc, fontsize=16)
                 if idx == 0:
                     ax[0, idx].set_yticks([int(npix*0.1), npix//2, int(npix*0.9)])
                     ax[0, idx].set_yticklabels([f'-{int((sizeau//2)*0.8)}', '0', f'{int((sizeau//2)*0.8)}'], fontsize=14)
                     ax[0, idx].set_ylabel('AU',fontsize=16)
                     ax[0, idx].set_yticks([int(npix*0.1), int(npix*0.3), npix//2, int(npix*0.7), int(npix*0.9)])
-                    ax[0, idx].set_yticklabels([f'-{int((sizeau//2)*0.8)}', f'-{int((sizeau//2)*0.4)}', '0', f'{int((sizeau//2)*0.4)}', f'{int((sizeau//2)*0.8)}'], fontsize=14)
+                    ax[0, idx].set_yticklabels([f'{int((sizeau//2)*0.8)}', f'{int((sizeau//2)*0.4)}', '0', f'-{int((sizeau//2)*0.4)}', f'-{int((sizeau//2)*0.8)}'], fontsize=14)
         return fig, ax, image
     
     
@@ -210,13 +211,13 @@ def plot_channel(dir=None, precomputed=False,
         if precomputed is True:
             cube = './precomputed_data/'+dir+'/'+cube
             cube_dust = './precomputed_data/'+dir+'/'+cube_dust
-        im = readImage(cube)
-        im_dust = readImage(cube_dust)  # to plot dust contours
+        
         if precomputed is False:
             os.system('mv '+cube+' ./precomputed_data/'+dir+'/'+cube)
         data = im.imageJyppix*1e3/(140**2) # mJy/pix
         data_dust = im_dust.imageJyppix*1e3/(140**2)
-        
+        im = readImage(cube)
+        im_dust = readImage(cube_dust)  # to plot dust contours
         sizeau = int(round((im.x/au)[-1]))*2
         npix=im.nx
         nlam=len(im.wav)
@@ -268,6 +269,7 @@ def plot_channel(dir=None, precomputed=False,
         sizeau = int(round((im.x/au)[-1]))*2
         npix=im.nx
         nlam=len(im.wav)
+        # data[:, int(npix*(2/3)), : ] = 1
         if nlam %2 == 1:
             freq0 = im.freq[nlam//2]
         else:
@@ -414,8 +416,8 @@ def plot_conti(dir=None, precomputed=False, img=None,
         cbar.set_label('Intensity (mJy/pixel)')
         fig.savefig('./figures/'+dir+'/'+fname+f'_convolved_fwhm_{fwhm}.pdf', transparent=True)
         plt.close('all')  
-    return
-###############################################################################
+#     return
+# ###############################################################################
 model = radmc3d_setup(silent=False)
 model.get_mastercontrol(filename=None,
                         comment=None,
@@ -437,7 +439,7 @@ for idx_a, a in enumerate([0.1, 0.01, 0.001]):
     model.get_diskcontrol(a_max=a, 
                             Mass_of_star=0.14, 
                             Accretion_rate=5e-7,
-                            Radius_of_disk=50,
+                            Radius_of_disk=30,
                             NR=200,
                             NTheta=200,
                             NPhi=10,
@@ -445,20 +447,23 @@ for idx_a, a in enumerate([0.1, 0.01, 0.001]):
     model.get_vfieldcontrol(Kep=True,
                             vinfall=0.5,
                             Rcb=None)
-    for idx_h, h in enumerate(['accretion', 'irradiation', 'combine']):
+    # for idx_h, h in enumerate(['irradiation', 'combine']):
+    for idx_h, h in enumerate(['accretion']):
         
         model.get_heatcontrol(heat=h)
         model.get_gasdensitycontrol(abundance=1e-10,
                                     snowline=100,
                                     enhancement=1e5,
                                     gas_inside_rcb=True)
-        # plot_disk_profile(f'./figures/test/{h}_profile_amax_{a}')
+        plot_disk_profile(f'./figures/test/{h}_profile_amax_{a}')
 
         generate_cube(extract_gas=True,v_width=5, nlam=11, sizeau=50, incl=70, fname=f'{h}_amax_{a}')
+        # generate_cube(extract_gas=False, nodust=True, scat=False,v_width=5, nlam=11, sizeau=100, incl=70, fname=f'{h}_amax_{a}')
         plot_channel(precomputed=False, cube_gas=f'image_gas_{h}_amax_{a}.img',cube_dust=f'image_dust_{h}_amax_{a}.img', dir='test/channel', fname=f'channel_{h}_amax_{a}', vkm=0)
-        # generate_conti(fname=f'{h}_amax_{a}', wav=[1300], sizeau=50, npix=200)
-        # plot_conti(precomputed=False, dir='test', img=f'{h}_amax_{a}.img', fwhm=5, title=['1300 um'], fname=f'conti_{h}_amax_{a}')
-        # os.system('make cleanall')
+        # plot_channel(precomputed=False, cube=f'image_{h}_amax_{a}.img',cube_dust=f'image_dust_{h}_amax_{a}.img', dir='test/channel', fname=f'channel_{h}_amax_{a}', vkm=0)
+        generate_conti(fname=f'{h}_amax_{a}', wav=[1300], sizeau=100, npix=200)
+        plot_conti(precomputed=False, dir='test/conti/new', img=f'{h}_amax_{a}.img', fwhm=5, title=['1300 um'], fname=f'conti_{h}_amax_{a}')
+
 
 # model = radmc3d_setup(silent=False)
 # model.get_mastercontrol(filename=None,
@@ -476,7 +481,7 @@ for idx_a, a in enumerate([0.1, 0.01, 0.001]):
 #                           comment=None,
 #                           lambda_micron=None,
 #                           append=False)
-# model.get_diskcontrol(a_max=0.001, 
+# model.get_diskcontrol(a_max=0.1, 
 #                         Mass_of_star=0.14, 
 #                         Accretion_rate=5e-7,
 #                         Radius_of_disk=50,
@@ -487,11 +492,17 @@ for idx_a, a in enumerate([0.1, 0.01, 0.001]):
 # model.get_vfieldcontrol(Kep=True,
 #                         vinfall=0.5,
 #                         Rcb=None)
-# model.get_heatcontrol(heat='irradiation')
+# model.get_heatcontrol(heat='accretion')
 # model.get_gasdensitycontrol(abundance=1e-10,
 #                             snowline=100,
 #                             enhancement=1e5,
 #                             gas_inside_rcb=True)
+# grid = readGrid()
+# d = radmc3dData(grid=grid)
+# read  = readData(ddens=True)
+# d.rhodust = read.rhodust
+# tau = d.getTau(wav=1300, axis='xyz')
+# print(tau)
 # plot_disk_profile('./figures/test/irradiation_profile')
 
 # # generate_cube(extract_gas=True,v_width=5, nlam=11, sizeau=50, incl=90)

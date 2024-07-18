@@ -341,6 +341,7 @@ class radmc3d_setup:
                      (input with float or None) (unit: gcm^-3)
       '''
       if a_max is None:                   a_max = 0.1  # 100 um
+      self.amax = a_max
       # CB68's properties
       if Mass_of_star is None:     Mass_of_star = 0.14
       if Accretion_rate is None: Accretion_rate = 5e-7
@@ -354,7 +355,8 @@ class radmc3d_setup:
       # Disk model
       self.d_to_gas_ratio = d_to_g_ratio
       # note: the original a_max is in cm
-      self.opacity_table  = generate_opacity_table(a_min=0, a_max=a_max*0.1,
+      # a_min is set to be 0.05 um = 5e-6 cm
+      self.opacity_table  = generate_opacity_table(a_min=5e-6, a_max=a_max*0.1,
                                                    q=q, dust_to_gas=d_to_g_ratio)
       disk_property_table = generate_disk_property_table(self.opacity_table)
       DM = DiskModel_vertical(self.opacity_table, disk_property_table)
@@ -415,52 +417,95 @@ class radmc3d_setup:
           f.write('%13.13e\n'%(value))
     
     
+    # def write_dust_opac(self):    
+    #   '''
+    #   Preparing the control file for dust opacity.
+    #   '''
+    #   with open('dustopac.inp','w+') as f:
+    #     f.write('2                          Format number of this file\n')
+    #     f.write('4                          Nr of dust species\n')
+    #     f.write('============================================================================\n')
+    #     f.write('1                          Way in which this dust species is read\n')
+    #     f.write('0                          0=Thermal grain\n')
+    #     f.write('water                  Extension of name of dustkappa_***.inp file\n')
+    #     f.write('============================================================================\n')
+    #     f.write('1                          Way in which this dust species is read\n')
+    #     f.write('0                          0=Thermal grain\n')
+    #     f.write('silicate                   Extension of name of dustkappa_***.inp file\n')
+    #     f.write('============================================================================\n')
+    #     f.write('1                          Way in which this dust species is read\n')
+    #     f.write('0                          0=Thermal grain\n')
+    #     f.write('troilite                   Extension of name of dustkappa_***.inp file\n')
+    #     f.write('============================================================================\n')
+    #     f.write('1                          Way in which this dust species is read\n')
+    #     f.write('0                          0=Thermal grain\n')
+    #     f.write('refractory_organics        Extension of name of dustkappa_***.inp file\n')
+
+    #   # Write dust opacity files
+    #   nlam      = len(self.opacity_table['lam'])
+    #   lam       = self.opacity_table['lam']*1e4     # lam in opacity_table is in cgs while RADMC3D uses micro
+    #   kappa_abs = self.opacity_table['kappa']
+    #   kappa_sca = self.opacity_table['kappa_s']
+    #   g         = self.opacity_table['g']
+    #   for idx, composition in enumerate(['water','silicate','troilite','refractory_organics']):
+    #     with open('dustkappa_'+composition+'.inp', "w+") as f:
+    #       f.write('3\n')
+    #       f.write(str(nlam)+'\n')
+    #       for lam_idx in range(nlam):
+    #         f.write('%13.6e %13.6e %13.6e %13.6e\n'%(lam[lam_idx],kappa_abs[idx,lam_idx],kappa_sca[idx,lam_idx],g[idx,lam_idx]))
+    #   self.dust_spec = idx+1
     def write_dust_opac(self):    
       '''
       Preparing the control file for dust opacity.
       '''
       with open('dustopac.inp','w+') as f:
         f.write('2                          Format number of this file\n')
-        f.write('4                          Nr of dust species\n')
+        f.write('1                          Nr of dust species\n')
         f.write('============================================================================\n')
         f.write('1                          Way in which this dust species is read\n')
         f.write('0                          0=Thermal grain\n')
-        f.write('water                  Extension of name of dustkappa_***.inp file\n')
+        f.write('dsharp_grain               Extension of name of dustkappa_***.inp file\n')
         f.write('============================================================================\n')
-        f.write('1                          Way in which this dust species is read\n')
-        f.write('0                          0=Thermal grain\n')
-        f.write('silicate                   Extension of name of dustkappa_***.inp file\n')
-        f.write('============================================================================\n')
-        f.write('1                          Way in which this dust species is read\n')
-        f.write('0                          0=Thermal grain\n')
-        f.write('troilite                   Extension of name of dustkappa_***.inp file\n')
-        f.write('============================================================================\n')
-        f.write('1                          Way in which this dust species is read\n')
-        f.write('0                          0=Thermal grain\n')
-        f.write('refractory_organics        Extension of name of dustkappa_***.inp file\n')
 
-      # Write dust opacity files
-      nlam      = len(self.opacity_table['lam'])
-      lam       = self.opacity_table['lam']*1e4     # lam in opacity_table is in cgs while RADMC3D uses micro
-      kappa_abs = self.opacity_table['kappa']
-      kappa_sca = self.opacity_table['kappa_s']
-      g         = self.opacity_table['g']
-      for idx, composition in enumerate(['water','silicate','troilite','refractory_organics']):
-        with open('dustkappa_'+composition+'.inp', "w+") as f:
-          f.write('3\n')
-          f.write(str(nlam)+'\n')
-          for lam_idx in range(nlam):
-            f.write('%13.6e %13.6e %13.6e %13.6e\n'%(lam[lam_idx],kappa_abs[idx,lam_idx],kappa_sca[idx,lam_idx],g[idx,lam_idx]))
+      self.dust_spec = 1
+      os.system(f'optool -dsharp -a 0.05 {self.amax*1e3} 3.5 -l 0.1 10000 -radmc')
+      os.system('mv dustkappa.inp dustkappa_dsharp_grain.inp')
 
-      
-      
+    # def write_dust_density(self):
+    #   '''
+    #   Preparing the control file for dust density.
+    #   '''
+    #   nspec     = 4
+    #   mass_frac = np.array([0.2, 0.3291, 0.0743, 0.3966])  # quoted from disk_model
+    #   self.mass_frac = mass_frac
+    #   if self.disk_boundary is not None: # setting the boundary of the disk
+    #     self.rho_dust = self.d_to_gas_ratio * np.where(self.DM.rho_sph<self.disk_boundary,
+    #                                               self.disk_boundary,
+    #                                               self.DM.rho_sph
+    #                                               )
+    #     self.rho_gas = np.where(self.DM.rho_sph<self.disk_boundary,
+    #                             self.disk_boundary,
+    #                             self.DM.rho_sph
+    #                             )
+    #   elif self.disk_boundary is None:
+    #     self.rho_dust = self.d_to_gas_ratio * self.DM.rho_sph
+    #     self.rho_gas = self.DM.rho_sph
+  
+    #   with open('dust_density.inp', "w+") as f:
+    #     f.write(str(1)+'\n')
+    #     f.write('%d\n'%(self.NR*self.NTheta*self.NPhi))
+    #     f.write(str(nspec)+'\n')
+    #     for i in range(nspec):
+    #       data = mass_frac[i]*self.rho_dust.ravel(order='F')
+    #       data.tofile(f, sep='\n', format="%13.6e")
+    #       f.write('\n')
+    #     f.write('\n')
+    
     def write_dust_density(self):
       '''
       Preparing the control file for dust density.
       '''
-      nspec     = 4
-      mass_frac = np.array([0.2, 0.3291, 0.0743, 0.3966])  # quoted from disk_model
-      self.mass_frac = mass_frac
+      nspec     = self.dust_spec
       if self.disk_boundary is not None: # setting the boundary of the disk
         self.rho_dust = self.d_to_gas_ratio * np.where(self.DM.rho_sph<self.disk_boundary,
                                                   self.disk_boundary,
@@ -479,7 +524,7 @@ class radmc3d_setup:
         f.write('%d\n'%(self.NR*self.NTheta*self.NPhi))
         f.write(str(nspec)+'\n')
         for i in range(nspec):
-          data = mass_frac[i]*self.rho_dust.ravel(order='F')
+          data = self.rho_dust.ravel(order='F')
           data.tofile(f, sep='\n', format="%13.6e")
           f.write('\n')
         f.write('\n')
@@ -591,7 +636,11 @@ class radmc3d_setup:
             os.system('radmc3d mctherm')
             d = readData(dtemp=True, ddens=True)
             boundary = np.ones(d.rhodust.shape)*self.disk_boundary*self.d_to_gas_ratio
-            T = np.where(d.rhodust<boundary*self.mass_frac,
+            # T = np.where(d.rhodust<boundary*self.mass_frac,
+            #              20,
+            #              d.dusttemp
+            #              )  # setting disk boundary
+            T = np.where(d.rhodust<boundary,
                          20,
                          d.dusttemp
                          )  # setting disk boundary
@@ -604,21 +653,25 @@ class radmc3d_setup:
             
         elif accretion is True:  # Combination of two heating mechanisms, irradiation and accretion
           if self.disk_boundary is not None:
-            T_acc = np.tile(self.DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, 4))
+            T_acc = np.tile(self.DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, self.dust_spec))
             
             os.system('radmc3d mctherm')  # Ignore viscous heating calculated by Xu's disk model
             d = readData(dtemp=True, ddens=True)
             T_irr  = d.dusttemp
             boundary = np.ones(d.rhodust.shape)*self.disk_boundary*self.d_to_gas_ratio
             
-            T = np.where(d.rhodust<boundary*self.mass_frac,
+            # T = np.where(d.rhodust<boundary*self.mass_frac,
+            #              20,
+            #              (T_irr**4+T_acc**4)**(1/4)
+            #              )
+            T = np.where(d.rhodust<boundary,
                          20,
                          (T_irr**4+T_acc**4)**(1/4)
                          )
             T = np.where(T<20, 20, T)  
 
           elif self.disk_boundary is None:
-            T_acc = np.tile(self.DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, 4))
+            T_acc = np.tile(self.DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, self.dust_spec))
             
             os.system('radmc3d mctherm')
             d = readData(dtemp=True)
@@ -630,50 +683,54 @@ class radmc3d_setup:
         with open('dust_temperature.dat', "w+") as f:
           f.write('1\n')
           f.write('%d\n'%(self.NR*self.NTheta*self.NPhi))
-          f.write(str(4)+'\n')
-          for i in range(4):
+          f.write(str(self.dust_spec)+'\n')
+          for i in range(self.dust_spec):
             data = T[:, :, :, i].ravel(order='F')
             data.tofile(f, sep='\n', format="%13.6e")
             f.write('\n')
           f.write('\n')
             
-        self.T_avg = np.sum(T, axis=3)/4  # averaging temperatures of four dust species
+        self.T_avg = np.sum(T, axis=3)/self.dust_spec  # averaging temperatures of four dust species
         with open('gas_temperature.inp', "w+") as f:
           f.write('1\n')
           f.write('%d\n'%(self.NR*self.NTheta*self.NPhi))
-          f.write(str(4)+'\n')
+          f.write(str(self.dust_spec)+'\n')
           data = self.T_avg.ravel(order='F')
           data.tofile(f, sep='\n', format="%13.6e")
           f.write('\n')
 
-      elif irradiation is False:  # Accretion heating calculated by Wenrui's Disk Model
+      elif irradiation is False:  # Accretion heating calculated by Wenrui's Disk Model 
         if self.disk_boundary is not None:
           d = readData(ddens=True)
           boundary = np.ones(d.rhodust.shape)*self.disk_boundary*self.d_to_gas_ratio
-          T = np.where(d.rhodust<boundary*self.mass_frac,
+          # T = np.where(d.rhodust<boundary*self.mass_frac,
+          #              20,
+          #              np.tile(self.DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, self.dust_spec))
+          #              )
+          T = np.where(d.rhodust<boundary,
                        20,
-                       np.tile(self.DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, 4))
+                       np.tile(self.DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, self.dust_spec))
                        )
           T = np.where(T<20, 20, T)
         elif self.disk_boundary is None:
-          T = np.tile(self.DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, 4))
+          T = np.tile(self.DM.T_sph[:, :, :, np.newaxis], (1, 1, 1, self.dust_spec))
           T = np.where(T<20, 20, T)
           
         with open('dust_temperature.dat', "w+") as f:
           f.write('1\n')
           f.write('%d\n'%(self.NR*self.NTheta*self.NPhi))
-          f.write(str(4)+'\n')
-          for i in range(4):
+          f.write(str(self.dust_spec)+'\n')
+          for i in range(self.dust_spec):
             data = T[:, :, :, i].ravel(order='F')
             data.tofile(f, sep='\n', format="%13.6e")
             f.write('\n')
           f.write('\n')
             
-        self.T_avg = np.sum(T, axis=3)/4 
+        self.T_avg = np.sum(T, axis=3)/self.dust_spec
         with open('gas_temperature.inp', "w+") as f:
           f.write('1\n')
           f.write('%d\n'%(self.NR*self.NTheta*self.NPhi))
-          f.write(str(4)+'\n')
+          f.write(str(self.dust_spec)+'\n')
           data = self.T_avg.ravel(order='F')
           data.tofile(f, sep='\n', format="%13.6e")
           f.write('\n')
