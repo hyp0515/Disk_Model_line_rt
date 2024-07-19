@@ -168,7 +168,7 @@ def plot_pv(dir=None, precomputed=False,
     if convolve is not True: 
         fig, ax = plt.subplots()
         pv_slice = np.sum(data[:, center-fwhm//2:center+fwhm//2, :], axis=1)
-        c = ax.pcolormesh(im.x/au, v+vkm, pv_slice.T, shading="nearest", rasterized=True, cmap='jet', vmin=0., vmax=3)
+        c = ax.pcolormesh(im.x/au, v+vkm, pv_slice.T, shading="nearest", rasterized=True, cmap='jet', vmin=0., vmax=1)
         
         absorption = np.where(pv_slice.T<0, pv_slice.T, 0)
         contour_levels = np.linspace(np.min(absorption), 0, 3)
@@ -198,7 +198,7 @@ def plot_pv(dir=None, precomputed=False,
         """
         fig, ax = plt.subplots()
         pv_slice = np.sum(data[:, center-fwhm//2:center+fwhm//2, :], axis=1)
-        c = ax.pcolormesh(im.x/au, v+vkm, pv_slice.T, shading="nearest", rasterized=True, cmap='jet', vmin=0., vmax=3)
+        c = ax.pcolormesh(im.x/au, v+vkm, pv_slice.T, shading="nearest", rasterized=True, cmap='jet', vmin=0., vmax=1)
         
         absorption = np.where(pv_slice.T<0, pv_slice.T, 0)
         contour_levels = np.linspace(np.min(absorption), 0, 3)
@@ -223,12 +223,12 @@ def plot_pv(dir=None, precomputed=False,
         fig_convolved, ax_convolved = plt.subplots()
         convolved_image = np.zeros(shape=data.shape)
         for i in range(nlam):
-            sigma = fwhm / (2*np.sqrt(2*np.log(2)))
+            sigma = fwhm * (npix/sizeau)/ (2*np.sqrt(2*np.log(2)))
             convolved_image[:, :, i] = gaussian_filter(data[:, :, i], sigma=sigma)
-        convolved_model = (convolved_image[:, center, :].T)*1e3/(140**2)
+        convolved_model = (convolved_image[:, center, :].T) * (fwhm * (npix/sizeau))**2
         c = ax_convolved.pcolormesh(im.x/au, v+vkm, convolved_model, shading="nearest", rasterized=True, cmap='jet')
         cbar = fig_convolved.colorbar(c, ax=ax_convolved)
-        cbar.set_label('mJy/pixel',fontsize = 16)
+        cbar.set_label('mJy/beam',fontsize = 16)
         ax_convolved.set_xlabel("Offset [au]",fontsize = 16)
         ax_convolved.set_ylabel("Velocity [km/s]",fontsize = 16)
         ax_convolved.plot([0, 0], [-v_width+vkm, v_width+vkm], 'w:')
@@ -244,137 +244,52 @@ def plot_pv(dir=None, precomputed=False,
         plt.close('all')
         return 
 ###############################################################################
-d = 'compare_rcb'
+
+
+###############################################################################
+d = 'possible_situation'
 os.makedirs('./figures/'+d, exist_ok=True)
 model = radmc3d_setup(silent=False)
-model.get_mastercontrol(filename='./figures/compare_rcb/compare_rcb.inp',
-                        comment='compare_rcb',
+model.get_mastercontrol(filename=None,
+                        comment=None,
                         incl_dust=1,
                         incl_lines=1,
-                        nphot=1000000,
-                        nphot_scat=1000000,
+                        nphot=10000000,
+                        nphot_scat=10000000,
                         scattering_mode_max=2,
                         istar_sphere=1,
-                        num_cpu=10)
-model.get_linecontrol(filename='./figures/compare_rcb/compare_rcb_line.inp',
+                        num_cpu=15)
+model.get_linecontrol(filename=None,
                       methanol='ch3oh leiden 0 0 0')
 model.get_continuumlambda(filename=None,
                           comment=None,
                           lambda_micron=None,
                           append=False)
-# model.get_diskcontrol(a_max=0.1, 
-#                       Mass_of_star=0.14, 
-#                       Accretion_rate=5e-7,
-#                       Radius_of_disk=50,
-#                       NR=200,
-#                       NTheta=200,
-#                       NPhi=10,
-#                       disk_boundary=1e-18)
-# model.get_vfieldcontrol(Kep=True,
-#                         vinfall=0.5,
-#                         Rcb=5)
-# model.get_heatcontrol(L_star=0.86,
-#                       heat = 'accretion')
-# model.get_gasdensitycontrol(abundance=1e-10,
-#                             snowline=100,
-#                             enhancement=1e5,
-#                             gas_inside_rcb=True)
-
-for idx_a, a in enumerate([0.01, 0.03, 0.05,0.1, 0.3, 0.5, 1, 3, 10]):
-    for idx_r, r in enumerate([None, 5, 10, 20, 30]):
-        for idx_mdot, mdot in enumerate([5, 10, 15]):
-            model.get_diskcontrol(a_max=a, 
-                        Mass_of_star=0.14, 
-                        Accretion_rate=mdot*1e-7,
-                        Radius_of_disk=30,
-                        NR=200,
-                        NTheta=200,
-                        NPhi=10,
-                        disk_boundary=1e-18)
-            model.get_vfieldcontrol(Kep=True,
+for idx_a, a in enumerate([10, 1, 0.1, 0.01, 0.001]):
+    model.get_diskcontrol(a_max=a, 
+                            Mass_of_star=0.14, 
+                            Accretion_rate=5e-7,
+                            Radius_of_disk=30,
+                            NR=200,
+                            NTheta=200,
+                            NPhi=10,
+                            disk_boundary=1e-18)
+    for idx_o, o in enumerate([None, 0.5, 0.25, 0.125]):
+        model.get_vfieldcontrol(Kep=True,
                                 vinfall=0.5,
-                                    Rcb=r)
-            for idx_s, snow in enumerate([100, None]):
-                if r == None:
-                    # for idx_h, mechanism in enumerate(['Accretion', 'Irradiation', 'Combine']):
-                    for idx_h, mechanism in enumerate(['Accretion']):
-                        model.get_heatcontrol(heat=mechanism)
-                        model.get_gasdensitycontrol(abundance=1e-10,
-                                        snowline=snow,
+                                Rcb=5,
+                                outflow=o)
+        model.get_heatcontrol(heat='accretion')
+        for idx_s, s in enumerate([100, None]):
+            model.get_gasdensitycontrol(abundance=1e-10,
+                                        snowline=s,
                                         enhancement=1e5,
                                         gas_inside_rcb=True)
-                        if snow is not None:
-                            generate_cube(fname=mechanism+f'_snowline_True', v_width=10, nlam=50, npix=200, sizeau=200)
-                            plot_pv(cube_dust='image_dust_'+mechanism+f'_snowline_True'+'.img',
-                                    cube_gas='image_gas_'+mechanism+f'_snowline_True'+'.img',
-                                    dir=d+f'/rcb_{r}/mdot_{mdot}/amax_{a}',
-                                    fname=mechanism+f'_snowline_True',
-                                    title=mechanism+"+ w/ snowline + w/ dust")
-                        elif snow is None:
-                            generate_cube(fname=mechanism+f'_snowline_{snow}', v_width=10, nlam=50, npix=200, sizeau=200)
-                            plot_pv(cube_dust='image_dust_'+mechanism+f'_snowline_{snow}'+'.img',
-                                    cube_gas='image_gas_'+mechanism+f'_snowline_{snow}'+'.img',
-                                    dir=d+f'/rcb_{r}/mdot_{mdot}/amax_{a}',
-                                    fname=mechanism+f'_snowline_{snow}',
-                                    title=mechanism+"+ w/o snowline + w/ dust")
-                else:
-                    for _, gas_rcb in enumerate([True, False]):
-                        for idx_h, mechanism in enumerate(['Accretion', 'Irradiation', 'Combine']):
-                            model.get_heatcontrol(heat=mechanism)
-                            model.get_gasdensitycontrol(abundance=1e-10,
-                                        snowline=snow,
-                                        enhancement=1e5,
-                                        gas_inside_rcb=gas_rcb)
-                            if snow is not None:
-                                generate_cube(fname=mechanism+f'_gas_inside_{gas_rcb}_snowline_True', v_width=10, nlam=50, npix=200, sizeau=200)
-                                plot_pv(cube_dust='image_dust_'+mechanism+f'_gas_inside_{gas_rcb}_snowline_True'+'.img',
-                                        cube_gas='image_gas_'+mechanism+f'_gas_inside_{gas_rcb}_snowline_True'+'.img',
-                                        dir=d+f'/rcb_{r}/mdot_{mdot}/amax_{a}',
-                                        fname=mechanism+f'_gas_inside_{gas_rcb}_snowline_True',
-                                        title=mechanism+"+ w/ snowline + w/ dust")
-                            if snow is None:
-                                generate_cube(fname=mechanism+f'_gas_inside_{gas_rcb}_snowline_{snow}', v_width=10, nlam=50, npix=200, sizeau=200)
-                                plot_pv(cube_dust='image_dust_'+mechanism+f'_gas_inside_{gas_rcb}_snowline_{snow}'+'.img',
-                                        cube_gas='image_gas_'+mechanism+f'_gas_inside_{gas_rcb}_snowline_{snow}'+'.img',
-                                        dir=d+f'/rcb_{r}/mdot_{mdot}/amax_{a}',
-                                        fname=mechanism+f'_gas_inside_{gas_rcb}_snowline_{snow}',
-                                        title=mechanism+"+ w/o snowline + w/ dust")
-
-###############################################################################
-# d = 'test'
-# os.makedirs('./figures/'+d, exist_ok=True)
-# model = radmc3d_setup(silent=False)
-# model.get_mastercontrol(filename=None,
-#                         comment=None,
-#                         incl_dust=1,
-#                         incl_lines=1,
-#                         nphot=1000000,
-#                         nphot_scat=1000000,
-#                         scattering_mode_max=2,
-#                         istar_sphere=1,
-#                         num_cpu=None)
-# model.get_linecontrol(filename=None,
-#                       methanol='ch3oh leiden 0 0 0')
-# model.get_continuumlambda(filename=None,
-#                           comment=None,
-#                           lambda_micron=None,
-#                           append=False)
-# model.get_diskcontrol(a_max=0.001, 
-#                         Mass_of_star=0.14, 
-#                         Accretion_rate=5e-7,
-#                         Radius_of_disk=50,
-#                         NR=200,
-#                         NTheta=200,
-#                         NPhi=10,
-#                         disk_boundary=1e-18)
-# model.get_vfieldcontrol(Kep=True,
-#                         vinfall=0.5,
-#                         Rcb=None)
-# model.get_heatcontrol(heat='accretion')
-# model.get_gasdensitycontrol(abundance=1e-10,
-#                             snowline=None,
-#                             enhancement=1e5,
-#                             gas_inside_rcb=True)
-
-# generate_cube(extract_gas=True, nlam=10)
-# plot_pv(precomputed=False, dir=d, cube=None, cube_gas='image_gas.img', cube_dust='image_dust.img', fname='test')
+            if s is not None:
+                generate_cube(fname=f'accretion_amax_{a}_snowline_True_outflow_{o}',v_width=10, nlam=50, npix=200, sizeau=200)
+                plot_pv(dir=d, cube_dust=f'image_dust_accretion_amax_{a}_snowline_True_outflow_{o}.img',
+                        cube_gas=f'image_gas_accretion_amax_{a}_snowline_True_outflow_{o}.img',fname=f'accretion_amax_{a}_snowline_True_outflow_{o}', title="Accretion + w/ snowline + w/ dust")
+            elif s is None:
+                generate_cube(fname=f'accretion_amax_{a}_snowline_False_outflow_{o}',v_width=10, nlam=50, npix=200, sizeau=200)
+                plot_pv(dir=d, cube_dust=f'image_dust_accretion_amax_{a}_snowline_False_outflow_{o}.img',
+                        cube_gas=f'image_gas_accretion_amax_{a}_snowline_False_outflow_{o}.img',fname=f'accretion_amax_{a}_snowline_False_outflow_{o}', title="Accretion + w/o snowline + w/ dust")

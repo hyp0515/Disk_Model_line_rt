@@ -533,6 +533,7 @@ class radmc3d_setup:
     def get_vfieldcontrol(self, Kep = True,
                             vinfall = None,
                                 Rcb = None,
+                            outflow = None
                         ):
       '''
       Preparing the control file for velocity field.
@@ -543,6 +544,7 @@ class radmc3d_setup:
       vinfall: infall velocity (unit: Keplerian velocity)
                e.g., 1 for 1 Keplerian velocity of infall direction
       Rcb: centrifugal barrier (unit: AU)
+      outflow: outflow velocity (unit: Keplerian velocity)
       '''
       if vinfall is None: vinfall = 0
       
@@ -556,10 +558,12 @@ class radmc3d_setup:
           vphi    = np.zeros(vr.shape)
       elif Rcb is not None:  # velocity field in Oya et al. 2014
         rcb_idx   = np.searchsorted(self.DM.r_sph, Rcb)
-        vr_kep    = np.zeros(self.DM.r_sph[:rcb_idx].shape)  # no infall compoonent inside the centrifugal barrier
-        # vr_kep    = +np.sqrt(G*self.Mstar/(self.DM.r_sph[:rcb_idx]*au))  # if expanding
+        if outflow is None:
+          vr_inside    = np.zeros(self.DM.r_sph[:rcb_idx].shape)  # no infall compoonent inside the centrifugal barrier
+        elif outflow is not None:
+          vr_inside    = +outflow*np.sqrt(G*self.Mstar*Msun/(self.DM.r_sph[:rcb_idx]*au))  # if expanding
         vr_infall = -vinfall*np.sqrt(G*self.Mstar*Msun/(self.DM.r_sph[rcb_idx:]*au))
-        vr        = np.concatenate((vr_kep, vr_infall))
+        vr        = np.concatenate((vr_inside, vr_infall))
         vtheta    = 0
         vphi      = np.sqrt(G*self.Mstar*Msun/(self.DM.r_sph*au))
         

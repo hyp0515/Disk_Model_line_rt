@@ -1,0 +1,9 @@
+# created: 2024-07-19 03:37:20 
+# outflow 
+incl_dust = 1
+incl_lines = 1
+nphot = 1000000
+nphot_scat = 1000000
+scattering_mode_max = 2
+istar_sphere = 1
+setthreads = 10

@@ -290,13 +290,14 @@ def plot_channel(dir=None, precomputed=False,
             convolved_conti = np.zeros(shape=data_dust.shape)
             convolved_absorption = np.zeros(shape=absorption.shape)
             for i in range(nlam):
-                sigma = fwhm / (2*np.sqrt(2*np.log(2)))
-                convolved_data[:, :, i] = gaussian_filter(data[:, :, i], sigma=sigma)
-                convolved_conti[:, :, i] = gaussian_filter(data_dust[:, :, i], sigma=sigma)
-                convolved_absorption[:, :, i] = gaussian_filter(absorption[:, :, i], sigma=sigma)
+                sigma = fwhm * (npix/sizeau)/ (2*np.sqrt(2*np.log(2)))
+                convolved_data[:, :, i] = gaussian_filter(data[:, :, i], sigma=sigma) * (fwhm * (npix/sizeau))**2
+                convolved_conti[:, :, i] = gaussian_filter(data_dust[:, :, i], sigma=sigma) * (fwhm * (npix/sizeau))**2
+                convolved_absorption[:, :, i] = gaussian_filter(absorption[:, :, i], sigma=sigma) * (fwhm * (npix/sizeau))**2
+            
             fig, ax, image = pannels(dust_conti=convolved_conti, data_to_plot=convolved_data, absorption_data=convolved_absorption)
             cbar = fig.colorbar(image, ax=ax, orientation='vertical', fraction=0.02, pad=0.04)
-            cbar.set_label('Intensity (mJy/pixel)')
+            cbar.set_label('Intensity (mJy/beam)')
             if title is not None:
                 ax.set_title(title, fontsize = 16) 
             fig.savefig('./figures/'+dir+'/'+fname+f'_convolved_fwhm_{fwhm}.pdf', transparent=True)
@@ -381,10 +382,10 @@ def plot_conti(dir=None, precomputed=False, img=None,
         convolved_data = np.zeros(shape=data.shape)
         for i in range(nlam):
             sigma = fwhm * (npix/sizeau) / (2*np.sqrt(2*np.log(2)))
-            convolved_data[:, :, i] = gaussian_filter(data[:, :, i], sigma=sigma)
+            convolved_data[:, :, i] = gaussian_filter(data[:, :, i], sigma=sigma) * (fwhm * (npix/sizeau))**2
         vmin, vmax = np.min(convolved_data), np.max(convolved_data)
         fig, ax = plt.subplots(1, nlam, figsize=(10*nlam, 10), sharex=True, sharey=True, gridspec_kw={'wspace': 0, 'hspace': 0})
-        contour_level=np.linspace(0.001, np.max(convolved_data), 5)
+        contour_level=np.linspace(np.min(convolved_data), np.max(convolved_data), 5)
         if nlam != 1:
             for idx in range(nlam):
                 # image = ax[idx].pcolormesh(Y, X, convolved_data[:, :, idx], cmap=cm,vmin=vmin, vmax=vmax, edgecolors='none')
@@ -413,7 +414,7 @@ def plot_conti(dir=None, precomputed=False, img=None,
             divider = make_axes_locatable(ax)
         cax2 = divider.append_axes("right", size="5%", pad=0.05) 
         cbar = fig.colorbar(image, cax=cax2, orientation='vertical', shrink=0.8)
-        cbar.set_label('Intensity (mJy/pixel)')
+        cbar.set_label('Intensity (mJy/beam)')
         fig.savefig('./figures/'+dir+'/'+fname+f'_convolved_fwhm_{fwhm}.pdf', transparent=True)
         plt.close('all')  
 #     return
@@ -423,8 +424,8 @@ model.get_mastercontrol(filename=None,
                         comment=None,
                         incl_dust=1,
                         incl_lines=1,
-                        nphot=1000000,
-                        nphot_scat=1000000,
+                        nphot=10000000,
+                        nphot_scat=10000000,
                         scattering_mode_max=2,
                         istar_sphere=1,
                         num_cpu=7)
@@ -434,7 +435,7 @@ model.get_continuumlambda(filename=None,
                           comment=None,
                           lambda_micron=None,
                           append=False)
-for idx_a, a in enumerate([0.1, 0.01, 0.001]):
+for idx_a, a in enumerate([10, 1, 0.1, 0.01, 0.001]):
     
     model.get_diskcontrol(a_max=a, 
                             Mass_of_star=0.14, 
@@ -444,69 +445,37 @@ for idx_a, a in enumerate([0.1, 0.01, 0.001]):
                             NTheta=200,
                             NPhi=10,
                             disk_boundary=1e-18)
-    model.get_vfieldcontrol(Kep=True,
-                            vinfall=0.5,
-                            Rcb=None)
-    # for idx_h, h in enumerate(['irradiation', 'combine']):
-    for idx_h, h in enumerate(['accretion']):
-        
-        model.get_heatcontrol(heat=h)
-        model.get_gasdensitycontrol(abundance=1e-10,
-                                    snowline=100,
-                                    enhancement=1e5,
-                                    gas_inside_rcb=True)
-        plot_disk_profile(f'./figures/test/{h}_profile_amax_{a}')
+    for idx_o, o in enumerate([None, 0.5, 0.25, 0.125]):
+        model.get_vfieldcontrol(Kep=True,
+                                vinfall=0.5,
+                                Rcb=5,
+                                outflow=o)
+        model.get_heatcontrol(heat='accretion')
+        for idx_s, s in enumerate([100, None]):
+            model.get_gasdensitycontrol(abundance=1e-10,
+                                        snowline=s,
+                                        enhancement=1e5,
+                                        gas_inside_rcb=True)
+            if s is not None:
+                plot_disk_profile(f'./figures/test/accretion_profile_amax_{a}_snowline_True')
+                generate_cube(extract_gas=True,v_width=5, nlam=11, incl=70, fname=f'accretion_amax_{a}_snowline_True_outflow_{o}', npix=200, sizeau=50)
+                plot_channel(precomputed=False, cube_gas=f'image_gas_accretion_amax_{a}_snowline_True_outflow_{o}.img',
+                            cube_dust=f'image_dust_accretion_amax_{a}_snowline_True_outflow_{o}.img',
+                            dir='test/channel',
+                            fname=f'channel_accretion_amax_{a}_snowline_True_outflow_{o}',
+                            vkm=0,
+                            fwhm=50)
+                generate_conti(fname=f'accretion_amax_{a}_snowline_True', wav=[1300], sizeau=100, npix=200)
+                plot_conti(precomputed=False, dir='test/conti/new', img=f'accretion_amax_{a}_snowline_True.img', fwhm=5, title=['1300 um'], fname=f'conti_accretion_amax_{a}')
+            elif s is None:
+                plot_disk_profile(f'./figures/test/accretion_profile_amax_{a}_snowline_False')
+                generate_cube(extract_gas=True,v_width=5, nlam=11, incl=70, fname=f'accretion_amax_{a}_snowline_False_outflow_{o}', npix=200, sizeau=50)
+                plot_channel(precomputed=False, cube_gas=f'image_gas_accretion_amax_{a}_snowline_False_outflow_{o}.img',
+                            cube_dust=f'image_dust_accretion_amax_{a}_snowline_False_outflow_{o}.img',
+                            dir='test/channel',
+                            fname=f'channel_accretion_amax_{a}_snowline_False_outflow_{o}',
+                            vkm=0,
+                            fwhm=50)
+                generate_conti(fname=f'accretion_amax_accretion_snowline_False', wav=[1300], sizeau=100, npix=200)
+                plot_conti(precomputed=False, dir='test/conti/new', img=f'accretion_amax_{a}_snowline_False.img', fwhm=5, title=['1300 um'], fname=f'conti_accretion_amax_{a}')
 
-        generate_cube(extract_gas=True,v_width=5, nlam=11, sizeau=50, incl=70, fname=f'{h}_amax_{a}')
-        # generate_cube(extract_gas=False, nodust=True, scat=False,v_width=5, nlam=11, sizeau=100, incl=70, fname=f'{h}_amax_{a}')
-        plot_channel(precomputed=False, cube_gas=f'image_gas_{h}_amax_{a}.img',cube_dust=f'image_dust_{h}_amax_{a}.img', dir='test/channel', fname=f'channel_{h}_amax_{a}', vkm=0)
-        # plot_channel(precomputed=False, cube=f'image_{h}_amax_{a}.img',cube_dust=f'image_dust_{h}_amax_{a}.img', dir='test/channel', fname=f'channel_{h}_amax_{a}', vkm=0)
-        generate_conti(fname=f'{h}_amax_{a}', wav=[1300], sizeau=100, npix=200)
-        plot_conti(precomputed=False, dir='test/conti/new', img=f'{h}_amax_{a}.img', fwhm=5, title=['1300 um'], fname=f'conti_{h}_amax_{a}')
-
-
-# model = radmc3d_setup(silent=False)
-# model.get_mastercontrol(filename=None,
-#                         comment=None,
-#                         incl_dust=1,
-#                         incl_lines=1,
-#                         nphot=1000000,
-#                         nphot_scat=1000000,
-#                         scattering_mode_max=2,
-#                         istar_sphere=1,
-#                         num_cpu=None)
-# model.get_linecontrol(filename=None,
-#                       methanol='ch3oh leiden 0 0 0')
-# model.get_continuumlambda(filename=None,
-#                           comment=None,
-#                           lambda_micron=None,
-#                           append=False)
-# model.get_diskcontrol(a_max=0.1, 
-#                         Mass_of_star=0.14, 
-#                         Accretion_rate=5e-7,
-#                         Radius_of_disk=50,
-#                         NR=200,
-#                         NTheta=200,
-#                         NPhi=10,
-#                         disk_boundary=1e-18)
-# model.get_vfieldcontrol(Kep=True,
-#                         vinfall=0.5,
-#                         Rcb=None)
-# model.get_heatcontrol(heat='accretion')
-# model.get_gasdensitycontrol(abundance=1e-10,
-#                             snowline=100,
-#                             enhancement=1e5,
-#                             gas_inside_rcb=True)
-# grid = readGrid()
-# d = radmc3dData(grid=grid)
-# read  = readData(ddens=True)
-# d.rhodust = read.rhodust
-# tau = d.getTau(wav=1300, axis='xyz')
-# print(tau)
-# plot_disk_profile('./figures/test/irradiation_profile')
-
-# # generate_cube(extract_gas=True,v_width=5, nlam=11, sizeau=50, incl=90)
-# # plot_channel(precomputed=False, cube_gas='image_gas.img',cube_dust='image_dust.img', dir='test', fname='channel_irradiation')
-# generate_conti(fname='irradiation', wav=[1300], sizeau=50, npix=200)
-# plot_conti(precomputed=False, dir='test', img='irradiation.img', fwhm=5, title=['1300 um'], fname='conti_irradiation_smaller_grain')
-# os.system('make cleanall')
