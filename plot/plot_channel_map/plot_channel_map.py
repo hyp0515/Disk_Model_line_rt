@@ -458,7 +458,7 @@ for idx_a, a in enumerate([10, 1, 0.1, 0.01, 0.001]):
                                         gas_inside_rcb=True)
             if s is not None:
                 plot_disk_profile(f'./figures/test/accretion_profile_amax_{a}_snowline_True')
-                generate_cube(extract_gas=True,v_width=5, nlam=11, incl=70, fname=f'accretion_amax_{a}_snowline_True_outflow_{o}', npix=200, sizeau=50)
+                generate_cube(extract_gas=True,v_width=5, nlam=11, incl=70, fname=f'accretion_amax_{a}_snowline_True_outflow_{o}', npix=200, sizeau=100)
                 plot_channel(precomputed=False, cube_gas=f'image_gas_accretion_amax_{a}_snowline_True_outflow_{o}.img',
                             cube_dust=f'image_dust_accretion_amax_{a}_snowline_True_outflow_{o}.img',
                             dir='test/channel',
@@ -469,7 +469,7 @@ for idx_a, a in enumerate([10, 1, 0.1, 0.01, 0.001]):
                 plot_conti(precomputed=False, dir='test/conti/new', img=f'accretion_amax_{a}_snowline_True.img', fwhm=5, title=['1300 um'], fname=f'conti_accretion_amax_{a}')
             elif s is None:
                 plot_disk_profile(f'./figures/test/accretion_profile_amax_{a}_snowline_False')
-                generate_cube(extract_gas=True,v_width=5, nlam=11, incl=70, fname=f'accretion_amax_{a}_snowline_False_outflow_{o}', npix=200, sizeau=50)
+                generate_cube(extract_gas=True,v_width=5, nlam=11, incl=70, fname=f'accretion_amax_{a}_snowline_False_outflow_{o}', npix=200, sizeau=100)
                 plot_channel(precomputed=False, cube_gas=f'image_gas_accretion_amax_{a}_snowline_False_outflow_{o}.img',
                             cube_dust=f'image_dust_accretion_amax_{a}_snowline_False_outflow_{o}.img',
                             dir='test/channel',
