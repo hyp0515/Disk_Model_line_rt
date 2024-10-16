@@ -155,7 +155,7 @@ def generate_opacity_table(
           same as kappa, kappa_p, kappa_r, but for effective scattering opacity
           (1-g)*kappa_scatter
     """
-    compute_grain_properties_DSHARP()
+    # compute_grain_properties_DSHARP()
     try:
         with open('./'+precomputed_grain_properties_fname, "rb") as f:
             grain_properties = pickle.load(f)
@@ -182,7 +182,8 @@ def generate_opacity_table(
     N_T = len(T_grid)
     kappa = grain_properties['kappa'] # get opacity: kappa(temperature_regime, a, lam)
     kappa_s = grain_properties['kappa_s']*(1-np.array(grain_properties['g'])) # effective kappa for anisotropic scattering
-
+    # print('kappa shape '+ str(len(kappa)))
+    # print('kappa_s shape '+ str(len(kappa_s)))
     # compute mean opacities
     nu = np.outer(c_light/lam_grid, [1])
     T = T_grid

@@ -6,8 +6,8 @@ from radmc3dPy.data import *
 import sys
 from disk_model import *
 from vertical_profile_class import DiskModel_vertical
-from problem_setup import problem_setup
-from radmc_setup import radmc3d_setup
+# from problem_setup import problem_setup
+from radmc.setup import radmc3d_setup
 
 def plot_polar_mesh(R, Theta, Phi, value, title, colorbar_label, fname, color, type='edge'):
     if type == 'edge':
@@ -209,79 +209,79 @@ os.system('make cleanall')
 # plt.close()
 
 
-def plot_compare_heating(amax=0.01, mstar=0.14*Msun, mdot=0.14e-5*Msun/yr, Rd=100*au,
-                         mctherm=True, snowline=True, floor=True):
+# def plot_compare_heating(amax=0.01, mstar=0.14*Msun, mdot=0.14e-5*Msun/yr, Rd=100*au,
+#                          mctherm=True, snowline=True, floor=True):
 
-    p = problem_setup(a_max=amax, Mass_of_star=mstar, Accretion_rate=mdot, Radius_of_disk=Rd, 
-                            pancake=False, v_infall=1, mctherm=True, snowline=True, floor=True)
-    data_mc = readData(dtemp=True, ddens=True)
-    grid_mc = readGrid()
+#     p = problem_setup(a_max=amax, Mass_of_star=mstar, Accretion_rate=mdot, Radius_of_disk=Rd, 
+#                             pancake=False, v_infall=1, mctherm=True, snowline=True, floor=True)
+#     data_mc = readData(dtemp=True, ddens=True)
+#     grid_mc = readGrid()
 
-    abunch3oh = np.where(data_mc.dusttemp[:, :, :, 0]<100, 1e-10, 1e-5)
-    factch3oh = abunch3oh/(2.3*mp)
-    nch3oh_mc    = 100*data_mc.rhodust[:, :, :, 0]*factch3oh
-    Theta = grid_mc.y
-    R  =grid_mc.x/au
+#     abunch3oh = np.where(data_mc.dusttemp[:, :, :, 0]<100, 1e-10, 1e-5)
+#     factch3oh = abunch3oh/(2.3*mp)
+#     nch3oh_mc    = 100*data_mc.rhodust[:, :, :, 0]*factch3oh
+#     Theta = grid_mc.y
+#     R  =grid_mc.x/au
 
-    p = problem_setup(a_max=0.01, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=100*au, 
-                            pancake=False, v_infall=1, mctherm=False, snowline=True, floor=True)
-    data_x22 = readData(dtemp=True, ddens=True)
-    grid_x22 = readGrid()
-    abunch3oh = np.where(data_x22.dusttemp[:, :, :, 0]<100, 1e-10, 1e-5)
-    factch3oh = abunch3oh/(2.3*mp)
-    nch3oh_x22    = 100*data_x22.rhodust[:, :, :, 0]*factch3oh
-    Theta = grid_x22.y
-    R  =grid_x22.x/au
+#     p = problem_setup(a_max=0.01, Mass_of_star=0.14*Msun, Accretion_rate=0.14e-5*Msun/yr, Radius_of_disk=100*au, 
+#                             pancake=False, v_infall=1, mctherm=False, snowline=True, floor=True)
+#     data_x22 = readData(dtemp=True, ddens=True)
+#     grid_x22 = readGrid()
+#     abunch3oh = np.where(data_x22.dusttemp[:, :, :, 0]<100, 1e-10, 1e-5)
+#     factch3oh = abunch3oh/(2.3*mp)
+#     nch3oh_x22    = 100*data_x22.rhodust[:, :, :, 0]*factch3oh
+#     Theta = grid_x22.y
+#     R  =grid_x22.x/au
 
-    fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(18, 12), subplot_kw={'projection': 'polar'})
-    fig.subplots_adjust(left=0.05, right=0.95, top=0.9, bottom=0.1, wspace=0.3, hspace=0.05)
-    mins = np.zeros((3))
-    maxs = np.zeros((3))
+#     fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(18, 12), subplot_kw={'projection': 'polar'})
+#     fig.subplots_adjust(left=0.05, right=0.95, top=0.9, bottom=0.1, wspace=0.3, hspace=0.05)
+#     mins = np.zeros((3))
+#     maxs = np.zeros((3))
 
-    mins[0], mins[1], mins[2] = min(np.min(np.log10(data_mc.rhodust[:, :, 0, 0])), np.min(np.log10(data_x22.rhodust[:, :, 0, 0]))), \
-                                min(np.min(np.log10(data_mc.dusttemp[:, :, 0, 0])), np.min(np.log10(data_x22.dusttemp[:, :, 0, 0]))), \
-                                min(np.min(np.log10(nch3oh_x22[:, :, 0])), np.min(np.log10(nch3oh_x22[:, :, 0])))
-    maxs[0], maxs[1], maxs[2] = max(np.max(np.log10(data_mc.rhodust[:, :, 0, 0])), np.max(np.log10(data_x22.rhodust[:, :, 0, 0]))), \
-                                max(np.max(np.log10(data_mc.dusttemp[:, :, 0, 0])), np.max(np.log10(data_x22.dusttemp[:, :, 0, 0]))), \
-                                max(np.max(np.log10(nch3oh_x22[:, :, 0])), np.max(np.log10(nch3oh_x22[:, :, 0])))
+#     mins[0], mins[1], mins[2] = min(np.min(np.log10(data_mc.rhodust[:, :, 0, 0])), np.min(np.log10(data_x22.rhodust[:, :, 0, 0]))), \
+#                                 min(np.min(np.log10(data_mc.dusttemp[:, :, 0, 0])), np.min(np.log10(data_x22.dusttemp[:, :, 0, 0]))), \
+#                                 min(np.min(np.log10(nch3oh_x22[:, :, 0])), np.min(np.log10(nch3oh_x22[:, :, 0])))
+#     maxs[0], maxs[1], maxs[2] = max(np.max(np.log10(data_mc.rhodust[:, :, 0, 0])), np.max(np.log10(data_x22.rhodust[:, :, 0, 0]))), \
+#                                 max(np.max(np.log10(data_mc.dusttemp[:, :, 0, 0])), np.max(np.log10(data_x22.dusttemp[:, :, 0, 0]))), \
+#                                 max(np.max(np.log10(nch3oh_x22[:, :, 0])), np.max(np.log10(nch3oh_x22[:, :, 0])))
 
 
-    cmaps = ['BuPu', 'OrRd', 'BuPu']
-    titles = ['Dust density', 'Temperature', 'Number density of methanol']
-    cbar = [r'log($\rho$) [g$cm^{-3}$]', r'log(T) [K]',r'log($n_{\mathregular{CH_3OH}}$) [$cm^{-3}$]']
-    for idx_val, (val_mc, val_x22) in enumerate(zip([data_mc.rhodust[:, :, 0, 0], data_mc.dusttemp[:, :, 0, 0], nch3oh_mc[:, :, 0]], 
-                                                    [data_x22.rhodust[:, :, 0, 0], data_x22.dusttemp[:, :, 0, 0], nch3oh_x22[:, :, 0]])):
+#     cmaps = ['BuPu', 'OrRd', 'BuPu']
+#     titles = ['Dust density', 'Temperature', 'Number density of methanol']
+#     cbar = [r'log($\rho$) [g$cm^{-3}$]', r'log(T) [K]',r'log($n_{\mathregular{CH_3OH}}$) [$cm^{-3}$]']
+#     for idx_val, (val_mc, val_x22) in enumerate(zip([data_mc.rhodust[:, :, 0, 0], data_mc.dusttemp[:, :, 0, 0], nch3oh_mc[:, :, 0]], 
+#                                                     [data_x22.rhodust[:, :, 0, 0], data_x22.dusttemp[:, :, 0, 0], nch3oh_x22[:, :, 0]])):
         
-        c1 = ax[0, idx_val].pcolormesh(Theta-pi/2, R, np.log10(val_mc), shading='auto', cmap=cmaps[idx_val], vmin=mins[idx_val], vmax=maxs[idx_val])
-        ax[0, idx_val].pcolormesh(Theta+pi/2, R, np.log10(val_mc), shading='auto', cmap=cmaps[idx_val], vmin=mins[idx_val], vmax=maxs[idx_val])
-        levels = np.linspace(np.log10(val_mc).min(), np.log10(val_mc).max(), 4)
-        ax[0, idx_val].contour(Theta-pi/2, R, np.log10(val_mc), levels=levels, colors='k', linewidths=.7, linestyles='dashed')
-        ax[0, idx_val].contour(Theta+pi/2, R, np.log10(val_mc), levels=levels, colors='k', linewidths=.7, linestyles='dashed')
-        ax[0, idx_val].set_xticks([])
-        ax[0, idx_val].set_yticks([])
-        if idx_val == 0:
-            ax[0, idx_val].set_ylabel('mctherm', fontsize=22, labelpad=40)
-            ax[0, idx_val].yaxis.set_label_position("right")
-            ax[0, idx_val].yaxis.set_label_coords(-0.1, 0.5)
+#         c1 = ax[0, idx_val].pcolormesh(Theta-pi/2, R, np.log10(val_mc), shading='auto', cmap=cmaps[idx_val], vmin=mins[idx_val], vmax=maxs[idx_val])
+#         ax[0, idx_val].pcolormesh(Theta+pi/2, R, np.log10(val_mc), shading='auto', cmap=cmaps[idx_val], vmin=mins[idx_val], vmax=maxs[idx_val])
+#         levels = np.linspace(np.log10(val_mc).min(), np.log10(val_mc).max(), 4)
+#         ax[0, idx_val].contour(Theta-pi/2, R, np.log10(val_mc), levels=levels, colors='k', linewidths=.7, linestyles='dashed')
+#         ax[0, idx_val].contour(Theta+pi/2, R, np.log10(val_mc), levels=levels, colors='k', linewidths=.7, linestyles='dashed')
+#         ax[0, idx_val].set_xticks([])
+#         ax[0, idx_val].set_yticks([])
+#         if idx_val == 0:
+#             ax[0, idx_val].set_ylabel('mctherm', fontsize=22, labelpad=40)
+#             ax[0, idx_val].yaxis.set_label_position("right")
+#             ax[0, idx_val].yaxis.set_label_coords(-0.1, 0.5)
             
 
-        c2 = ax[1, idx_val].pcolormesh(Theta-pi/2, R, np.log10(val_x22), shading='auto', cmap=cmaps[idx_val], vmin=mins[idx_val], vmax=maxs[idx_val])
-        ax[1, idx_val].pcolormesh(Theta+pi/2, R, np.log10(val_x22), shading='auto', cmap=cmaps[idx_val], vmin=mins[idx_val], vmax=maxs[idx_val])
-        levels = np.linspace(np.log10(val_x22).min(), np.log10(val_x22).max(), 4)
-        ax[1, idx_val].contour(Theta-pi/2, R, np.log10(val_x22), levels=levels, colors='k', linewidths=.7, linestyles='dashed')
-        ax[1, idx_val].contour(Theta+pi/2, R, np.log10(val_x22), levels=levels, colors='k', linewidths=.7, linestyles='dashed')
-        ax[1, idx_val].set_xticks([])
-        ax[1, idx_val].set_yticks([])
-        if idx_val == 0:
-            ax[1, idx_val].set_ylabel('X22 model', fontsize=22, labelpad=40)
-            ax[1, idx_val].yaxis.set_label_position("right")
-            ax[1, idx_val].yaxis.set_label_coords(-0.1, 0.5)
+#         c2 = ax[1, idx_val].pcolormesh(Theta-pi/2, R, np.log10(val_x22), shading='auto', cmap=cmaps[idx_val], vmin=mins[idx_val], vmax=maxs[idx_val])
+#         ax[1, idx_val].pcolormesh(Theta+pi/2, R, np.log10(val_x22), shading='auto', cmap=cmaps[idx_val], vmin=mins[idx_val], vmax=maxs[idx_val])
+#         levels = np.linspace(np.log10(val_x22).min(), np.log10(val_x22).max(), 4)
+#         ax[1, idx_val].contour(Theta-pi/2, R, np.log10(val_x22), levels=levels, colors='k', linewidths=.7, linestyles='dashed')
+#         ax[1, idx_val].contour(Theta+pi/2, R, np.log10(val_x22), levels=levels, colors='k', linewidths=.7, linestyles='dashed')
+#         ax[1, idx_val].set_xticks([])
+#         ax[1, idx_val].set_yticks([])
+#         if idx_val == 0:
+#             ax[1, idx_val].set_ylabel('X22 model', fontsize=22, labelpad=40)
+#             ax[1, idx_val].yaxis.set_label_position("right")
+#             ax[1, idx_val].yaxis.set_label_coords(-0.1, 0.5)
 
-        # Add shared colorbar for each column
-        fig.colorbar(c1, ax=[ax[0, idx_val], ax[1, idx_val]], orientation='vertical', fraction=0.046*1.5, pad=0.04).set_label(cbar[idx_val], fontsize=18)
+#         # Add shared colorbar for each column
+#         fig.colorbar(c1, ax=[ax[0, idx_val], ax[1, idx_val]], orientation='vertical', fraction=0.046*1.5, pad=0.04).set_label(cbar[idx_val], fontsize=18)
 
-        ax[0, idx_val].set_title(titles[idx_val], fontsize=26, color='k')
+#         ax[0, idx_val].set_title(titles[idx_val], fontsize=26, color='k')
 
-    plt.savefig('high_mdot_profiles.pdf', transparent=True)
-    plt.close()
-    return
+#     plt.savefig('high_mdot_profiles.pdf', transparent=True)
+#     plt.close()
+#     return
