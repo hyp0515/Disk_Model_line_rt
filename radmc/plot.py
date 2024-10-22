@@ -56,7 +56,7 @@ class generate_plot():
         titles = [r'$\rho_{dust}$', r'$T$', r'$n_{\mathregular{CH_3OH}}$']
         cbar = [r'log($\rho$) [g$cm^{-3}$]', r'log(T) [K]',r'log($n_{\mathregular{CH_3OH}}$) [$cm^{-3}$]']
         
-        for idx_val, val in enumerate([dust[:, :, 0, 0], t[:, :, 0, 0], nch3oh[:, :, 0, 0]]):
+        for idx_val, val in enumerate([np.sum(dust[:, :, 0, :], axis=2), t[:, :, 0, 1], nch3oh[:, :, 0, 0]]):
             c = ax[idx_val].pcolormesh(Theta-np.pi/2, R, np.log10(val), shading='auto', cmap=cmaps[idx_val])
             ax[idx_val].pcolormesh(Theta+np.pi/2, R, np.log10(val), shading='auto', cmap=cmaps[idx_val])
             if idx_val == 0:
@@ -112,11 +112,8 @@ class generate_plot():
         scale_bar_ax.add_artist(scale_bar)
         scale_bar_ax.set_axis_off()
         
-        dir = getattr(parms, 'dir', './test/')
-        fname = getattr(parms, 'fname', '')
-        
-        plt.savefig(dir+fname+'profile.pdf', transparent=True)
-        plt.close()
+        self.save_plot(fig=fig, parms=parms)
+
 
     
     def plot_channel_map(self, parms):
@@ -372,7 +369,52 @@ class generate_plot():
             ax.set_ylabel("Velocity [km/s]",fontsize = 16)
             ax.plot([0, 0], [-v_width+vkms, v_width+vkms], 'w:')
             ax.plot([-(sizeau//2), (sizeau//2)], [vkms, vkms], 'w:')
+            
+            if parms.CB68 is True:
+                CB68_PV = np.load('../../CB68/CB68_PV.npy')
+                sizeau_cb68  = 300
+                v_width_cb68 = 5
+                nlam_cb68 = 60
+                npix_cb68 = 50
+                v_axis = np.linspace(0, 10, 60, endpoint=True)
+                offset = np.linspace(-150, 150, 50, endpoint=True)
+                if sizeau >= sizeau_cb68:
+                    if v_width >= v_width_cb68:
+                        cb68_extent = [int((npix//2)-(sizeau_cb68*npix/sizeau)//2),
+                                    int((npix//2)+(sizeau_cb68*npix/sizeau)//2),
+                                    int((npix//2)-(v_width_cb68*npix/v_width)//2),
+                                    int((npix//2)+(v_width_cb68*npix/v_width)//2)]
+                    else:
+                        cb68_extent = [int((npix//2)-(sizeau_cb68*npix/sizeau)//2),
+                                    int((npix//2)+(sizeau_cb68*npix/sizeau)//2),
+                                    0,
+                                    npix]
+                        CB68_PV = CB68_PV[int(round(nlam_cb68*0.5*(1-nlam/nlam_cb68))):-int(round(nlam_cb68*0.5*(1-nlam/nlam_cb68))),:]
+                        v_axis = np.linspace(v_width-5, v_width+5, int(round(nlam_cb68/(v_width_cb68/v_width))), endpoint=True)
+                else:
+                    if v_width >= v_width_cb68:
+                        cb68_extent = [0,
+                                    npix,
+                                    int((npix//2)-(v_width_cb68*npix/v_width)//2),
+                                    int((npix//2)+(v_width_cb68*npix/v_width)//2)]
+                        CB68_PV = CB68_PV[:, int(npix_cb68*0.5*(1-sizeau/sizeau_cb68)):-int(npix_cb68*0.5*(1-sizeau/sizeau_cb68))]
+                        offset = np.linspace(-(sizeau//2), (sizeau//2), int(round(npix_cb68/(sizeau_cb68/sizeau))), endpoint=True)
+                        print(offset.shape)
+                    else:
+                        cb68_extent = [0,npix, 0, npix]
+                        CB68_PV = CB68_PV[int(round(nlam_cb68*0.5*(1-nlam/nlam_cb68))):-int(round(nlam_cb68*0.5*(1-nlam/nlam_cb68))),
+                                        int(round(npix_cb68*0.5*(1-sizeau/sizeau_cb68))):-int(round(npix_cb68*0.5*(1-sizeau/sizeau_cb68)))]
+                        v_axis = np.linspace(v_width-5, v_width+5, int(round(nlam_cb68/(v_width_cb68/v_width))), endpoint=True)
+                        offset = np.linspace(-(sizeau//2), (sizeau//2), int(round(npix_cb68/(sizeau_cb68/sizeau))), endpoint=True)       
+                O, V = np.meshgrid(offset, v_axis)
+                contour_levels = np.linspace(0.01, CB68_PV.max(), 4)
+                contour = ax.contour(O, V, CB68_PV[::-1, :], levels=contour_levels, colors='w', linewidths=1, extent=cb68_extent)
+                
+            
+            
             return fig, ax
+        
+        
         
         title = getattr(parms, 'title', '')
         fwhm  = getattr(parms, 'fwhm', 50)
@@ -438,7 +480,7 @@ class generate_plot():
             vmin, vmax = np.min(image), np.max(image)
             x, y = np.linspace(0, npix, npix), np.linspace(0, npix, npix)
             X, Y = np.meshgrid(x, y)
-            contour_level = np.linspace(vmin, vmax, 5)
+            contour_level = np.linspace(0.2*vmax, 0.8*vmax, 4, endpoint=True)
             extent = [0, npix, 0, npix]
             
             c = ax.imshow(image[:, ::-1, 0].T, cmap='jet',

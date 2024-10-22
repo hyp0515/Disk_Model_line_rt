@@ -46,19 +46,19 @@ model.get_continuumlambda(filename=None,
                           comment=None,
                           lambda_micron=None,
                           append=False)
+        
 model.get_diskcontrol(  d_to_g_ratio = 0.01,
-                        a_max=1, 
+                        a_max=0.1, 
                         Mass_of_star=0.14, 
                         Accretion_rate=5e-7,
-                        Radius_of_disk=30,
+                        Radius_of_disk=50,
                         NR=200,
                         NTheta=200,
-                        NPhi=10,
-                        disk_boundary=1e-18)
+                        NPhi=10)
 model.get_vfieldcontrol(Kep=True,
-                        vinfall=0.5,
-                        Rcb=5,
-                        outflow=0.5)
+                        vinfall=None,
+                        Rcb=None,
+                        outflow=None)
 model.get_heatcontrol(heat='accretion')
 model.get_gasdensitycontrol(abundance=1e-10,
                             snowline=None,
@@ -66,6 +66,7 @@ model.get_gasdensitycontrol(abundance=1e-10,
                             gas_inside_rcb=True)
 
 ##############################################
+
 condition_parms = general_parameters(
     nodust      = False,
     scat        = True,
@@ -75,34 +76,34 @@ condition_parms = general_parameters(
 channel_cube_parms = general_parameters(
     incl=70, line=240,
     v_width=10, nlam=11, vkms=0,
-    npix=200, sizeau=100,
-    dir='./test/', fname='test',
+    npix=500, sizeau=200,
+    dir='./test/', fname=f'test',
     read_cube=True
 )
 
 pv_cube_parms = general_parameters(
     incl=70, line=240,
     v_width=10, nlam=50, vkms=0,
-    npix=200, sizeau=100,
-    dir='./test/', fname='test',
+    npix=500, sizeau=200,
+    dir=f'./test/', fname=f'test',
     read_cube=True
 )
 
-sed_parms = general_parameters(
-    dir='./', fname='test',
-    read_sed=True
-)
+# sed_parms = general_parameters(
+#     dir='./', fname='test',
+#     read_sed=True
+# )
 
-spectrum_parms = general_parameters(
-    dir='./', fname='test',
-    read_spectrum=True
-)
+# spectrum_parms = general_parameters(
+#     dir='./', fname='test',
+#     read_spectrum=True
+# )
 
 conti_parms = general_parameters(
     incl=70, wav=1300,
-    npix=200, sizeau=100,
+    npix=500, sizeau=200,
     scat=True,
-    dir='./test/', fname='test',
+    dir=f'./test/', fname=f'test',
     read_conti=True
 )
 
@@ -111,76 +112,81 @@ simulation_parms = general_parameters(
     channel_cube_parms = channel_cube_parms,
     pv_cube_parms      = pv_cube_parms,
     conti_parms        = conti_parms,
-    sed_parms          = sed_parms,
-    spectrum_parms     = spectrum_parms,
-    save_out=True, save_npz=True,
+    # sed_parms          = sed_parms,
+    # spectrum_parms     = spectrum_parms,
+    save_out=True,
+    save_npz=True,
 )
 
 simulation = generate_simulation(
     parms=simulation_parms,
-    channel       = False,
+    channel       = True,
     pv            = False,
     conti         = True,
     sed           = False,
     line_spectrum = False
 )
 
+
 ##############################################
 profile_parms = general_parameters(
-    dir='./test/', fname='test_profile'
+    dir=f'./test/', fname='profile'
 )
+
+
 
 channel_parms = general_parameters(
     cube_dir = './test/npzfile/',
-    cube_fname = ['channel_test_scat.npz', 'channel_test_conti.npz'],
+    cube_fname = [f'channel_test_scat.npz', 'channel_test_conti.npz'],
     extracted = True,
     conti = True,
     convolve = True,
     vkms = 5,
     fwhm = 50,
     d = 140,
-    title = 'test',
-    dir = './test/',
-    fname = 'test_channel'
+    title = f'test',
+    dir = f'./test/',
+    fname = 'channel'
 )
 
 pv_parms = general_parameters(
     cube_dir = './test/npzfile/',
-    cube_fname = ['pv_test_scat.npz', 'pv_test_conti.npz'],
+    cube_fname = [f'channel_test_scat.npz', 'channel_test_conti.npz'],
     extracted = True,
     conti = True,
     convolve = True,
     vkms = 5,
     fwhm = 50,
     d = 140,
-    title = 'test',
-    dir = './test/',
-    fname = 'test_pv'
+    CB68 = False,
+    title = f'test',
+    dir = f'./test/',
+    fname = 'pv'
 )
 
-spectra_parms = general_parameters(
-    spectra_dir = './test/npzfile/',
-    spectra_fname = 'test_extracted.npz',
-    extracted = True,
-    conti = True,
-    convolve = True,
-    vkms = 5,
-    fwhm = 50,
-    d = 140,
-    title = 'test',
-    dir = './test/',
-    fname = 'test_spectrum'
-)
+# spectra_parms = general_parameters(
+#     spectra_dir = './test/npzfile/',
+#     spectra_fname = 'test_extracted.npz',
+#     extracted = True,
+#     conti = True,
+#     convolve = True,
+#     vkms = 5,
+#     fwhm = 50,
+#     d = 140,
+#     title = 'test',
+#     dir = './test/',
+#     fname = 'test_spectrum'
+# )
 
 continuum_parms = general_parameters(
-    conti_dir = './test/npzfile/',
-    conti_fname = 'conti_test_scat.npz',
+    conti_dir = './test/outfile/',
+    conti_fname = f'conti_test_scat.out',
     convolve = True,
     fwhm = 50,
     d = 140,
-    title = 'test',
-    dir = './test/',
-    fname = 'test_conti'
+    title = f'test',
+    dir = f'./test/',
+    fname = 'conti'
 )
 
 
@@ -188,16 +194,19 @@ plot_parms = general_parameters(
     profile_parms   = profile_parms,
     channel_parms   = channel_parms,
     pv_parms        = pv_parms,
-    spectra_parms   = spectra_parms,
+    # spectra_parms   = spectra_parms,
     continuum_parms = continuum_parms
 )
 
 plot = generate_plot(
     parms     = plot_parms, 
-    profile   = False,
-    channel   = False,
-    pv        = False,
+    profile   = True,
+    channel   = True,
+    pv        = True,
     continuum = True,
     sed       = False,
     spectrum  = False,
 )
+
+
+

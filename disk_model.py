@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import warnings
-
-
+import optool
+import os
 
 
 """
@@ -125,16 +125,245 @@ def get_u(T):
 Opacity
 =======================================================================
 """
+# X22 original opacity table
+# def generate_opacity_table(
+#     a_min, a_max, q, dust_to_gas,
+#     precomputed_grain_properties_fname='data_for_disk_model/opacity_tables/grain_properties.pkl',
+#     T_min=20, T_max=2000, N_T=50,
+#     ):
+#     """
+#     Generate an opacity table for given grain size distribution.
+
+#     Args:
+#       a_min, a_max: min/max grain size in grain size distribution
+#       q: slope for grain size distribution
+#       dust_to_gas: dust-to-gas mass ratio (before sublimation)
+#       precomputed_grain_properties_fname:
+#         name of the pkl file storing pre-computed grain material properties
+#       T_min, T_max: min/max temprature for temprature grid
+#       N_T: temperature grid resolution
+
+#     Returns:
+#       a dictionary containing the following items:
+#         T_crit: sublimation temperatures
+#         T: temperature grid
+#         lam: wavelength grid
+#         kappa: absorption opacity at given lam
+#                2d array, first dimension corresponds to temperature range
+#         kappa_p: Planck mean opacity
+#         kappa_r: Rosseland mean opacity
+#         kappa_s, kappa_s_p, kappa_s_r:
+#           same as kappa, kappa_p, kappa_r, but for effective scattering opacity
+#           (1-g)*kappa_scatter
+#     """
+#     compute_grain_properties_DSHARP()
+#     try:
+#         with open('./'+precomputed_grain_properties_fname, "rb") as f:
+#             grain_properties = pickle.load(f)
+#     except FileNotFoundError:
+#         try:
+#             with open('../../'+precomputed_grain_properties_fname, "rb") as f:
+#                 grain_properties = pickle.load(f)
+#         except FileNotFoundError:
+#             compute_grain_properties_DSHARP(fname='./'+precomputed_grain_properties_fname)
+#             with open('./'+precomputed_grain_properties_fname, "rb") as f:
+#                 grain_properties = pickle.load(f)
+    
+
+
+
+#     a_grid = grain_properties['a_grid']
+#     N_a = len(a_grid)
+#     lam_grid = grain_properties['lam_grid']
+#     T_crit = grain_properties['T_crit']
+#     N_composition = len(T_crit)
+#     T_grid = np.logspace(np.log10(T_min),np.log10(T_max),N_T)
+#     eps = 1e-3
+#     T_grid = np.sort(np.concatenate((T_grid, T_crit-eps, T_crit+eps))) # insert points around T_crit
+#     N_T = len(T_grid)
+#     kappa = grain_properties['kappa'] # get opacity: kappa(temperature_regime, a, lam)
+#     kappa_s = grain_properties['kappa_s']*(1-np.array(grain_properties['g'])) # effective kappa for anisotropic scattering
+#     # print('kappa shape '+ str(len(kappa)))
+#     # print('kappa_s shape '+ str(len(kappa_s)))
+#     # compute mean opacities
+#     nu = np.outer(c_light/lam_grid, [1])
+#     T = T_grid
+#     with warnings.catch_warnings():
+#             warnings.simplefilter('ignore')
+#             exp_nu_T = np.exp(h*nu/(kB*T))    
+#     B_times_nu = nu**4 / (exp_nu_T-1) # arbitrary unit
+#     B_times_nu_norm = B_times_nu/np.sum(B_times_nu,axis=0)
+#     # u = dB/dT
+#     u_times_nu = nu**4 / (exp_nu_T-1/exp_nu_T) * h*nu/kB/T**2
+#     u_times_nu_norm = u_times_nu/np.sum(u_times_nu,axis=0)
+#     kappa_p = [None]*N_composition
+#     kappa_r = [None]*N_composition
+#     kappa_s_p = [None]*N_composition
+#     kappa_s_r = [None]*N_composition
+#     for i in range(N_composition):
+#         kappa_p[i] = kappa[i].dot(B_times_nu_norm)
+#         kappa_r[i] = ((kappa[i]**-1).dot(u_times_nu_norm))**-1
+#         kappa_s_p[i] = kappa_s[i].dot(B_times_nu_norm)
+#         kappa_s_r[i] = ((kappa_s[i]**-1).dot(u_times_nu_norm))**-1
+#         # the summations above assume log-uniform lambda grid
+#     # kappa_p/r(temperature_regime, a, T)
+
+#     # weighted average across size distribution
+#     ia_min = np.argmin(np.abs(a_grid-a_min))
+#     ia_max = np.argmin(np.abs(a_grid-a_max))
+#     weight = a_grid**(q+4)
+#     weight[:max(0,ia_min-1)] = 0
+#     weight[ia_max+1:] = 0
+#     weight = weight/np.sum(weight)
+#     mass_ratio_after_subl = grain_properties['mass_ratio_after_subl']
+#     weight = weight.reshape((1,N_a,1))
+#     weight = weight*dust_to_gas*mass_ratio_after_subl.reshape((N_composition,1,1))
+#     kappa = np.sum(kappa*weight,axis=1) # kappa(temperature_regime, lam)
+#     kappa_s = np.sum(kappa_s*weight,axis=1) # kappa(temperature_regime, lam)
+#     kappa_p = np.sum(kappa_p*weight,axis=1) # kappa_p/r(temperature_regime, T)
+#     kappa_r = np.sum(kappa_r*weight,axis=1)
+#     kappa_s_p = np.sum(kappa_s_p*weight,axis=1) # kappa_p/r(temperature_regime, T)
+#     kappa_s_r = np.sum(kappa_s_r*weight,axis=1)
+#     g = np.sum(grain_properties['g']*weight,axis=1)
+
+#     # combine different temperature regimes
+#     def combine_temperature_regimes(y):
+#         if y.ndim>2:
+#             return np.array([combine_temperature_regimes(y1) for y1 in y])
+#         y_out = np.zeros(y.shape[1:])
+#         for i in range(N_composition)[::-1]:
+#             y_out[T_grid<T_crit[i]] = y[i,T_grid<T_crit[i]]
+#         return y_out
+#     kappa_p = combine_temperature_regimes(kappa_p)
+#     kappa_r = combine_temperature_regimes(kappa_r)
+#     kappa_s_p = combine_temperature_regimes(kappa_s_p)
+#     kappa_s_r = combine_temperature_regimes(kappa_s_r)
+
+#     opacity_table = {}
+#     opacity_table['T_crit'] = T_crit
+#     opacity_table['T'] = T_grid
+#     opacity_table['lam'] = lam_grid
+#     opacity_table['kappa'] = kappa
+#     opacity_table['kappa_s'] = kappa_s
+#     opacity_table['kappa_p'] = kappa_p
+#     opacity_table['kappa_r'] = kappa_r
+#     opacity_table['kappa_s_p'] = kappa_s_p
+#     opacity_table['kappa_s_r'] = kappa_s_r
+#     opacity_table['g'] = g
+#     return opacity_table
+
+# import dsharp_opac # this can be installed from https://github.com/birnstiel/dsharp_opac
+
+# def compute_grain_properties_DSHARP(
+#     fname='./data_for_disk_model/opacity_tables/grain_properties.pkl',
+#     nang=3, # same as the default value in dsharp_opac
+#     ):
+#     """
+#     Store grain properties computed using the DSHARP opacity model
+#     (Birnstiel et al. 2018)
+    
+#     Args:
+#       fname: file name for storing computed grain properties
+#       nang: number of angles to compute opacity (passed to dsharp_opac)
+#     """
+    
+    
+#     # dust grain compoistion following Birnstiel et al. 2018
+#     # the four species:
+#     # water, scilicate, troilite, refractory organics
+#     N_composition = 4
+#     rho_grain = np.array([0.92, 3.30, 4.83, 1.50])
+#     mass_frac = np.array([0.2, 0.3291, 0.0743, 0.3966])
+#     vol_frac = np.array([0.3642, 0.1670, 0.0258, 0.4430])
+
+#     # sublimation temperature from Pollack et al. 1994
+#     T_crit = np.array([150, 425, 680, 1200])
+
+#     diel_constants = [dsharp_opac.diel_warrenbrandt08(),
+#                       dsharp_opac.diel_draine2003(species='astrosilicates'),
+#                       dsharp_opac.diel_henning('troilite'),
+#                       dsharp_opac.diel_henning('organics', refractory=True),
+#                      ]
+
+#     species_exists = [[1,1,1,1],
+#                       [0,1,1,1],
+#                       [0,1,1,0],
+#                       [0,1,0,0]]
+#     # species_exits[i,j] = species j exists in temperature range i
+#     species_exists = np.array(species_exists)
+#     rho_grain_eff = np.zeros(N_composition)
+#     mass_ratio_after_subl = np.ones(N_composition)
+#     mixed_diel_constants = [None]*N_composition
+#     for i in range(N_composition):
+#         mass_ratio_after_subl[i] = np.sum(mass_frac*species_exists[i])
+#         current_vol_frac = vol_frac*species_exists[i]
+#         current_vol_frac = current_vol_frac/np.sum(current_vol_frac)
+#         rho_grain_eff[i] = np.sum(current_vol_frac*rho_grain)
+#         mixed_diel_constants[i] = dsharp_opac.diel_mixed(constants=diel_constants,
+#                                   abundances=current_vol_frac,
+#                                   rule='Bruggeman')
+#         mixed_diel_constants[i] = mixed_diel_constants[i].get_normal_object()
+
+#     # generate grids for grain size and wavelength
+#     a_min = 1e-6
+#     a_max = 1
+#     N_a = 121
+#     a_grid = np.logspace(np.log10(a_min),np.log10(a_max),N_a)
+#     lam_min = 1e-5 # 1000K=0.0002898cm, choose lam_min << this
+#     lam_max = 1 # 10K = 0.02898cm, choose lam_max >> this
+#     N_lam = 101
+#     lam_grid = np.logspace(np.log10(lam_min),np.log10(lam_max),N_lam)
+
+#     mie_data_package = [None]*N_composition
+#     for i in range(N_composition):
+#         mie_data_package[i] = dsharp_opac.get_mie_coefficients(
+#             a_grid, lam_grid, mixed_diel_constants[i],
+#             nang=nang, extrapolate_large_grains=False)
+
+#     kappa   = [None]*N_composition # abroption opacity
+#     kappa_s = [None]*N_composition # scattering opacity
+#     g       = [None]*N_composition # asymmetry factor
+#     for i in range(N_composition):
+#         m = 4*np.pi/3 * a_grid**3 * rho_grain_eff[i]
+#         kappa_both = dsharp_opac.get_kappa_from_q(
+#             a_grid, m,
+#             mie_data_package[i]['q_abs'],
+#             mie_data_package[i]['q_sca'],
+#         )
+#         kappa[i] = kappa_both[0]
+#         kappa_s[i] = kappa_both[1]
+#         g[i] = mie_data_package[i]['g']
+
+#     grain_properties = {}
+#     grain_properties['a_grid'] = a_grid
+#     grain_properties['lam_grid'] = lam_grid
+#     grain_properties['kappa'] = kappa
+#     grain_properties['kappa_s'] = kappa_s
+#     grain_properties['g'] = g
+#     grain_properties['T_crit'] = T_crit
+#     grain_properties['mass_ratio_after_subl'] = mass_ratio_after_subl
+
+#     # with open(fname,"wb") as f:
+#     #     pickle.dump(grain_properties, f)
+    
+#     try:
+#         with open(fname, "wb") as f:
+#             pickle.dump(grain_properties, f)
+#     except FileNotFoundError:
+#         with open('../../'+fname, "wb") as f:
+#             pickle.dump(grain_properties, f)
+#     return
+
+# Optool to generate opacity table
 def generate_opacity_table(
     a_min, a_max, q, dust_to_gas,
-    precomputed_grain_properties_fname='data_for_disk_model/opacity_tables/grain_properties.pkl',
-    T_min=20, T_max=2000, N_T=30,
+    T_min=20, T_max=2000, N_T=50,
     ):
     """
-    Generate an opacity table for given grain size distribution.
+    Generate an opacity table for given grain size distribution. (using dsharp compsition)
 
     Args:
-      a_min, a_max: min/max grain size in grain size distribution
+      a_min, a_max: min/max grain size in grain size distribution (in cm)
       q: slope for grain size distribution
       dust_to_gas: dust-to-gas mass ratio (before sublimation)
       precomputed_grain_properties_fname:
@@ -155,206 +384,53 @@ def generate_opacity_table(
           same as kappa, kappa_p, kappa_r, but for effective scattering opacity
           (1-g)*kappa_scatter
     """
-    compute_grain_properties_DSHARP()
-    try:
-        with open('./'+precomputed_grain_properties_fname, "rb") as f:
-            grain_properties = pickle.load(f)
-    except FileNotFoundError:
-        try:
-            with open('../../'+precomputed_grain_properties_fname, "rb") as f:
-                grain_properties = pickle.load(f)
-        except FileNotFoundError:
-            compute_grain_properties_DSHARP(fname='./'+precomputed_grain_properties_fname)
-            with open('./'+precomputed_grain_properties_fname, "rb") as f:
-                grain_properties = pickle.load(f)
     
-
-
-
-    a_grid = grain_properties['a_grid']
-    N_a = len(a_grid)
-    lam_grid = grain_properties['lam_grid']
-    T_crit = grain_properties['T_crit']
-    N_composition = len(T_crit)
-    T_grid = np.logspace(np.log10(T_min),np.log10(T_max),N_T)
-    eps = 1e-3
-    T_grid = np.sort(np.concatenate((T_grid, T_crit-eps, T_crit+eps))) # insert points around T_crit
-    N_T = len(T_grid)
-    kappa = grain_properties['kappa'] # get opacity: kappa(temperature_regime, a, lam)
-    kappa_s = grain_properties['kappa_s']*(1-np.array(grain_properties['g'])) # effective kappa for anisotropic scattering
-    # print('kappa shape '+ str(len(kappa)))
-    # print('kappa_s shape '+ str(len(kappa_s)))
-    # compute mean opacities
-    nu = np.outer(c_light/lam_grid, [1])
-    T = T_grid
-    with warnings.catch_warnings():
+    T_crit = [150, 425, 680, 1200]
+    material = ['h2o-w 0.2', 'c-org 0.3966', 'fes 0.0743', 'astrosil 0.3291']
+    fraction = [0.2, 0.3966, 0.0743, 0.3291]
+    fname = ['temp_1', 'temp_2', 'temp_3', 'temp_4']
+    kappa = []
+    kappa_s = []
+    kappa_p = []
+    kappa_r = []
+    for idx in range(len(material)):
+        p = optool.particle(f'optool -c {' '.join(material[(idx):])} -a 0.01 {a_max*1e-4} {-q} -l 0.1 10000 101 -mie')
+        with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            exp_nu_T = np.exp(h*nu/(kB*T))    
-    B_times_nu = nu**4 / (exp_nu_T-1) # arbitrary unit
-    B_times_nu_norm = B_times_nu/np.sum(B_times_nu,axis=0)
-    # u = dB/dT
-    u_times_nu = nu**4 / (exp_nu_T-1/exp_nu_T) * h*nu/kB/T**2
-    u_times_nu_norm = u_times_nu/np.sum(u_times_nu,axis=0)
-    kappa_p = [None]*N_composition
-    kappa_r = [None]*N_composition
-    kappa_s_p = [None]*N_composition
-    kappa_s_r = [None]*N_composition
-    for i in range(N_composition):
-        kappa_p[i] = kappa[i].dot(B_times_nu_norm)
-        kappa_r[i] = ((kappa[i]**-1).dot(u_times_nu_norm))**-1
-        kappa_s_p[i] = kappa_s[i].dot(B_times_nu_norm)
-        kappa_s_r[i] = ((kappa_s[i]**-1).dot(u_times_nu_norm))**-1
-        # the summations above assume log-uniform lambda grid
-    # kappa_p/r(temperature_regime, a, T)
+            p.computemean(tmin=T_min, tmax=T_max, ntemp=N_T)
+        kappa.append(p.kabs[0,:]*dust_to_gas*np.sum(fraction[idx:]))
+        kappa_s.append(p.ksca[0]*dust_to_gas*np.sum(fraction[idx:]))
+        kappa_p.append(p.kplanck[0,:]*dust_to_gas*np.sum(fraction[idx:]))
+        kappa_r.append(p.kross[0,:]*dust_to_gas*np.sum(fraction[idx:]))
 
-    # weighted average across size distribution
-    ia_min = np.argmin(np.abs(a_grid-a_min))
-    ia_max = np.argmin(np.abs(a_grid-a_max))
-    weight = a_grid**(q+4)
-    weight[:max(0,ia_min-1)] = 0
-    weight[ia_max+1:] = 0
-    weight = weight/np.sum(weight)
-    mass_ratio_after_subl = grain_properties['mass_ratio_after_subl']
-    weight = weight.reshape((1,N_a,1))
-    weight = weight*dust_to_gas*mass_ratio_after_subl.reshape((N_composition,1,1))
-    kappa = np.sum(kappa*weight,axis=1) # kappa(temperature_regime, lam)
-    kappa_s = np.sum(kappa_s*weight,axis=1) # kappa(temperature_regime, lam)
-    kappa_p = np.sum(kappa_p*weight,axis=1) # kappa_p/r(temperature_regime, T)
-    kappa_r = np.sum(kappa_r*weight,axis=1)
-    kappa_s_p = np.sum(kappa_s_p*weight,axis=1) # kappa_p/r(temperature_regime, T)
-    kappa_s_r = np.sum(kappa_s_r*weight,axis=1)
-    g = np.sum(grain_properties['g']*weight,axis=1)
-
+    T_grid = p.temp
+    kappa = np.array(kappa)
+    kappa_s = np.array(kappa_s)
+    kappa_p = np.array(kappa_p)
+    kappa_r = np.array(kappa_r)
+    
     # combine different temperature regimes
     def combine_temperature_regimes(y):
         if y.ndim>2:
             return np.array([combine_temperature_regimes(y1) for y1 in y])
         y_out = np.zeros(y.shape[1:])
-        for i in range(N_composition)[::-1]:
+        for i in range(len(material))[::-1]:
             y_out[T_grid<T_crit[i]] = y[i,T_grid<T_crit[i]]
         return y_out
+
     kappa_p = combine_temperature_regimes(kappa_p)
     kappa_r = combine_temperature_regimes(kappa_r)
-    kappa_s_p = combine_temperature_regimes(kappa_s_p)
-    kappa_s_r = combine_temperature_regimes(kappa_s_r)
+
 
     opacity_table = {}
     opacity_table['T_crit'] = T_crit
     opacity_table['T'] = T_grid
-    opacity_table['lam'] = lam_grid
+    opacity_table['lam'] = p.lam * 1e-4
     opacity_table['kappa'] = kappa
     opacity_table['kappa_s'] = kappa_s
     opacity_table['kappa_p'] = kappa_p
     opacity_table['kappa_r'] = kappa_r
-    opacity_table['kappa_s_p'] = kappa_s_p
-    opacity_table['kappa_s_r'] = kappa_s_r
-    opacity_table['g'] = g
     return opacity_table
-
-import dsharp_opac # this can be installed from https://github.com/birnstiel/dsharp_opac
-
-def compute_grain_properties_DSHARP(
-    fname='./data_for_disk_model/opacity_tables/grain_properties.pkl',
-    nang=3, # same as the default value in dsharp_opac
-    ):
-    """
-    Store grain properties computed using the DSHARP opacity model
-    (Birnstiel et al. 2018)
-    
-    Args:
-      fname: file name for storing computed grain properties
-      nang: number of angles to compute opacity (passed to dsharp_opac)
-    """
-    
-    
-    # dust grain compoistion following Birnstiel et al. 2018
-    # the four species:
-    # water, scilicate, troilite, refractory organics
-    N_composition = 4
-    rho_grain = np.array([0.92, 3.30, 4.83, 1.50])
-    mass_frac = np.array([0.2, 0.3291, 0.0743, 0.3966])
-    vol_frac = np.array([0.3642, 0.1670, 0.0258, 0.4430])
-
-    # sublimation temperature from Pollack et al. 1994
-    T_crit = np.array([150, 425, 680, 1200])
-
-    diel_constants = [dsharp_opac.diel_warrenbrandt08(),
-                      dsharp_opac.diel_draine2003(species='astrosilicates'),
-                      dsharp_opac.diel_henning('troilite'),
-                      dsharp_opac.diel_henning('organics', refractory=True),
-                     ]
-
-    species_exists = [[1,1,1,1],
-                      [0,1,1,1],
-                      [0,1,1,0],
-                      [0,1,0,0]]
-    # species_exits[i,j] = species j exists in temperature range i
-    species_exists = np.array(species_exists)
-    rho_grain_eff = np.zeros(N_composition)
-    mass_ratio_after_subl = np.ones(N_composition)
-    mixed_diel_constants = [None]*N_composition
-    for i in range(N_composition):
-        mass_ratio_after_subl[i] = np.sum(mass_frac*species_exists[i])
-        current_vol_frac = vol_frac*species_exists[i]
-        current_vol_frac = current_vol_frac/np.sum(current_vol_frac)
-        rho_grain_eff[i] = np.sum(current_vol_frac*rho_grain)
-        mixed_diel_constants[i] = dsharp_opac.diel_mixed(constants=diel_constants,
-                                  abundances=current_vol_frac,
-                                  rule='Bruggeman')
-        mixed_diel_constants[i] = mixed_diel_constants[i].get_normal_object()
-
-    # generate grids for grain size and wavelength
-    a_min = 1e-6
-    a_max = 1
-    N_a = 121
-    a_grid = np.logspace(np.log10(a_min),np.log10(a_max),N_a)
-    lam_min = 1e-5 # 1000K=0.0002898cm, choose lam_min << this
-    lam_max = 1 # 10K = 0.02898cm, choose lam_max >> this
-    N_lam = 101
-    lam_grid = np.logspace(np.log10(lam_min),np.log10(lam_max),N_lam)
-
-    mie_data_package = [None]*N_composition
-    for i in range(N_composition):
-        mie_data_package[i] = dsharp_opac.get_mie_coefficients(
-            a_grid, lam_grid, mixed_diel_constants[i],
-            nang=nang, extrapolate_large_grains=False)
-
-    kappa   = [None]*N_composition # abroption opacity
-    kappa_s = [None]*N_composition # scattering opacity
-    g       = [None]*N_composition # asymmetry factor
-    for i in range(N_composition):
-        m = 4*np.pi/3 * a_grid**3 * rho_grain_eff[i]
-        kappa_both = dsharp_opac.get_kappa_from_q(
-            a_grid, m,
-            mie_data_package[i]['q_abs'],
-            mie_data_package[i]['q_sca'],
-        )
-        kappa[i] = kappa_both[0]
-        kappa_s[i] = kappa_both[1]
-        g[i] = mie_data_package[i]['g']
-
-    grain_properties = {}
-    grain_properties['a_grid'] = a_grid
-    grain_properties['lam_grid'] = lam_grid
-    grain_properties['kappa'] = kappa
-    grain_properties['kappa_s'] = kappa_s
-    grain_properties['g'] = g
-    grain_properties['T_crit'] = T_crit
-    grain_properties['mass_ratio_after_subl'] = mass_ratio_after_subl
-
-    # with open(fname,"wb") as f:
-    #     pickle.dump(grain_properties, f)
-    
-    try:
-        with open(fname, "wb") as f:
-            pickle.dump(grain_properties, f)
-    except FileNotFoundError:
-        with open('../../'+fname, "wb") as f:
-            pickle.dump(grain_properties, f)
-    return
-
-
-
 
 """
 =======================================================================
@@ -612,7 +688,7 @@ class DiskModel:
         T_crit = opacity_table['T_crit']
         self.T_subl = T_crit[-1]
         T = opacity_table['T']
-        lam = opacity_table['lam']
+        # lam = opacity_table['lam']
         kappa_p = opacity_table['kappa_p']
         kappa_r = opacity_table['kappa_r']
         # ignore the last sublimation point for kappa_p and kappa_r
