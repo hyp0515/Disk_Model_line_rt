@@ -34,9 +34,9 @@ class generate_plot():
         if continuum is True:
             self.plot_continuum(parms.continuum_parms)
         if sed is True:
-            self.plot_sed(parms)
+            self.plot_sed(parms.sed_parms)
         if spectrum is True:
-            self.plot_spectrum(parms)
+            self.plot_spectrum(parms.spectra_parms)
 
         pass
 
@@ -181,7 +181,7 @@ class generate_plot():
             for i in range(nlam):
                 sigma = fwhm * (npix/sizeau)/ (2*np.sqrt(2*np.log(2)))
                 convolved_image[:, :, i] = gaussian_filter(image[:, :, i], sigma=sigma)
-            return convolved_image*(np.pi/4*(parms.fwhm*npix/sizeau)**2)
+            return convolved_image*(np.pi/4*((fwhm*npix/sizeau)**2))
         
         def channel(image, conti=None, negative=True,
                     colormap='hot', neg_colormap='viridis_r',
@@ -340,7 +340,7 @@ class generate_plot():
         freq0 = (cube.freq[nlam//2] + cube.freq[(nlam//2)-1])/2
         v = cc / 1e5 * (freq0 - cube.freq) / freq0
         v_width = round(v[-1]-v[0])//2
-        vkms = parms.vkms
+        vkms = getattr(parms, 'vkms', 5)
         center = int(cube.ny//2)
         
         image = image * 1e3/(parms.d**2) 
@@ -351,15 +351,16 @@ class generate_plot():
             for i in range(nlam):
                 sigma = fwhm * (npix/sizeau)/ (2*np.sqrt(2*np.log(2)))
                 convolved_image[:, :, i] = gaussian_filter(image[:, :, i], sigma=sigma)
-            return convolved_image*(np.pi/4*(parms.fwhm*npix/sizeau)**2)
+            return convolved_image*(np.pi/4*((fwhm*npix/sizeau)**2))
         
         def slice_pv(image, fwhm):
-            pv_slice = np.sum(image[:, int(center-(fwhm*npix/sizeau)//2):int(center+(fwhm*npix/sizeau)//2), :], axis=1)
+            pv_slice = np.sum(image[:, int(center-((5*npix/sizeau)//2)):int(center+((5*npix/sizeau)//2)), :], axis=1)
+            # pv_slice = image[:, int(center), :]
             return pv_slice.T
         
         def pv(x_axis, v_axis, pv_slice, convolve=False):
             fig, ax = plt.subplots()
-            c = ax.pcolormesh(x_axis, v_axis, pv_slice, shading="nearest", rasterized=True, cmap='jet', vmin=0)
+            c = ax.pcolormesh(x_axis, v_axis, pv_slice, shading="nearest", rasterized=True, cmap='gist_ncar', vmax=40, vmin=-4)
             cbar = fig.colorbar(c, ax=ax)
             if convolve is True:
                 cbar.set_label('mJy/beam',fontsize = 16)
@@ -372,49 +373,17 @@ class generate_plot():
             
             if parms.CB68 is True:
                 CB68_PV = np.load('../../CB68/CB68_PV.npy')
-                sizeau_cb68  = 300
-                v_width_cb68 = 5
-                nlam_cb68 = 60
-                npix_cb68 = 50
-                v_axis = np.linspace(0, 10, 60, endpoint=True)
-                offset = np.linspace(-150, 150, 50, endpoint=True)
-                if sizeau >= sizeau_cb68:
-                    if v_width >= v_width_cb68:
-                        cb68_extent = [int((npix//2)-(sizeau_cb68*npix/sizeau)//2),
-                                    int((npix//2)+(sizeau_cb68*npix/sizeau)//2),
-                                    int((npix//2)-(v_width_cb68*npix/v_width)//2),
-                                    int((npix//2)+(v_width_cb68*npix/v_width)//2)]
-                    else:
-                        cb68_extent = [int((npix//2)-(sizeau_cb68*npix/sizeau)//2),
-                                    int((npix//2)+(sizeau_cb68*npix/sizeau)//2),
-                                    0,
-                                    npix]
-                        CB68_PV = CB68_PV[int(round(nlam_cb68*0.5*(1-nlam/nlam_cb68))):-int(round(nlam_cb68*0.5*(1-nlam/nlam_cb68))),:]
-                        v_axis = np.linspace(v_width-5, v_width+5, int(round(nlam_cb68/(v_width_cb68/v_width))), endpoint=True)
-                else:
-                    if v_width >= v_width_cb68:
-                        cb68_extent = [0,
-                                    npix,
-                                    int((npix//2)-(v_width_cb68*npix/v_width)//2),
-                                    int((npix//2)+(v_width_cb68*npix/v_width)//2)]
-                        CB68_PV = CB68_PV[:, int(npix_cb68*0.5*(1-sizeau/sizeau_cb68)):-int(npix_cb68*0.5*(1-sizeau/sizeau_cb68))]
-                        offset = np.linspace(-(sizeau//2), (sizeau//2), int(round(npix_cb68/(sizeau_cb68/sizeau))), endpoint=True)
-                        print(offset.shape)
-                    else:
-                        cb68_extent = [0,npix, 0, npix]
-                        CB68_PV = CB68_PV[int(round(nlam_cb68*0.5*(1-nlam/nlam_cb68))):-int(round(nlam_cb68*0.5*(1-nlam/nlam_cb68))),
-                                        int(round(npix_cb68*0.5*(1-sizeau/sizeau_cb68))):-int(round(npix_cb68*0.5*(1-sizeau/sizeau_cb68)))]
-                        v_axis = np.linspace(v_width-5, v_width+5, int(round(nlam_cb68/(v_width_cb68/v_width))), endpoint=True)
-                        offset = np.linspace(-(sizeau//2), (sizeau//2), int(round(npix_cb68/(sizeau_cb68/sizeau))), endpoint=True)       
-                O, V = np.meshgrid(offset, v_axis)
-                contour_levels = np.linspace(0.01, CB68_PV.max(), 4)
-                contour = ax.contour(O, V, CB68_PV[::-1, :], levels=contour_levels, colors='w', linewidths=1, extent=cb68_extent)
-                
+                v_axis_cb68 = np.linspace(0, 10, 60, endpoint=True)
+                offset = np.linspace(-150, 150, 50, endpoint=True) 
+                O, V = np.meshgrid(offset, v_axis_cb68)
+                # contour_levels = np.linspace(0.01, CB68_PV.max(), 4)
+                contour_levels = np.array([0.01, 0.02, 0.03, 0.04])
+                contour = ax.contour(O, V, CB68_PV[::-1, ::-1], levels=contour_levels, colors='w', linewidths=1)
+                ax.set_xlim(max(np.min(x_axis), np.min(offset)), min(np.max(x_axis), np.max(offset)))
+                ax.set_ylim(max(np.min(v_axis), np.min(v_axis_cb68)), min(np.max(v_axis), np.max(v_axis_cb68)))
             
             
             return fig, ax
-        
-        
         
         title = getattr(parms, 'title', '')
         fwhm  = getattr(parms, 'fwhm', 50)
@@ -469,7 +438,7 @@ class generate_plot():
             convolved_image = np.zeros(shape=image.shape)
             sigma = fwhm * (npix/sizeau)/ (2*np.sqrt(2*np.log(2)))
             convolved_image[:, :, 0] = gaussian_filter(image[:, :, 0], sigma=sigma)
-            return convolved_image*(np.pi/4*(parms.fwhm*npix/sizeau)**2)
+            return convolved_image*(np.pi/4*((fwhm*npix/sizeau)**2))
         
         def plot_conti(image, convolved=True):
             
@@ -533,13 +502,130 @@ class generate_plot():
             conti_plot_convolved = plot_conti(image=convolved_image, convolved=True)
             self.save_plot(fig=conti_plot_convolved, parms=parms, f='_convolved')
     
-    def plot_sed(self, parms):
-        
-        return
-    
-    
     def plot_spectrum(self, parms):
         
+        if os.path.isdir(parms.spectra_dir):
+            try:
+                if os.path.isfile(parms.spectra_dir+parms.spectra_fname):
+                    if parms.spectra_fname.endswith(".out"):
+                        spectrum = readSpectrum(parms.spectra_dir+parms.spectra_fname)
+                        lam = spectrum[:, 0]
+                        fnu = spectrum[:, 1]
+                    elif parms.spectra_fname.endswith(".npz"):
+                        raw_spectrum = np.load(parms.spectra_dir+parms.spectra_fname)
+                        spectrum = npz_to_class(raw_spectrum)
+                        lam = spectrum.lam
+                        fnu = spectrum.fnu
+                    else:
+                        print('No correct spectrum file is given')
+                        pass
+                else:
+                    print('No spectrum file is found')
+                    pass 
+            except:
+                if isinstance(parms.spectra_fname, list):
+                    for fname in parms.spectra_fname:
+                        if fname.endswith("_scat.out"):
+                            line = readSpectrum(parms.spectra_dir+fname)
+                            lam = line[:, 0]
+                            fnu = line[:, 1]
+                        elif fname.endswith("_scat.npz"):
+                            raw_line = np.load(parms.spectra_dir+fname)
+                            line = npz_to_class(raw_line)
+                            lam = line.lam
+                            fnu = line.fnu
+                        elif fname.endswith("_conti.out"):
+                            conti = readSpectrum(parms.spectra_dir+fname)
+                            fnu_conti = line[:, 1]
+                        elif fname.endswith("_conti.npz"):
+                            raw_conti = np.load(parms.spectra_dir+fname)
+                            conti = npz_to_class(raw_conti)
+                            fnu_conti = conti.fnu
+                        else:
+                            print("No correct spectrum file is given")
+                            break
+                    fnu = fnu - fnu_conti
+                else:
+                    print('No correct spectrum file is given')
+                    pass
+        else:
+            print('No correct spectrum directory is given')
+            pass
+        
+        def plot_specta(lam, fnu, d, vkms):
+            fnu = fnu * 1e26 / d ** 2  # mJy
+
+            freq = (cc*1e-2) / (lam*1e-6)
+            freq0 = (freq[len(lam)//2] + freq[(len(lam)//2)-1])/2
+            v = cc / 1e5 * (freq0 - freq) / freq0
+            
+            fig, ax = plt.subplots()
+            
+            ax.plot(v+vkms, fnu)
+            # ax.set_xscale('log')
+            # ax.set_yscale('log')
+            ax.set_xlabel(r'$\nu$ [GHz]')
+            ax.set_ylabel(r'Flux Density [mJy]')
+            # ax.set_ylim(1e-1, 1e3)
+            ax.set_xlim(np.min(v+vkms), np.max(v+vkms))
+            
+            return fig, ax
+
+        title = getattr(parms, 'title', '')
+        vkms = getattr(parms, 'vkms', 5)
+        fig, ax = plot_specta(lam, fnu, parms.d, vkms)
+        ax.set_title(title)
+        self.save_plot(fig=fig, parms=parms)
+        
+    
+    
+    def plot_sed(self, parms):
+        
+        if os.path.isdir(parms.sed_dir):
+            if os.path.isfile(parms.sed_dir+parms.sed_fname):
+                if parms.sed_fname.endswith(".out"):
+                    sed = readSpectrum(parms.sed_dir+parms.sed_fname)
+                    lam = sed[:, 0]
+                    fnu = sed[:, 1]
+                elif parms.sed_fname.endswith(".npz"):
+                    raw_sed = np.load(parms.sed_dir+parms.sed_fname)
+                    sed = npz_to_class(raw_sed)
+                    lam = sed.lam
+                    fnu = sed.fnu
+                else:
+                    print('No correct sed file is given')
+                    pass
+            else:
+                print('No sed file is found')
+                pass 
+        else:
+            print('No correct sed directory is given')
+            pass
+        
+        def plot_spectral_energy_distribution(lam, fnu, d):
+            fnu = fnu * 1e26 / d ** 2  # mJy
+            nu  = 1e-9*(1e-2*cc)/(1e-6*lam) # GHz
+            fig, ax = plt.subplots()
+            
+            ax.plot(nu, fnu)
+            ax.set_xscale('log')
+            ax.set_yscale('log')
+            ax.set_xlabel(r'$\nu$ [GHz]')
+            ax.set_ylabel(r'Flux Density [mJy]')
+            ax.set_ylim(1e-1, 1e3)
+            ax.set_xlim(np.min(nu), np.max(nu))
+            if parms.CB68 is True:
+                fnu_cb68 = [   56,    55,    59,    62,    60,    60,    61,    66]
+                nu_cb68  = [233.8, 233.8, 233.8, 246.7, 246.7, 246.7, 246.7, 246.7]
+                ax.scatter(nu_cb68, fnu_cb68, color='k')
+            
+            return fig, ax
+
+        title = getattr(parms, 'title', '')
+        
+        fig, ax = plot_spectral_energy_distribution(lam, fnu, parms.d)
+        ax.set_title(title)
+        self.save_plot(fig=fig, parms=parms)
 
         return
     

@@ -30,13 +30,209 @@ class general_parameters:
         setattr(self, k, v)
 
 
+# model = radmc3d_setup(silent=False)
+# model.get_mastercontrol(filename=None,
+#                         comment=None,
+#                         incl_dust=1,
+#                         incl_lines=1,
+#                         nphot=500000,
+#                         nphot_scat=5000000,
+#                         scattering_mode_max=2,
+#                         istar_sphere=1,
+#                         num_cpu=None)
+# model.get_linecontrol(filename=None,
+#                       methanol='ch3oh leiden 0 0 0')
+# model.get_continuumlambda(filename=None,
+#                           comment=None,
+#                           lambda_micron=None,
+#                           append=False)
+
+# for a in [10, 1, 0.1, 0.01]:
+#     for vin in [None, 0.5, 0.25]:
+#         for snow in [None, 100]:
+#             model.get_diskcontrol(  d_to_g_ratio = 0.01,
+#                                     a_max=a, 
+#                                     Mass_of_star=0.14, 
+#                                     Accretion_rate=5e-7,
+#                                     Radius_of_disk=50,
+#                                     NR=200,
+#                                     NTheta=200,
+#                                     NPhi=10)
+#             model.get_vfieldcontrol(Kep=True,
+#                                     vinfall=vin,
+#                                     Rcb=None,
+#                                     outflow=None)
+#             model.get_heatcontrol(heat='accretion')
+#             model.get_gasdensitycontrol(abundance=1e-10,
+#                                         snowline=snow,
+#                                         enhancement=1e5,
+#                                         gas_inside_rcb=True)
+
+#             ##############################################
+
+#             condition_parms = general_parameters(
+#                 nodust      = False,
+#                 scat        = True,
+#                 extract_gas = True,
+#             )
+
+#             channel_cube_parms = general_parameters(
+#                 incl=70, line=240,
+#                 v_width=10, nlam=11, vkms=0,
+#                 npix=500, sizeau=200,
+#                 dir='./test/a_vinfall_snowline/', fname=f'a_{a}_vinfall_{vin}_snowline_{snow}',
+#                 read_cube=True
+#             )
+
+#             pv_cube_parms = general_parameters(
+#                 incl=70, line=240,
+#                 v_width=10, nlam=50, vkms=0,
+#                 npix=500, sizeau=200,
+#                 dir=f'./test/a_vinfall_snowline/', fname=f'a_{a}_vinfall_{vin}_snowline_{snow}',
+#                 read_cube=True
+#             )
+
+#             sed_parms = general_parameters(
+#                 incl = 70, scat=True,
+#                 freq_min=5e1, freq_max=1e3, nlam=100,
+#                 dir='./', fname='test',
+#                 read_sed=True
+#             )
+
+#             spectrum_parms = general_parameters(
+#                 incl=70, line=240,
+#                 v_width=10, nlam=10, vkms=0,
+#                 dir=f'./test/a_vinfall_snowline/', fname=f'a_{a}_vinfall_{vin}_snowline_{snow}',
+#                 read_spectrum=True
+#             )
+#             conti_parms = general_parameters(
+#                 incl=70, wav=1300,
+#                 npix=500, sizeau=200,
+#                 scat=True,
+#                 dir=f'./test/a_vinfall_snowline/', fname=f'a_{a}_vinfall_{vin}_snowline_{snow}',
+#                 read_conti=True
+#             )
+
+#             simulation_parms = general_parameters(
+#                 condition_parms    = condition_parms,
+#                 channel_cube_parms = channel_cube_parms,
+#                 pv_cube_parms      = pv_cube_parms,
+#                 conti_parms        = conti_parms,
+#                 sed_parms          = sed_parms,
+#                 spectrum_parms     = spectrum_parms,
+#                 save_out=True,
+#                 save_npz=True,
+#             )
+
+#             simulation = generate_simulation(
+#                 parms=simulation_parms,
+#                 channel       = False,
+#                 pv            = False,
+#                 conti         = False,
+#                 sed           = False,
+#                 line_spectrum = True
+#             )
+
+
+#             ##############################################
+#             plot_profile_parms = general_parameters(
+#                 dir=f'./test/a_{a}_vinfall_{vin}_snowline_{snow}/', fname='profile'
+#             )
+
+#             plot_channel_parms = general_parameters(
+#                 cube_dir = './test/a_vinfall_snowline/npzfile/',
+#                 cube_fname = [f'channel_a_{a}_vinfall_{vin}_snowline_{snow}_scat.npz',
+#                               f'channel_a_{a}_vinfall_{vin}_snowline_{snow}_conti.npz'],
+#                 extracted = True,
+#                 conti = True,
+#                 convolve = True,
+#                 vkms = 5,
+#                 fwhm = 60,
+#                 d = 140,
+#                 title = f'amax {a} vinfall {vin} snowline {snow}',
+#                 dir = f'./test/a_{a}_vinfall_{vin}_snowline_{snow}/',
+#                 fname = 'channel'
+#             )
+
+#             plot_pv_parms = general_parameters(
+#                 cube_dir = './test/a_vinfall_snowline/npzfile/',
+#                 cube_fname = [f'pv_a_{a}_vinfall_{vin}_snowline_{snow}_scat.npz',
+#                               f'pv_a_{a}_vinfall_{vin}_snowline_{snow}_conti.npz'],
+#                 extracted = True,
+#                 conti = True,
+#                 convolve = True,
+#                 vkms = 5,
+#                 fwhm = 60,
+#                 d = 140,
+#                 CB68 = True,
+#                 title = f'amax {a} vinfall {vin} snowline {snow}',
+#                 dir = f'./test/a_{a}_vinfall_{vin}_snowline_{snow}/',
+#                 fname = 'pv'
+#             )
+
+#             plot_sed_parms = general_parameters(
+#                 sed_dir = './test/npzfile/',
+#                 sed_fname = 'test_extracted.npz',
+#                 d = 140,
+#                 CB68 = True,
+#                 title = 'test',
+#                 dir = './test/',
+#                 fname = 'test_spectrum'
+#             )
+            
+#             plot_spectrum_parms = general_parameters(
+#                 spectra_dir = './test/npzfile/',
+#                 spectra_fname = 'test_extracted.npz',
+#                 extracted = True,
+#                 conti = True,
+#                 convolve = True,
+#                 vkms = 5,
+#                 fwhm = 50,
+#                 d = 140,
+#                 title = 'test',
+#                 dir = './test/',
+#                 fname = 'test_spectrum'
+#             )
+
+#             plot_continuum_parms = general_parameters(
+#                 conti_dir = './test/a_vinfall_snowline/npzfile/',
+#                 conti_fname = f'conti_a_{a}_vinfall_{vin}_snowline_{snow}_scat.npz',
+#                 convolve = True,
+#                 fwhm = 60,
+#                 d = 140,
+#                 title = f'amax {a} vinfall {vin} snowline {snow}',
+#                 dir = f'./test/a_{a}_vinfall_{vin}_snowline_{snow}/',
+#                 fname = 'conti'
+#             )
+
+
+#             plot_parms = general_parameters(
+#                 profile_parms   = plot_profile_parms,
+#                 channel_parms   = plot_channel_parms,
+#                 pv_parms        = plot_pv_parms,
+#                 sed_parms       = plot_sed_parms,
+#                 spectra_parms   = plot_spectrum_parms,
+#                 continuum_parms = plot_continuum_parms
+#             )
+
+#             plot = generate_plot(
+#                 parms     = plot_parms, 
+#                 profile   = False,
+#                 channel   = False,
+#                 pv        = False,
+#                 continuum = False,
+#                 sed       = False,
+#                 spectrum  = True,
+#             )
+
 model = radmc3d_setup(silent=False)
 model.get_mastercontrol(filename=None,
                         comment=None,
                         incl_dust=1,
                         incl_lines=1,
-                        nphot=1000000,
-                        nphot_scat=1000000,
+                        nphot=500000,
+                        nphot_scat=5000000,
+                        nphot_spec=1000000, 
                         scattering_mode_max=2,
                         istar_sphere=1,
                         num_cpu=None)
@@ -46,167 +242,179 @@ model.get_continuumlambda(filename=None,
                           comment=None,
                           lambda_micron=None,
                           append=False)
-        
-model.get_diskcontrol(  d_to_g_ratio = 0.01,
-                        a_max=0.1, 
-                        Mass_of_star=0.14, 
-                        Accretion_rate=5e-7,
-                        Radius_of_disk=50,
-                        NR=200,
-                        NTheta=200,
-                        NPhi=10)
-model.get_vfieldcontrol(Kep=True,
-                        vinfall=None,
-                        Rcb=None,
-                        outflow=None)
-model.get_heatcontrol(heat='accretion')
-model.get_gasdensitycontrol(abundance=1e-10,
-                            snowline=None,
-                            enhancement=1e5,
-                            gas_inside_rcb=True)
 
-##############################################
+for a in [10, 1, 0.1, 0.01]:
+    for snow in [None, 100]:
+        for vin in [None, 0.25, 0.5]:
+            model.get_diskcontrol(  d_to_g_ratio = 0.01,
+                                    a_max=a, 
+                                    Mass_of_star=0.14, 
+                                    Accretion_rate=5e-7,
+                                    Radius_of_disk=50,
+                                    NR=200,
+                                    NTheta=200,
+                                    NPhi=10)
+            model.get_vfieldcontrol(Kep=True,
+                                    vinfall=vin,
+                                    Rcb=None,
+                                    outflow=None)
+            model.get_heatcontrol(heat='accretion')
+            model.get_gasdensitycontrol(abundance=1e-10,
+                                        snowline=snow,
+                                        enhancement=1e5,
+                                        gas_inside_rcb=True)
 
-condition_parms = general_parameters(
-    nodust      = False,
-    scat        = True,
-    extract_gas = True,
-)
+            #############################################
 
-channel_cube_parms = general_parameters(
-    incl=70, line=240,
-    v_width=10, nlam=11, vkms=0,
-    npix=500, sizeau=200,
-    dir='./test/', fname=f'test',
-    read_cube=True
-)
+            condition_parms = general_parameters(
+                nodust      = False,
+                scat        = True,
+                extract_gas = True,
+            )
 
-pv_cube_parms = general_parameters(
-    incl=70, line=240,
-    v_width=10, nlam=50, vkms=0,
-    npix=500, sizeau=200,
-    dir=f'./test/', fname=f'test',
-    read_cube=True
-)
+            channel_cube_parms = general_parameters(
+                incl=70, line=240,
+                v_width=10, nlam=11, vkms=0,
+                npix=500, sizeau=200,
+                dir='./test/a_vinfall_snowline/', fname=f'a_{a}_vinfall_{vin}_snowline_{snow}',
+                read_cube=True
+            )
 
-# sed_parms = general_parameters(
-#     dir='./', fname='test',
-#     read_sed=True
-# )
+            pv_cube_parms = general_parameters(
+                incl=70, line=240,
+                v_width=10, nlam=50, vkms=0,
+                npix=500, sizeau=200,
+                dir=f'./test/a_vinfall_snowline/', fname=f'a_{a}_vinfall_{vin}_snowline_{snow}',
+                read_cube=True
+            )
 
-# spectrum_parms = general_parameters(
-#     dir='./', fname='test',
-#     read_spectrum=True
-# )
+            sed_parms = general_parameters(
+                incl = 70, scat=True,
+                freq_min=5e1, freq_max=5e2, nlam=10,
+                dir=f'./test/a_vinfall_snowline/', fname=f'a_{a}_vinfall_{vin}_snowline_{snow}',
+                read_sed=True
+            )
 
-conti_parms = general_parameters(
-    incl=70, wav=1300,
-    npix=500, sizeau=200,
-    scat=True,
-    dir=f'./test/', fname=f'test',
-    read_conti=True
-)
+            spectrum_parms = general_parameters(
+                incl=70, line=240,
+                v_width=5, nlam=21, vkms=0,
+                dir=f'./test/a_vinfall_snowline/', fname=f'a_{a}_vinfall_{vin}_snowline_{snow}',
+                read_spectrum=True
+            )
 
-simulation_parms = general_parameters(
-    condition_parms    = condition_parms,
-    channel_cube_parms = channel_cube_parms,
-    pv_cube_parms      = pv_cube_parms,
-    conti_parms        = conti_parms,
-    # sed_parms          = sed_parms,
-    # spectrum_parms     = spectrum_parms,
-    save_out=True,
-    save_npz=True,
-)
+            conti_parms = general_parameters(
+                incl=70, wav=1300,
+                npix=500, sizeau=200,
+                scat=True,
+                dir=f'./test/a_vinfall_snowline/', fname=f'a_{a}_vinfall_{vin}_snowline_{snow}',
+                read_conti=True
+            )
 
-simulation = generate_simulation(
-    parms=simulation_parms,
-    channel       = True,
-    pv            = False,
-    conti         = True,
-    sed           = False,
-    line_spectrum = False
-)
+            simulation_parms = general_parameters(
+                condition_parms    = condition_parms,
+                channel_cube_parms = channel_cube_parms,
+                pv_cube_parms      = pv_cube_parms,
+                conti_parms        = conti_parms,
+                sed_parms          = sed_parms,
+                spectrum_parms     = spectrum_parms,
+                save_out=True,
+                save_npz=True,
+            )
 
-
-##############################################
-profile_parms = general_parameters(
-    dir=f'./test/', fname='profile'
-)
-
-
-
-channel_parms = general_parameters(
-    cube_dir = './test/npzfile/',
-    cube_fname = [f'channel_test_scat.npz', 'channel_test_conti.npz'],
-    extracted = True,
-    conti = True,
-    convolve = True,
-    vkms = 5,
-    fwhm = 50,
-    d = 140,
-    title = f'test',
-    dir = f'./test/',
-    fname = 'channel'
-)
-
-pv_parms = general_parameters(
-    cube_dir = './test/npzfile/',
-    cube_fname = [f'channel_test_scat.npz', 'channel_test_conti.npz'],
-    extracted = True,
-    conti = True,
-    convolve = True,
-    vkms = 5,
-    fwhm = 50,
-    d = 140,
-    CB68 = False,
-    title = f'test',
-    dir = f'./test/',
-    fname = 'pv'
-)
-
-# spectra_parms = general_parameters(
-#     spectra_dir = './test/npzfile/',
-#     spectra_fname = 'test_extracted.npz',
-#     extracted = True,
-#     conti = True,
-#     convolve = True,
-#     vkms = 5,
-#     fwhm = 50,
-#     d = 140,
-#     title = 'test',
-#     dir = './test/',
-#     fname = 'test_spectrum'
-# )
-
-continuum_parms = general_parameters(
-    conti_dir = './test/outfile/',
-    conti_fname = f'conti_test_scat.out',
-    convolve = True,
-    fwhm = 50,
-    d = 140,
-    title = f'test',
-    dir = f'./test/',
-    fname = 'conti'
-)
+            simulation = generate_simulation(
+                parms=simulation_parms,
+                channel       = False,
+                pv            = False,
+                conti         = False,
+                sed           = False,
+                line_spectrum = True
+            )
 
 
-plot_parms = general_parameters(
-    profile_parms   = profile_parms,
-    channel_parms   = channel_parms,
-    pv_parms        = pv_parms,
-    # spectra_parms   = spectra_parms,
-    continuum_parms = continuum_parms
-)
+            ##############################################
+            plot_profile_parms = general_parameters(
+                dir=f'./test/a_{a}_vinfall_{vin}_snowline_{snow}/', fname='profile'
+            )
 
-plot = generate_plot(
-    parms     = plot_parms, 
-    profile   = True,
-    channel   = True,
-    pv        = True,
-    continuum = True,
-    sed       = False,
-    spectrum  = False,
-)
+            plot_channel_parms = general_parameters(
+                cube_dir = './test/a_vinfall_snowline/npzfile/',
+                cube_fname = [f'channel_a_{a}_vinfall_{vin}_snowline_{snow}_scat.npz',
+                                f'channel_a_{a}_vinfall_{vin}_snowline_{snow}_conti.npz'],
+                extracted = True,
+                conti = True,
+                convolve = True,
+                vkms = 5,
+                fwhm = 60,
+                d = 140,
+                title = f'amax {a} vinfall {vin} snowline {snow}',
+                dir = f'./test/a_{a}_vinfall_{vin}_snowline_{snow}/',
+                fname = 'channel'
+            )
 
+            plot_pv_parms = general_parameters(
+                cube_dir = './test/a_vinfall_snowline/npzfile/',
+                cube_fname = [f'pv_a_{a}_vinfall_{vin}_snowline_{snow}_scat.npz',
+                                f'pv_a_{a}_vinfall_{vin}_snowline_{snow}_conti.npz'],
+                extracted = True,
+                conti = True,
+                convolve = True,
+                vkms = 5,
+                fwhm = 60,
+                d = 140,
+                CB68 = True,
+                title = f'amax {a} vinfall {vin} snowline {snow}',
+                dir = f'./test/a_{a}_vinfall_{vin}_snowline_{snow}/',
+                fname = 'pv'
+            )
 
+            plot_sed_parms = general_parameters(
+                sed_dir = './test/a_vinfall_snowline/npzfile/',
+                sed_fname = f'sed_a_{a}_vinfall_{vin}_snowline_{snow}_scat.npz',
+                d = 140,
+                CB68 = True,
+                title = f'amax {a} vinfall {vin} snowline {snow}',
+                dir = f'./test/a_{a}_vinfall_{vin}_snowline_{snow}/',
+                fname = 'sed'
+            )
+            
+            plot_spectrum_parms = general_parameters(
+                spectra_dir = './test/a_vinfall_snowline/npzfile/',
+                spectra_fname = [f'spectrum_a_{a}_vinfall_{vin}_snowline_{snow}_scat.npz',
+                                f'spectrum_a_{a}_vinfall_{vin}_snowline_{snow}_conti.npz'],
+                extracted = True,
+                vkms = 5,
+                d = 140,
+                title = f'amax {a} vinfall {vin} snowline {snow}',
+                dir = f'./test/a_{a}_vinfall_{vin}_snowline_{snow}/',
+                fname = 'spectrum'
+            )
 
+            plot_continuum_parms = general_parameters(
+                conti_dir = './test/a_vinfall_snowline/npzfile/',
+                conti_fname = f'conti_a_{a}_vinfall_{vin}_snowline_{snow}_scat.npz',
+                convolve = True,
+                fwhm = 60,
+                d = 140,
+                title = f'amax {a} vinfall {vin} snowline {snow}',
+                dir = f'./test/a_{a}_vinfall_{vin}_snowline_{snow}/',
+                fname = 'conti'
+            )
+
+            plot_parms = general_parameters(
+                profile_parms   = plot_profile_parms,
+                channel_parms   = plot_channel_parms,
+                pv_parms        = plot_pv_parms,
+                sed_parms       = plot_sed_parms,
+                spectra_parms   = plot_spectrum_parms,
+                continuum_parms = plot_continuum_parms
+            )
+
+            plot = generate_plot(
+                parms     = plot_parms, 
+                profile   = False,
+                channel   = False,
+                pv        = False,
+                continuum = False,
+                sed       = False,
+                spectrum  = True,
+            )

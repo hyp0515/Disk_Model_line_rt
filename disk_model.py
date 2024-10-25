@@ -393,8 +393,9 @@ def generate_opacity_table(
     kappa_s = []
     kappa_p = []
     kappa_r = []
+    g       = []
     for idx in range(len(material)):
-        p = optool.particle(f'optool -c {' '.join(material[(idx):])} -a 0.01 {a_max*1e-4} {-q} -l 0.1 10000 101 -mie')
+        p = optool.particle(f'optool -c {' '.join(material[(idx):])} -a 0.01 {a_max*1e-4} {-q} -l 0.1 10000 101 -mie -radmc')
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             p.computemean(tmin=T_min, tmax=T_max, ntemp=N_T)
@@ -402,13 +403,15 @@ def generate_opacity_table(
         kappa_s.append(p.ksca[0]*dust_to_gas*np.sum(fraction[idx:]))
         kappa_p.append(p.kplanck[0,:]*dust_to_gas*np.sum(fraction[idx:]))
         kappa_r.append(p.kross[0,:]*dust_to_gas*np.sum(fraction[idx:]))
+        g.append(p.gsca[0,:]*dust_to_gas*np.sum(fraction[idx:]))
+        # os.system(f'mv dustkappa.inp dustkappa_{fname[idx]}.inp')
 
     T_grid = p.temp
     kappa = np.array(kappa)
     kappa_s = np.array(kappa_s)
     kappa_p = np.array(kappa_p)
     kappa_r = np.array(kappa_r)
-    
+    g = np.array(g)
     # combine different temperature regimes
     def combine_temperature_regimes(y):
         if y.ndim>2:
@@ -421,7 +424,6 @@ def generate_opacity_table(
     kappa_p = combine_temperature_regimes(kappa_p)
     kappa_r = combine_temperature_regimes(kappa_r)
 
-
     opacity_table = {}
     opacity_table['T_crit'] = T_crit
     opacity_table['T'] = T_grid
@@ -430,6 +432,7 @@ def generate_opacity_table(
     opacity_table['kappa_s'] = kappa_s
     opacity_table['kappa_p'] = kappa_p
     opacity_table['kappa_r'] = kappa_r
+    opacity_table['g'] = g
     return opacity_table
 
 """

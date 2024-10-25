@@ -316,7 +316,6 @@ class radmc3d_setup:
                       Accretion_rate = None,
                       Radius_of_disk = None,
                                    Q = 1.5,
-                             pancake = False,
                                   NR = None,
                               NTheta = None,
                                 NPhi = None,
@@ -444,12 +443,23 @@ class radmc3d_setup:
         f.write('temp_4                     Extension of name of dustkappa_***.inp file\n')
         f.write('============================================================================\n')
         
-      material = ['h2o-w 0.2', 'c-org 0.3966', 'fes 0.0743', 'astrosil 0.3291']
+      # material = ['h2o-w 0.2', 'c-org 0.3966', 'fes 0.0743', 'astrosil 0.3291']
+      # fname = ['temp_1', 'temp_2', 'temp_3', 'temp_4']
+      # for idx in range(len(material)):
+      #   os.system(f'optool -c {' '.join(material[(idx):])} -a 0.01 {self.amax*1e3} 3.5 -l 0.1 10000 101 -mie -radmc')
+      #   os.system(f'mv dustkappa.inp dustkappa_{fname[idx]}.inp')
       fname = ['temp_1', 'temp_2', 'temp_3', 'temp_4']
-      for idx in range(len(material)):
-        os.system(f'optool -c {' '.join(material[(idx):])} -a 0.01 {self.amax*1e3} 3.5 -l 0.1 10000 101 -mie -radmc')
-        os.system(f'mv dustkappa.inp dustkappa_{fname[idx]}.inp')
-
+      nlam      = len(self.opacity_table['lam'])
+      lam       = self.opacity_table['lam']*1e4     # lam in opacity_table is in cgs while RADMC3D uses micro
+      kappa_abs = self.opacity_table['kappa']
+      kappa_sca = self.opacity_table['kappa_s']
+      g         = self.opacity_table['g']
+      for idx, composition in enumerate(fname):
+        with open('dustkappa_'+composition+'.inp', "w+") as f:
+          f.write('3\n')
+          f.write(str(nlam)+'\n')
+          for lam_idx in range(nlam):
+            f.write('%13.6e %13.6e %13.6e %13.6e\n'%(lam[lam_idx],kappa_abs[idx,lam_idx],kappa_sca[idx,lam_idx],g[idx,lam_idx]))
       
     # def write_dust_opac(self):    
     #   '''
@@ -724,7 +734,7 @@ class radmc3d_setup:
       
       if self.rcb is None:  
         if snowline is not None:
-          abunch3oh = np.where(self.T_avg < snowline,
+          abunch3oh = np.where(self.DM.T_sph < snowline,
                                abundance,
                                abundance * enhancement
                                )
@@ -741,7 +751,7 @@ class radmc3d_setup:
       elif self.rcb is not None:  # The main assumption of Oya's velocity field is that there is no gas inside the centrifugal barrier.
         rcb_idx = np.searchsorted(self.DM.r_sph, self.rcb)
         if snowline is not None:
-          abunch3oh = np.where(self.T_avg < snowline,
+          abunch3oh = np.where(self.DM.T_sph < snowline,
                                abundance,
                                abundance * enhancement
                                )

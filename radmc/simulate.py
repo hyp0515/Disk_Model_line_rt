@@ -10,7 +10,7 @@ class generate_simulation:
                  channel=True,
                  pv=True,
                  conti=True,
-                 sed=False,
+                 sed=True,
                  line_spectrum=False
                  ):
         
@@ -35,7 +35,7 @@ class generate_simulation:
         
         if sed is True:
             try:
-                self.generate_sed(parms)
+                self.generate_sed(parms.sed_parms)
                 print('SED is generated')
                 
             except:
@@ -43,7 +43,7 @@ class generate_simulation:
                 
         if line_spectrum is True:
             try:
-                self.generate_line_spectrum(parms)
+                self.generate_line_spectrum(parms, parms.spectrum_parms)
                 print('Line spectrum is generated')
             except:
                 print('Wrong parameters to generate line spectra')
@@ -190,7 +190,6 @@ class generate_simulation:
         else:
             pass
             
-    
     def generate_continuum(self, conti_parms, **kwargs):
         
         type_note = 'conti'
@@ -227,18 +226,172 @@ class generate_simulation:
                 self.save_outfile(conti_parms, f=f, note=type_note)
         else:
             pass
+ 
+    def generate_sed(self, sed_parms, **kwargs):
         
-        return
-    
-    
-    
-    def generate_sed(self, parms, **kwargs):
+        type_note = 'sed'
         
-        return
-    
-    def generate_line_spectrum(self, parms, **kwargs):
+        incl     = getattr(sed_parms,     'incl',     70)
+        freq_min = getattr(sed_parms, 'freq_min',    5e1)
+        freq_max = getattr(sed_parms, 'freq_max',    1e3)
+        nlam     = getattr(sed_parms,     'nlam',    100)
+        wav_max  = ((cc*1e-2)/(freq_min*1e9))*1e+6
+        wav_min  = ((cc*1e-2)/(freq_max*1e9))*1e+6
         
-        return
+        
+        prompt = f"radmc3d spectrum incl {incl} lambdarange {wav_min} {wav_max} nlam {nlam} noline"
+        f = '_scat'
+        if sed_parms.scat is False:
+            prompt = prompt + ' noscat'
+            f = '_noscat'
+        os.system(prompt)
+        if (sed_parms.read_sed is True) or (kwargs['read_sed'] is True):
+            self.spectrum = readSpectrum('spectrum.out')
+            if self.save_npz is True:
+                if 'fname' in kwargs.keys():
+                    self.save_npzfile(self.spectrum, sed_parms, fname=kwargs['fname'], f=f, note=type_note)
+                else:
+                    self.save_npzfile(self.spectrum, sed_parms, f=f, note=type_note)
+        else:
+            pass
+        
+        if self.save_out is True:
+            if 'fname' in kwargs.keys():
+                self.save_outfile(sed_parms, fname=kwargs['fname'], f=f, note=type_note)
+            else:
+                self.save_outfile(sed_parms, f=f, note=type_note)
+        else:
+            pass
+
+    def generate_line_spectrum(self, parms, spectrum_parms, **kwargs):
+        """
+        incl               : Inclination angle of the disk
+        line               : Transistion level (see 'molecule_ch3oh.inp')
+        v_width            : Range of velocity to simulate
+        nlam               : Number of velocities
+        npix               : Number of map's pixels
+        nodust             : If False, dust effect is included
+        scat               : If True and nodust=False, scattering is included. (Time-consuming)
+        extracted_gas      : If True, spectral line is extracted (I_{dust+gas}-I_{dust})
+        sizeau             : Map's span
+        """
+        
+        type_note = 'spectrum'
+        
+        
+        condition = {}
+        for c in ['nodust', 'scat', 'extract_gas']:
+            if c in kwargs:
+                condition[c] = kwargs[c]
+            else:
+                condition[c] = getattr(parms.condition_parms, c, False)
+        nodust = condition['nodust']
+        scat = condition['scat']
+        extract_gas = condition['extract_gas']
+        
+        incl        = getattr(spectrum_parms,        'incl',    70)
+        line        = getattr(spectrum_parms,        'line',   240)
+        v_width     = getattr(spectrum_parms,     'v_width',    10)
+        nlam        = getattr(spectrum_parms,        'nlam',    10)
+        vkms        = getattr(spectrum_parms,        'vkms',     0)
+        
+        prompt = f"radmc3d spectrum incl {incl} iline {line} vkms {vkms} widthkms {v_width} linenlam {nlam}"
+        
+        
+        if extract_gas is False:
+            if nodust is True:
+                prompt = prompt + ' noscat nodust'
+                f      = '_nodust'
+            elif nodust is False:
+                if scat is True:
+                    f      = '_scat'
+                elif scat is False:
+                    prompt = prompt +' noscat'
+                    f      = '_noscat'
+                else:
+                    pass
+            else:
+                pass
+                    
+            os.system(prompt)
+            
+            if (spectrum_parms.read_spectrum is True) or (kwargs['read_spectrum'] is True):
+                self.spectrum = readSpectrum('spectrum.out')
+                if self.save_npz is True:
+                    if 'fname' in kwargs.keys():
+                        self.save_npzfile(self.spectrum, spectrum_parms, fname=kwargs['fname'], f=f, note=type_note)
+                    else:
+                        self.save_npzfile(self.spectrum, spectrum_parms, f=f, note=type_note)
+            else:
+                pass
+            
+            if self.save_out is True:
+                if 'fname' in kwargs.keys():
+                    self.save_outfile(spectrum_parms, fname=kwargs['fname'], f=f, note=type_note)
+                else:
+                    self.save_outfile(spectrum_parms, f=f, note=type_note)
+            else:
+                pass
+                    
+        elif extract_gas is True:
+            os.system(prompt)
+            if spectrum_parms.read_spectrum is True:
+                self.spectrum = readSpectrum('spectrum.out')
+                if self.save_npz is True:
+                    if 'fname' in kwargs.keys():
+                        self.save_npzfile(self.spectrum, spectrum_parms, fname=kwargs['fname'], f='_scat', note=type_note)
+                    else:
+                        self.save_npzfile(self.spectrum, spectrum_parms, f='_scat', note=type_note)
+                else:
+                    pass
+                
+                if self.save_out is True:
+                    if 'fname' in kwargs.keys():
+                        self.save_outfile(spectrum_parms, fname=kwargs['fname'], f='_scat', note=type_note)
+                    else:
+                        self.save_outfile(spectrum_parms, f='_scat', note=type_note)
+                else:
+                    pass
+            else:
+                pass
+            
+            os.system(f"radmc3d spectrum incl {incl} lambdarange {self.spectrum[0,0]} {self.spectrum[-1,0]} nlam {nlam} noline")
+            
+            if spectrum_parms.read_spectrum is True:
+                self.conti = readSpectrum('spectrum.out')
+                if self.save_npz is True:
+                    if 'fname' in kwargs.keys():
+                        self.save_npzfile(self.conti, spectrum_parms, fname=kwargs['fname'], f='_conti', note=type_note)
+                    else:
+                        self.save_npzfile(self.conti, spectrum_parms, f='_conti', note=type_note)
+                else:
+                    pass
+                
+                if self.save_out is True:
+                    if 'fname' in kwargs.keys():
+                        self.save_outfile(spectrum_parms, fname=kwargs['fname'], f='_conti', note=type_note)
+                    else:
+                        self.save_outfile(spectrum_parms, f='_conti', note=type_note)
+                else:
+                    pass
+            else:
+                pass
+            
+            if spectrum_parms.read_spectrum is True:
+                
+                self.spectrum_list = [self.spectrum, self.conti]
+                if self.save_npz is True:
+                    if 'fname' in kwargs.keys():
+                        self.save_npzfile(self.spectrum_list, spectrum_parms, fname=kwargs['fname'], f='_extracted', note=type_note)
+                    else:
+                        self.save_npzfile(self.spectrum_list, spectrum_parms, f='_extracted', note=type_note)
+                else:
+                    pass
+            else:
+                pass
+        else:
+            pass
+
     
     
     
@@ -266,11 +419,14 @@ class generate_simulation:
             head = ''
         
         os.makedirs(dir+'outfile/', exist_ok=True)
-        os.system('mv image.out '+dir+'outfile/'+head+fname+f+'.out')
+        if (kwargs['note'] == 'sed') or (kwargs['note'] == 'spectrum'):
+            os.system('mv spectrum.out '+dir+'outfile/'+head+fname+f+'.out')
+        else:
+            os.system('mv image.out '+dir+'outfile/'+head+fname+f+'.out')
 
-    def save_npzfile(self, cube, parms, **kwargs):
+    def save_npzfile(self, data, parms, **kwargs):
         """
-        This will only save image cube regardless of other information
+        This will only save image data regardless of other information
         The file tyep will be '*.npz', which the storage may be kB-scale
         """
         
@@ -294,23 +450,27 @@ class generate_simulation:
         
         os.makedirs(dir+'npzfile/', exist_ok=True)
         
-    
-        if isinstance(cube, list):
+        if (kwargs['note'] == 'sed') or (kwargs['note'] == 'spectrum'):
             np.savez(dir+'npzfile/'+head+fname+f+'.npz',
-                    imageJyppix = cube[0].imageJyppix - cube[1].imageJyppix,
-                    x           = cube[0].x,
-                    nx          = cube[0].nx,
-                    y           = cube[0].y,
-                    ny          = cube[0].ny,
-                    wav         = cube[0].wav,
-                    freq        = cube[0].freq)
+                    lam = data[:, 0],
+                    fnu = data[:, 1])
         else:
-            np.savez(dir+'npzfile/'+head+fname+f+'.npz',
-                    imageJyppix = cube.imageJyppix,
-                    x           = cube.x,
-                    nx          = cube.nx,
-                    y           = cube.y,
-                    ny          = cube.ny,
-                    wav         = cube.wav,
-                    freq        = cube.freq)
+            if isinstance(data, list):
+                np.savez(dir+'npzfile/'+head+fname+f+'.npz',
+                        imageJyppix = data[0].imageJyppix - data[1].imageJyppix,
+                        x           = data[0].x,
+                        nx          = data[0].nx,
+                        y           = data[0].y,
+                        ny          = data[0].ny,
+                        wav         = data[0].wav,
+                        freq        = data[0].freq)
+            else:
+                np.savez(dir+'npzfile/'+head+fname+f+'.npz',
+                        imageJyppix = data.imageJyppix,
+                        x           = data.x,
+                        nx          = data.nx,
+                        y           = data.y,
+                        ny          = data.ny,
+                        wav         = data.wav,
+                        freq        = data.freq)
         
