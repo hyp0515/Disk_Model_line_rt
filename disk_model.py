@@ -395,7 +395,8 @@ def generate_opacity_table(
     kappa_r = []
     g       = []
     for idx in range(len(material)):
-        p = optool.particle(f'optool -c {' '.join(material[(idx):])} -a 0.01 {a_max*1e-4} {-q} -l 0.1 10000 101 -mie -radmc')
+        p = optool.particle(f'optool -c {' '.join(material[(idx):])} -a 0.01 {a_max*1e4} {-q} -l 0.1 10000 101 -mie -radmc','./opacity_table/',
+                            silent=True)
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             p.computemean(tmin=T_min, tmax=T_max, ntemp=N_T)
@@ -403,8 +404,9 @@ def generate_opacity_table(
         kappa_s.append(p.ksca[0]*dust_to_gas*np.sum(fraction[idx:]))
         kappa_p.append(p.kplanck[0,:]*dust_to_gas*np.sum(fraction[idx:]))
         kappa_r.append(p.kross[0,:]*dust_to_gas*np.sum(fraction[idx:]))
-        g.append(p.gsca[0,:]*dust_to_gas*np.sum(fraction[idx:]))
-        # os.system(f'mv dustkappa.inp dustkappa_{fname[idx]}.inp')
+        g.append(p.gsca[0,:])
+        os.system(f'cp -r ./opacity_table/dustkappa.inp ./dustkappa_{fname[idx]}.inp')
+        os.system('rm -r ./opacity_table')
 
     T_grid = p.temp
     kappa = np.array(kappa)

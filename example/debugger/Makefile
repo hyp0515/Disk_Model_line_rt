@@ -8,9 +8,7 @@ cleanmodel:
 cleanall:
 	@rm -f	*.o *.mod *.pyc *.dat *.out *.info *.used           \
 	   *wavelength_micron.inp dustopac.inp dust_density.inp     \
-	   dustkappa_silicate.inp dustkappa_water.inp               \
-	   dustkappa_troilite.inp dustkappa_refractory_organics.inp \
-	   dustkappa_dsharp_grain.inp                               \
+	   dustkappa_*                                              \
 	   gas_velocity.inp lines.inp                               \
 	   numberdens_ch3oh.inp numberdens_co.inp                   \
 	   gas_temperature.inp                                      \

@@ -142,7 +142,7 @@ class radmc3d_setup:
           f.write('scattering_mode_max = {}\n'.format(scattering_mode_max))
         f.write('istar_sphere = {}\n'.format(istar_sphere))
         f.write('setthreads = {}\n'.format(num_cpu))
-
+        # f.write('mc_scat_maxtauabs = 5.d0\n')
         # print additional keyword parameters
         for k, v in kwargs.items():
           f.write('{} = {} \n'.format(k, v))
@@ -446,20 +446,23 @@ class radmc3d_setup:
       # material = ['h2o-w 0.2', 'c-org 0.3966', 'fes 0.0743', 'astrosil 0.3291']
       # fname = ['temp_1', 'temp_2', 'temp_3', 'temp_4']
       # for idx in range(len(material)):
-      #   os.system(f'optool -c {' '.join(material[(idx):])} -a 0.01 {self.amax*1e3} 3.5 -l 0.1 10000 101 -mie -radmc')
+      #   os.system(f'optool -c {' '.join(material[(idx):])} -a 0.01 {self.amax*1e3} 3.5 -l 0.1 10000 101 -mie -radmc '+fname[idx])
       #   os.system(f'mv dustkappa.inp dustkappa_{fname[idx]}.inp')
-      fname = ['temp_1', 'temp_2', 'temp_3', 'temp_4']
-      nlam      = len(self.opacity_table['lam'])
-      lam       = self.opacity_table['lam']*1e4     # lam in opacity_table is in cgs while RADMC3D uses micro
-      kappa_abs = self.opacity_table['kappa']
-      kappa_sca = self.opacity_table['kappa_s']
-      g         = self.opacity_table['g']
-      for idx, composition in enumerate(fname):
-        with open('dustkappa_'+composition+'.inp', "w+") as f:
-          f.write('3\n')
-          f.write(str(nlam)+'\n')
-          for lam_idx in range(nlam):
-            f.write('%13.6e %13.6e %13.6e %13.6e\n'%(lam[lam_idx],kappa_abs[idx,lam_idx],kappa_sca[idx,lam_idx],g[idx,lam_idx]))
+      
+      
+      # fname = ['temp_1', 'temp_2', 'temp_3', 'temp_4']
+      # fraction = [       0.2,         0.3966,       0.0743,            0.3291 ]
+      # nlam      = len(self.opacity_table['lam'])
+      # lam       = self.opacity_table['lam']*1e4     # lam in opacity_table is in cgs while RADMC3D uses micro
+      # for idx, composition in enumerate(fname):
+      #   kappa_abs = self.opacity_table['kappa'] / (self.dust_to_gas_ratio*np.sum(fraction[idx:]))
+      #   kappa_sca = self.opacity_table['kappa_s'] / (self.dust_to_gas_ratio*np.sum(fraction[idx:]))
+      #   g         = self.opacity_table['g']
+      #   with open('dustkappa_'+composition+'.inp', "w+") as f:
+      #     f.write('3\n')
+      #     f.write(str(nlam)+'\n')
+      #     for lam_idx in range(nlam):
+      #       f.write('%13.6e %13.6e %13.6e %13.6e\n'%(lam[lam_idx],kappa_abs[idx,lam_idx],kappa_sca[idx,lam_idx],g[idx,lam_idx]))
       
     # def write_dust_opac(self):    
     #   '''
