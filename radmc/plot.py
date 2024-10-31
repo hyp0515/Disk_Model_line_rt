@@ -360,7 +360,7 @@ class generate_plot():
         
         def pv(x_axis, v_axis, pv_slice, convolve=False):
             fig, ax = plt.subplots()
-            c = ax.pcolormesh(x_axis, v_axis, pv_slice, shading="nearest", rasterized=True, cmap='gist_ncar', vmin=-5)
+            c = ax.pcolormesh(x_axis, v_axis, pv_slice, shading="nearest", rasterized=True, cmap='gist_ncar', vmin=-5, vmax=50)
             cbar = fig.colorbar(c, ax=ax)
             if convolve is True:
                 cbar.set_label('mJy/beam',fontsize = 16)

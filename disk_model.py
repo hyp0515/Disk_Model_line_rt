@@ -406,7 +406,7 @@ def generate_opacity_table(
         kappa_r.append(p.kross[0,:]*dust_to_gas*np.sum(fraction[idx:]))
         g.append(p.gsca[0,:])
         os.system(f'cp -r ./opacity_table/dustkappa.inp ./dustkappa_{fname[idx]}.inp')
-        os.system('rm -r ./opacity_table')
+        # os.system('rm -r ./opacity_table')
 
     T_grid = p.temp
     kappa = np.array(kappa)
