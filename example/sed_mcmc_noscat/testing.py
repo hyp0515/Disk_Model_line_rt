@@ -11,9 +11,9 @@ from multiprocessing import Pool, current_process
 
 
 n_processes = 20
-nwalkers = 500  # Total number of walkers
+nwalkers = 300  # Total number of walkers
 ndim = 5        # Dimension of parameter space
-niter = 100     # Number of iterations
+niter = 50      # Number of iterations
 
 
 work_dirs = [f"work_dir_{i}" for i in range(n_processes)]
@@ -116,48 +116,29 @@ data = [(walker_groups[i], observed_Freq, observed_Flux, err, work_dirs[i]) for 
 with Pool(n_processes) as pool:
     samplers = pool.map(run_mcmc_in_dir, data)
 
-for sampler in samplers:
-    try:
-        print(sampler.get_autocorr_time())
-    except:
-        pass
-    
 try:
     np.savez('test.npz',
-            all_samples = np.concatenate([sampler.get_chain(flat=True) for sampler in samplers], axis=0),
-            last_steps  = np.concatenate([sampler.get_chain(flat=True, discard=niter-1) for sampler in samplers], axis=0),
-            half_steps  = np.concatenate([sampler.get_chain(flat=True, discard=niter//2) for sampler in samplers], axis=0))
+            all_samples = np.concatenate([sampler.get_chain(flat=True) for sampler in samplers], axis=0))
 except:
     pass
 
 def plotter(sampler=None,
             samplers_chain=None,
             fname='MCMC_test',
-            x=observed_Freq, y=observed_Flux, yerr=err,
-            multi = True):
+            x=observed_Freq, y=observed_Flux, yerr=err):
+    plt.ion()
     plt.errorbar(x, y, yerr=yerr, fmt=".k", capsize=0,label='CB68')
     if sampler is not None:
         if isinstance(sampler, list):
-            samples = np.concatenate([sampler.flatchain for sampler in samplers], axis=0)
+            samples = np.concatenate([sampler.get_chain(flat=True) for sampler in samplers], axis=0)
         else:
             samples = sampler.flatchain
     else:
         samples = samplers_chain
-    
-    if multi is True:
-        samples = np.split(samples, n_processes)
-        plot_parms = [(samples[i], work_dirs[i]) for i in range(n_processes)]
-        with Pool(n_processes) as pool:
-            plots = pool.map(paralleled_plotter,plot_parms)
-            for plot_group in plots:
-                nu, fnu = plot_group
-                for i in range(len(nu)):
-                    plt.plot(nu[i], fnu[i], "C1", alpha=0.1)
-
-    else:
-        for theta in samples:
-            freq_model, flux_model = sed_model(theta, work_dir=None)
-            plt.plot(freq_model, flux_model, "C1", alpha=0.1)
+        
+    for theta in samples:
+        freq_model, flux_model = sed_model(theta, work_dir=None)
+        plt.plot(freq_model, flux_model, "C1", alpha=0.1)
     # theta_max = samples[np.argmax(sampler.flatlnprobability)]
     plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
     plt.legend()
@@ -167,8 +148,9 @@ def plotter(sampler=None,
     plt.ylim((0,100))
     plt.xlim((230,250))
     plt.xscale('log')
+    plt.ioff()
     plt.savefig(fname+'.pdf', transparent=True)
-    plt.close('all')
+    # plt.show()
 
 def posterior(sampler=None,
               samplers_chain=None,
@@ -186,28 +168,14 @@ def posterior(sampler=None,
         show_titles=True, plot_datapoints=True, quantiles=[0.16, 0.5, 0.84]
         )
     fig.savefig(fname+'.pdf', transparent=True)
-    plt.close('all')
+    
 
-def paralleled_plotter(data):
-    nu = []
-    fnu = []
-    samples, work_dir = data
-    for theta in samples:
-        nu_i, fnu_i = sed_model(theta, work_dir)
-        nu.append(nu_i)
-        fnu.append(fnu_i)
-    return nu, fnu
-
+    
 chain = np.load('test.npz')
-print(chain['all_samples'].shape)
-print(chain['last_steps'].shape)
-print(chain['half_steps'].shape)
-# chain = chain['all_samples']
-posterior(samplers_chain=chain['last_steps'], fname=f'corner_last')
-plotter(samplers_chain=chain['last_steps'], fname='plot_last')
+chain = chain['all_samples']
+posterior(samplers_chain=chain, fname=f'corner_all')
+plotter(samplers_chain=chain, fname='plot_all')
 
-posterior(samplers_chain=chain['half_steps'], fname=f'corner_half')
-plotter(samplers_chain=chain['half_steps'], fname='plot_half')
 
 
 
