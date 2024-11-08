@@ -159,9 +159,9 @@ class generate_plot():
             pass
         
         nlam = len(cube.wav)
-        if nlam > 20:
-            print('Too much wavelength!!')
-            return
+        # if nlam > 20:
+        #     print('Too much wavelength!!')
+        #     return
         sizeau = int(round((cube.x/au)[-1]))*2
         npix = cube.nx
         if nlam%2 == 0:
@@ -203,7 +203,8 @@ class generate_plot():
             else:
                 vmin = np.min(image)
             vmax = np.max(image)
-            
+            # vmin = 0
+            # vmax = 10
             if conti is not None:
                 x, y = np.linspace(0, npix, npix), np.linspace(0, npix, npix)
                 X, Y = np.meshgrid(x, y)
@@ -273,7 +274,7 @@ class generate_plot():
             return fig, cbar
         
         
-        
+        # image = np.ones(image.shape)
         try:
             fig, cbar = channel(image=image, conti=cube_conti.imageJyppix)
         except:

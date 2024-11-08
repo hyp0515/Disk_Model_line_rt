@@ -29,44 +29,44 @@ class general_parameters:
         # add parameters as attributes of this object
         setattr(self, k, v)
 
-# model = radmc3d_setup(silent=False)
-# model.get_mastercontrol(filename=None,
-#                         comment=None,
-#                         incl_dust=4,
-#                         incl_lines=1,
-#                         nphot=500000,
-#                         nphot_scat=1000000,
-#                         nphot_spec=500000, 
-#                         scattering_mode_max=2,
-#                         istar_sphere=1,
-#                         num_cpu=10)
-# model.get_linecontrol(filename=None,
-#                       methanol='ch3oh leiden 0 0 0')
-# model.get_continuumlambda(filename=None,
-#                           comment=None,
-#                           lambda_micron=None,
-#                           append=False)
+model = radmc3d_setup(silent=False)
+model.get_mastercontrol(filename=None,
+                        comment=None,
+                        incl_dust=4,
+                        incl_lines=1,
+                        nphot=500000,
+                        nphot_scat=1000000,
+                        nphot_spec=500000, 
+                        scattering_mode_max=2,
+                        istar_sphere=1,
+                        num_cpu=20)
+model.get_linecontrol(filename=None,
+                      methanol='ch3oh leiden 0 0 0')
+model.get_continuumlambda(filename=None,
+                          comment=None,
+                          lambda_micron=None,
+                          append=False)
 
 for a in [10, 1, 0.1, 0.01]:
     for snow in [None, 100]:
         for vin in [None, 0.25, 0.5]:
-            # model.get_diskcontrol(  d_to_g_ratio = 0.01,
-            #                         a_max=a, 
-            #                         Mass_of_star=0.14, 
-            #                         Accretion_rate=5e-7,
-            #                         Radius_of_disk=50,
-            #                         NR=200,
-            #                         NTheta=200,
-            #                         NPhi=10)
-            # model.get_vfieldcontrol(Kep=True,
-            #                         vinfall=vin,
-            #                         Rcb=None,
-            #                         outflow=None)
-            # model.get_heatcontrol(heat='accretion')
-            # model.get_gasdensitycontrol(abundance=1e-10,
-            #                             snowline=snow,
-            #                             enhancement=1e5,
-            #                             gas_inside_rcb=True)
+            model.get_diskcontrol(  d_to_g_ratio = 0.01,
+                                    a_max=a, 
+                                    Mass_of_star=0.14, 
+                                    Accretion_rate=5e-7,
+                                    Radius_of_disk=50,
+                                    NR=200,
+                                    NTheta=200,
+                                    NPhi=10)
+            model.get_vfieldcontrol(Kep=True,
+                                    vinfall=vin,
+                                    Rcb=None,
+                                    outflow=None)
+            model.get_heatcontrol(heat='accretion')
+            model.get_gasdensitycontrol(abundance=1e-10,
+                                        snowline=snow,
+                                        enhancement=1e5,
+                                        gas_inside_rcb=True)
 
             #############################################
 
@@ -86,7 +86,7 @@ for a in [10, 1, 0.1, 0.01]:
 
             pv_cube_parms = general_parameters(
                 incl=70, line=240,
-                v_width=10, nlam=50, vkms=0,
+                v_width=10, nlam=51, vkms=0,
                 npix=500, sizeau=200,
                 dir=f'./test/a_vinfall_snowline/', fname=f'a_{a}_vinfall_{vin}_snowline_{snow}',
                 read_cube=True
@@ -127,8 +127,8 @@ for a in [10, 1, 0.1, 0.01]:
 
             simulation = generate_simulation(
                 parms=simulation_parms,
-                channel       = False,
-                pv            = False,
+                channel       = True,
+                pv            = True,
                 conti         = False,
                 sed           = False,
                 line_spectrum = False
@@ -165,7 +165,7 @@ for a in [10, 1, 0.1, 0.01]:
                 vkms = 5,
                 fwhm = 60,
                 d = 140,
-                CB68 = True,
+                CB68 = False,
                 title = f'amax {a} vinfall {vin} snowline {snow}',
                 dir = f'./test/a_{a}_vinfall_{vin}_snowline_{snow}/',
                 fname = 'pv'
@@ -216,7 +216,7 @@ for a in [10, 1, 0.1, 0.01]:
             plot = generate_plot(
                 parms     = plot_parms, 
                 profile   = False,
-                channel   = False,
+                channel   = True,
                 pv        = True,
                 continuum = False,
                 sed       = False,
