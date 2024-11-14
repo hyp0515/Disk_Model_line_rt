@@ -10,7 +10,8 @@ from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 import matplotlib.font_manager as fm
 
 # Reading the cube file
-cube = SpectralCube.read('/run/media/hyp0515/storage/CB68_setup1/CB68-Setup1-cube-products/CB68_218.440GHz_CH3OH_joint_0.5_clean.image.pbcor.common.fits')
+cube = SpectralCube.read(
+    '/run/media/hyp0515/fd14f880-ba6f-450f-b82d-98ba3710dc5f/backup/CB68/CB68-Setup1-cube-products/CB68_218.440GHz_CH3OH_joint_0.5_clean.image.pbcor.common.fits')
 
 # Calculate the velocity axis
 freq0 = 218.440063 * 1e9

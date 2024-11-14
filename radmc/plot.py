@@ -565,7 +565,7 @@ class generate_plot():
             ax.plot(v+vkms, fnu)
             # ax.set_xscale('log')
             # ax.set_yscale('log')
-            ax.set_xlabel(r'$\nu$ [GHz]')
+            ax.set_xlabel(r'v [km/s]')
             ax.set_ylabel(r'Flux Density [mJy]')
             # ax.set_ylim(1e-1, 1e3)
             ax.set_xlim(np.min(v+vkms), np.max(v+vkms))
