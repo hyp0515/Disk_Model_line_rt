@@ -13,32 +13,26 @@ import shutil
 import h5py
 
 n_processes = 20
-nwalkers = 5  # Total number of walkers
+nwalkers = 10  # Total number of walkers
 ndim = 2        # Dimension of parameter space
 niter = 100000     # Number of iterations
 
 # # CB68's observation
 observed_Freq = np.array([
-                        #   233.8, 233.8,
-                          233.8, 233.8, 233.8, 
-                        #   246.7,
-                          246.7, 246.7, 246.7, 246.7, 246.7,
-                          95.0,  95.0,  95.0
-                           ])
-observed_Flux = np.array([   
-                        #   91,    87,
-                             56,    55,    59,
-                            # 101,
-                            62,    60,    60,    61,    66,
-                           6.9,   7.2,   7.6
-                            ])
+                        # 95.0,
+                        233.8,
+                        246.8
+                        ])
+observed_Flux = np.array([
+                        # 7.6,
+                        59, 
+                        66
+                        ])
 err           = np.array([
-                        #   0.730, 0.520,
-                          0.054, 0.150, 0.029,
-                        #   0.740,
-                          0.120, 0.300, 0.220, 0.120, 0.040,
-                         0.130, 0.040, 0.022
-                          ])
+                        # 0.022,
+                        0.029,
+                        0.040
+                        ])
 
         
 def sed_model(theta):
@@ -74,7 +68,7 @@ def log_probability(theta, Freq, Flux, err):
     nu, fnu = sed_model(theta)
     return lp - 0.5 * np.sum((Flux - fnu)**2 / err**2)
 
-initial = [np.array([2.6e-4, 2.27]) + [1e-5, 1e-3] * np.random.randn(ndim) for i in range(nwalkers)]
+initial = [np.array([2.6e-4, 2.07]) + [1e-5, 1e-3] * np.random.randn(ndim) for i in range(nwalkers)]
 
 with Pool(n_processes) as pool:
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability, args=(observed_Freq, observed_Flux, err), pool=pool)
@@ -97,7 +91,7 @@ plt.close()
 tau = sampler.get_autocorr_time()
 print(tau)
 
-flat_samples = sampler.get_chain(discard=1000, thin=50, flat=True)
+flat_samples = sampler.get_chain(discard=2000, thin=50, flat=True)
 fig = corner.corner(
     flat_samples, labels=labels,
     show_titles=True, plot_datapoints=True, quantiles=[0.16, 0.5, 0.84])
@@ -110,8 +104,8 @@ inds = np.random.randint(len(flat_samples), size=1000)
 for ind in inds:
     sample = flat_samples[ind]
     A, alpha = sample
-    nu = np.linspace(90, 250, 100)
-    plt.plot(nu, A*nu**alpha, "C1", alpha=0.01)
+    nu = np.linspace(230, 250, 100)
+    plt.plot(nu, A*nu**alpha, "C1", alpha=0.005)
 plt.errorbar(observed_Freq, observed_Flux, yerr=err, fmt=".k", capsize=0)
 plt.xlabel('$\\nu [GHz]$')
 plt.ylabel('Flux density [mJy]')
