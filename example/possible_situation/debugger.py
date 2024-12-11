@@ -39,7 +39,7 @@ model.get_mastercontrol(filename=None,
                         nphot_spec=500000, 
                         scattering_mode_max=2,
                         istar_sphere=1,
-                        num_cpu=20)
+                        num_cpu=15)
 model.get_linecontrol(filename=None,
                       methanol='ch3oh leiden 0 0 0')
 model.get_continuumlambda(filename=None,
@@ -54,7 +54,7 @@ for a in [10, 1, 0.1, 0.01]:
                                     a_max=a, 
                                     Mass_of_star=0.14, 
                                     Accretion_rate=5e-7,
-                                    Radius_of_disk=50,
+                                    Radius_of_disk=30,
                                     NR=200,
                                     NTheta=200,
                                     NPhi=10)
@@ -129,7 +129,7 @@ for a in [10, 1, 0.1, 0.01]:
                 parms=simulation_parms,
                 channel       = True,
                 pv            = True,
-                conti         = False,
+                conti         = True,
                 sed           = False,
                 line_spectrum = False
             )
@@ -165,7 +165,7 @@ for a in [10, 1, 0.1, 0.01]:
                 vkms = 5,
                 fwhm = 60,
                 d = 140,
-                CB68 = False,
+                CB68 = True,
                 title = f'amax {a} vinfall {vin} snowline {snow}',
                 dir = f'./test/a_{a}_vinfall_{vin}_snowline_{snow}/',
                 fname = 'pv'
@@ -218,7 +218,7 @@ for a in [10, 1, 0.1, 0.01]:
                 profile   = False,
                 channel   = True,
                 pv        = True,
-                continuum = False,
+                continuum = True,
                 sed       = False,
                 spectrum  = False,
             )

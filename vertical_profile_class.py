@@ -153,7 +153,7 @@ class DiskModel_spherical:
         def get_T_from_tau(tau, T_eff):  # 2(b)
             tau_p = self.tau_p_mid[self.mask_index:]*2
             tau_r = self.tau_r_mid[self.mask_index:]*2
-            T = (T_eff**4*(3/4)*(tau*(1-tau/tau_r)+(1/np.sqrt(3))+(1/(1.5*tau_p))))**(1/4)  # (3) from Wenrui+22
+            T = ((T_eff**4)*(3/4)*(tau*(1-tau/tau_r)+(1/np.sqrt(3))+(1/(1.5*tau_p))))**(1/4)  # (3) from Wenrui+22
             return T
         
         

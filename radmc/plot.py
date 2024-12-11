@@ -123,11 +123,11 @@ class generate_plot():
                 if os.path.isfile(parms.cube_dir+parms.cube_fname):
                     if parms.cube_fname.endswith(".out"):
                         cube = readImage(parms.cube_dir+parms.cube_fname)
-                        image = cube.imageJyppix
+                        image = cube.imageJyppix / (140)**2
                     elif parms.cube_fname.endswith(".npz"):
                         raw_cube = np.load(parms.cube_dir+parms.cube_fname)
                         cube = npz_to_class(raw_cube)
-                        image = cube.imageJyppix
+                        image = cube.imageJyppix / (140)**2
                     else:
                         print('No correct cube file is given')
                         pass
@@ -150,7 +150,7 @@ class generate_plot():
                         else:
                             print("No correct cube file is given")
                             break
-                    image = cube.imageJyppix - cube_conti.imageJyppix
+                    image = cube.imageJyppix / (140)**2 - cube_conti.imageJyppix / (140)**2
                 else:
                     print('No correct cube file is given')
                     pass
@@ -276,7 +276,7 @@ class generate_plot():
         
         # image = np.ones(image.shape)
         try:
-            fig, cbar = channel(image=image, conti=cube_conti.imageJyppix)
+            fig, cbar = channel(image=image, conti=cube_conti.imageJyppix / (140)**2)
         except:
             fig, cbar = channel(image=image)
         cbar.set_label('Intensity (mJy/pixel)')
@@ -285,7 +285,7 @@ class generate_plot():
         if parms.convolve is True:
             convolved_image = convolve(image, fwhm)
             try:
-                convolved_conti = convolve(cube_conti.imageJyppix, fwhm)
+                convolved_conti = convolve(cube_conti.imageJyppix / (140)**2, fwhm)
                 fig, cbar = channel(image=convolved_image, conti=convolved_conti, convolved=True)
             except:
                 fig, cbar = channel(image=convolved_image, convolved=True)
@@ -300,11 +300,11 @@ class generate_plot():
                 if os.path.isfile(parms.cube_dir+parms.cube_fname):
                     if parms.cube_fname.endswith(".out"):
                         cube = readImage(parms.cube_dir+parms.cube_fname)
-                        image = cube.imageJyppix
+                        image = cube.imageJyppix / (140)**2
                     elif parms.cube_fname.endswith(".npz"):
                         raw_cube = np.load(parms.cube_dir+parms.cube_fname)
                         cube = npz_to_class(raw_cube)
-                        image = cube.imageJyppix
+                        image = cube.imageJyppix / (140)**2
                     else:
                         print('No correct cube file is given')
                         pass
@@ -327,7 +327,7 @@ class generate_plot():
                         else:
                             print("No correct cube file is given")
                             break
-                    image = cube.imageJyppix - cube_conti.imageJyppix
+                    image = cube.imageJyppix / (140)**2 - cube_conti.imageJyppix / (140)**2
                 else:
                     print('No correct cube file is given')
                     pass
@@ -408,11 +408,11 @@ class generate_plot():
             if os.path.isfile(parms.conti_dir+parms.conti_fname):
                 if parms.conti_fname.endswith(".out"):
                     conti = readImage(parms.conti_dir+parms.conti_fname)
-                    image = conti.imageJyppix
+                    image = conti.imageJyppix / (140)**2
                 elif parms.conti_fname.endswith(".npz"):
                     raw_conti = np.load(parms.conti_dir+parms.conti_fname)
                     conti = npz_to_class(raw_conti)
-                    image = conti.imageJyppix
+                    image = conti.imageJyppix / (140)**2
                 else:
                     print('No correct continuum file is given')
                     pass

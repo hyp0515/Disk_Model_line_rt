@@ -26,9 +26,9 @@ def find_center(fname,
     
     # Estimate the source location (rough cropping for fitting)
     if x_lim is None:
-        x_lim = [1200, 1360]
+        x_lim = [data.shape[1]//2-data.shape[1]//20, data.shape[1]//2+data.shape[1]//20]
     if y_lim is None:
-        y_lim = [1200, 1360]
+        y_lim = [data.shape[0]//2-data.shape[0]//20, data.shape[0]//2+data.shape[0]//20]
 
             
     x_min, x_max = x_lim[0], x_lim[1]  # Adjust these based on the source
@@ -61,7 +61,7 @@ def find_center(fname,
 
 
 # # Load the FITS file
-# filename = '/run/media/hyp0515/fd14f880-ba6f-450f-b82d-98ba3710dc5f/backup/CB68/cb68_alma/cb68_setup1_all.rob2.I.image.tt0.pbcor.smooth.dropdeg.fits'
+# filename = '/run/media/hyp0515/fd14f880-ba6f-450f-b82d-98ba3710dc5f/backup/CB68_eDisk/CB68_SBLB_continuum_robust_0.0.image.tt0.fits'
 # hdul = fits.open(filename)
 # data = hdul[0].data
 # header = hdul[0].header
@@ -69,8 +69,8 @@ def find_center(fname,
 # hdul.close()
 
 # # Estimate the source location (rough cropping for fitting)
-# x_min, x_max = 1200, 1360  # Adjust these based on the source
-# y_min, y_max = 1200, 1360
+# x_min, x_max = 2750, 3250  # Adjust these based on the source
+# y_min, y_max = 2750, 3250
 # cropped_data = data[y_min:y_max, x_min:x_max]
 
 # # Create grid for fitting

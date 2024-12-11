@@ -7,7 +7,7 @@ from disk_model import *
 
 for a in [1, 0.1, 0.01, 0.001]:
     print("Calcuatle X22 opacity table \n")
-    x22_opacity = generate_opacity_table(
+    x22_opacity = generate_opacity_table_x22(
         a_min=1e-6, a_max=a,
         q=-3.5, dust_to_gas=0.01
     )
@@ -53,7 +53,7 @@ for a in [1, 0.1, 0.01, 0.001]:
 
 #########################################################################################
 
-# x22_opacity = generate_opacity_table(
+# x22_opacity = generate_opacity_table_x22(
 #     a_min=1e-6, a_max=0.001,
 #     q=-3.5, dust_to_gas=0.01
 # )

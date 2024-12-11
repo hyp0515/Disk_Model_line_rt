@@ -4,7 +4,7 @@ import pickle
 import warnings
 import optool
 import os
-
+from numba import jit, cuda 
 
 """
 =======================================================================
@@ -126,236 +126,236 @@ Opacity
 =======================================================================
 """
 # X22 original opacity table
-# def generate_opacity_table(
-#     a_min, a_max, q, dust_to_gas,
-#     precomputed_grain_properties_fname='precomputed_grain_properties/grain_properties.pkl',
-#     T_min=20, T_max=2000, N_T=50,
-#     ):
-#     """
-#     Generate an opacity table for given grain size distribution.
+def generate_opacity_table_x22(
+    a_min, a_max, q, dust_to_gas,
+    precomputed_grain_properties_fname='precomputed_grain_properties/grain_properties.pkl',
+    T_min=20, T_max=2000, N_T=50,
+    ):
+    """
+    Generate an opacity table for given grain size distribution.
 
-#     Args:
-#       a_min, a_max: min/max grain size in grain size distribution
-#       q: slope for grain size distribution
-#       dust_to_gas: dust-to-gas mass ratio (before sublimation)
-#       precomputed_grain_properties_fname:
-#         name of the pkl file storing pre-computed grain material properties
-#       T_min, T_max: min/max temprature for temprature grid
-#       N_T: temperature grid resolution
+    Args:
+      a_min, a_max: min/max grain size in grain size distribution
+      q: slope for grain size distribution
+      dust_to_gas: dust-to-gas mass ratio (before sublimation)
+      precomputed_grain_properties_fname:
+        name of the pkl file storing pre-computed grain material properties
+      T_min, T_max: min/max temprature for temprature grid
+      N_T: temperature grid resolution
 
-#     Returns:
-#       a dictionary containing the following items:
-#         T_crit: sublimation temperatures
-#         T: temperature grid
-#         lam: wavelength grid
-#         kappa: absorption opacity at given lam
-#                2d array, first dimension corresponds to temperature range
-#         kappa_p: Planck mean opacity
-#         kappa_r: Rosseland mean opacity
-#         kappa_s, kappa_s_p, kappa_s_r:
-#           same as kappa, kappa_p, kappa_r, but for effective scattering opacity
-#           (1-g)*kappa_scatter
-#     """
-#     # compute_grain_properties_DSHARP()
-#     try:
-#         with open('./'+precomputed_grain_properties_fname, "rb") as f:
-#             grain_properties = pickle.load(f)
-#     except FileNotFoundError:
-#         try:
-#             with open('../../'+precomputed_grain_properties_fname, "rb") as f:
-#                 grain_properties = pickle.load(f)
-#         except FileNotFoundError:
-#             compute_grain_properties_DSHARP(fname='./'+precomputed_grain_properties_fname)
-#             with open('./'+precomputed_grain_properties_fname, "rb") as f:
-#                 grain_properties = pickle.load(f)
+    Returns:
+      a dictionary containing the following items:
+        T_crit: sublimation temperatures
+        T: temperature grid
+        lam: wavelength grid
+        kappa: absorption opacity at given lam
+               2d array, first dimension corresponds to temperature range
+        kappa_p: Planck mean opacity
+        kappa_r: Rosseland mean opacity
+        kappa_s, kappa_s_p, kappa_s_r:
+          same as kappa, kappa_p, kappa_r, but for effective scattering opacity
+          (1-g)*kappa_scatter
+    """
+    # compute_grain_properties_DSHARP()
+    try:
+        with open('./'+precomputed_grain_properties_fname, "rb") as f:
+            grain_properties = pickle.load(f)
+    except FileNotFoundError:
+        try:
+            with open('../../'+precomputed_grain_properties_fname, "rb") as f:
+                grain_properties = pickle.load(f)
+        except FileNotFoundError:
+            compute_grain_properties_DSHARP(fname='./'+precomputed_grain_properties_fname)
+            with open('./'+precomputed_grain_properties_fname, "rb") as f:
+                grain_properties = pickle.load(f)
     
 
 
 
-#     a_grid = grain_properties['a_grid']
-#     N_a = len(a_grid)
-#     lam_grid = grain_properties['lam_grid']
-#     T_crit = grain_properties['T_crit']
-#     N_composition = len(T_crit)
-#     T_grid = np.logspace(np.log10(T_min),np.log10(T_max),N_T)
-#     eps = 1e-3
-#     T_grid = np.sort(np.concatenate((T_grid, T_crit-eps, T_crit+eps))) # insert points around T_crit
-#     N_T = len(T_grid)
-#     kappa = grain_properties['kappa'] # get opacity: kappa(temperature_regime, a, lam)
-#     kappa_s = grain_properties['kappa_s']*(1-np.array(grain_properties['g'])) # effective kappa for anisotropic scattering
-#     # print('kappa shape '+ str(len(kappa)))
-#     # print('kappa_s shape '+ str(len(kappa_s)))
-#     # compute mean opacities
-#     nu = np.outer(c_light/lam_grid, [1])
-#     T = T_grid
-#     with warnings.catch_warnings():
-#             warnings.simplefilter('ignore')
-#             exp_nu_T = np.exp(h*nu/(kB*T))    
-#     B_times_nu = nu**4 / (exp_nu_T-1) # arbitrary unit
-#     B_times_nu_norm = B_times_nu/np.sum(B_times_nu,axis=0)
-#     # u = dB/dT
-#     u_times_nu = nu**4 / (exp_nu_T-1/exp_nu_T) * h*nu/kB/T**2
-#     u_times_nu_norm = u_times_nu/np.sum(u_times_nu,axis=0)
-#     kappa_p = [None]*N_composition
-#     kappa_r = [None]*N_composition
-#     kappa_s_p = [None]*N_composition
-#     kappa_s_r = [None]*N_composition
-#     for i in range(N_composition):
-#         kappa_p[i] = kappa[i].dot(B_times_nu_norm)
-#         kappa_r[i] = ((kappa[i]**-1).dot(u_times_nu_norm))**-1
-#         kappa_s_p[i] = kappa_s[i].dot(B_times_nu_norm)
-#         kappa_s_r[i] = ((kappa_s[i]**-1).dot(u_times_nu_norm))**-1
-#         # the summations above assume log-uniform lambda grid
-#     # kappa_p/r(temperature_regime, a, T)
+    a_grid = grain_properties['a_grid']
+    N_a = len(a_grid)
+    lam_grid = grain_properties['lam_grid']
+    T_crit = grain_properties['T_crit']
+    N_composition = len(T_crit)
+    T_grid = np.logspace(np.log10(T_min),np.log10(T_max),N_T)
+    eps = 1e-3
+    T_grid = np.sort(np.concatenate((T_grid, T_crit-eps, T_crit+eps))) # insert points around T_crit
+    N_T = len(T_grid)
+    kappa = grain_properties['kappa'] # get opacity: kappa(temperature_regime, a, lam)
+    kappa_s = grain_properties['kappa_s']*(1-np.array(grain_properties['g'])) # effective kappa for anisotropic scattering
+    # print('kappa shape '+ str(len(kappa)))
+    # print('kappa_s shape '+ str(len(kappa_s)))
+    # compute mean opacities
+    nu = np.outer(c_light/lam_grid, [1])
+    T = T_grid
+    with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            exp_nu_T = np.exp(h*nu/(kB*T))    
+    B_times_nu = nu**4 / (exp_nu_T-1) # arbitrary unit
+    B_times_nu_norm = B_times_nu/np.sum(B_times_nu,axis=0)
+    # u = dB/dT
+    u_times_nu = nu**4 / (exp_nu_T-1/exp_nu_T) * h*nu/kB/T**2
+    u_times_nu_norm = u_times_nu/np.sum(u_times_nu,axis=0)
+    kappa_p = [None]*N_composition
+    kappa_r = [None]*N_composition
+    kappa_s_p = [None]*N_composition
+    kappa_s_r = [None]*N_composition
+    for i in range(N_composition):
+        kappa_p[i] = kappa[i].dot(B_times_nu_norm)
+        kappa_r[i] = ((kappa[i]**-1).dot(u_times_nu_norm))**-1
+        kappa_s_p[i] = kappa_s[i].dot(B_times_nu_norm)
+        kappa_s_r[i] = ((kappa_s[i]**-1).dot(u_times_nu_norm))**-1
+        # the summations above assume log-uniform lambda grid
+    # kappa_p/r(temperature_regime, a, T)
 
-#     # weighted average across size distribution
-#     ia_min = np.argmin(np.abs(a_grid-a_min))
-#     ia_max = np.argmin(np.abs(a_grid-a_max))
-#     weight = a_grid**(q+4)
-#     weight[:max(0,ia_min-1)] = 0
-#     weight[ia_max+1:] = 0
-#     weight = weight/np.sum(weight)
-#     mass_ratio_after_subl = grain_properties['mass_ratio_after_subl']
-#     weight = weight.reshape((1,N_a,1))
-#     weight = weight*dust_to_gas*mass_ratio_after_subl.reshape((N_composition,1,1))
-#     kappa = np.sum(kappa*weight,axis=1) # kappa(temperature_regime, lam)
-#     kappa_s = np.sum(kappa_s*weight,axis=1) # kappa(temperature_regime, lam)
-#     kappa_p = np.sum(kappa_p*weight,axis=1) # kappa_p/r(temperature_regime, T)
-#     kappa_r = np.sum(kappa_r*weight,axis=1)
-#     kappa_s_p = np.sum(kappa_s_p*weight,axis=1) # kappa_p/r(temperature_regime, T)
-#     kappa_s_r = np.sum(kappa_s_r*weight,axis=1)
-#     g = np.sum(grain_properties['g']*weight,axis=1)
+    # weighted average across size distribution
+    ia_min = np.argmin(np.abs(a_grid-a_min))
+    ia_max = np.argmin(np.abs(a_grid-a_max))
+    weight = a_grid**(q+4)
+    weight[:max(0,ia_min-1)] = 0
+    weight[ia_max+1:] = 0
+    weight = weight/np.sum(weight)
+    mass_ratio_after_subl = grain_properties['mass_ratio_after_subl']
+    weight = weight.reshape((1,N_a,1))
+    weight = weight*dust_to_gas*mass_ratio_after_subl.reshape((N_composition,1,1))
+    kappa = np.sum(kappa*weight,axis=1) # kappa(temperature_regime, lam)
+    kappa_s = np.sum(kappa_s*weight,axis=1) # kappa(temperature_regime, lam)
+    kappa_p = np.sum(kappa_p*weight,axis=1) # kappa_p/r(temperature_regime, T)
+    kappa_r = np.sum(kappa_r*weight,axis=1)
+    kappa_s_p = np.sum(kappa_s_p*weight,axis=1) # kappa_p/r(temperature_regime, T)
+    kappa_s_r = np.sum(kappa_s_r*weight,axis=1)
+    g = np.sum(grain_properties['g']*weight,axis=1)
 
-#     # combine different temperature regimes
-#     def combine_temperature_regimes(y):
-#         if y.ndim>2:
-#             return np.array([combine_temperature_regimes(y1) for y1 in y])
-#         y_out = np.zeros(y.shape[1:])
-#         for i in range(N_composition)[::-1]:
-#             y_out[T_grid<T_crit[i]] = y[i,T_grid<T_crit[i]]
-#         return y_out
-#     kappa_p = combine_temperature_regimes(kappa_p)
-#     kappa_r = combine_temperature_regimes(kappa_r)
-#     kappa_s_p = combine_temperature_regimes(kappa_s_p)
-#     kappa_s_r = combine_temperature_regimes(kappa_s_r)
+    # combine different temperature regimes
+    def combine_temperature_regimes(y):
+        if y.ndim>2:
+            return np.array([combine_temperature_regimes(y1) for y1 in y])
+        y_out = np.zeros(y.shape[1:])
+        for i in range(N_composition)[::-1]:
+            y_out[T_grid<T_crit[i]] = y[i,T_grid<T_crit[i]]
+        return y_out
+    kappa_p = combine_temperature_regimes(kappa_p)
+    kappa_r = combine_temperature_regimes(kappa_r)
+    kappa_s_p = combine_temperature_regimes(kappa_s_p)
+    kappa_s_r = combine_temperature_regimes(kappa_s_r)
 
-#     opacity_table = {}
-#     opacity_table['T_crit'] = T_crit
-#     opacity_table['T'] = T_grid
-#     opacity_table['lam'] = lam_grid
-#     opacity_table['kappa'] = kappa
-#     opacity_table['kappa_s'] = kappa_s
-#     opacity_table['kappa_p'] = kappa_p
-#     opacity_table['kappa_r'] = kappa_r
-#     opacity_table['kappa_s_p'] = kappa_s_p
-#     opacity_table['kappa_s_r'] = kappa_s_r
-#     opacity_table['g'] = g
-#     return opacity_table
+    opacity_table = {}
+    opacity_table['T_crit'] = T_crit
+    opacity_table['T'] = T_grid
+    opacity_table['lam'] = lam_grid
+    opacity_table['kappa'] = kappa
+    opacity_table['kappa_s'] = kappa_s
+    opacity_table['kappa_p'] = kappa_p
+    opacity_table['kappa_r'] = kappa_r
+    opacity_table['kappa_s_p'] = kappa_s_p
+    opacity_table['kappa_s_r'] = kappa_s_r
+    opacity_table['g'] = g
+    return opacity_table
 
-# import dsharp_opac # this can be installed from https://github.com/birnstiel/dsharp_opac
+import dsharp_opac # this can be installed from https://github.com/birnstiel/dsharp_opac
 
-# def compute_grain_properties_DSHARP(
-#     fname='./precomputed_grain_properties/grain_properties.pkl',
-#     nang=3, # same as the default value in dsharp_opac
-#     ):
-#     """
-#     Store grain properties computed using the DSHARP opacity model
-#     (Birnstiel et al. 2018)
+def compute_grain_properties_DSHARP(
+    fname='./precomputed_grain_properties/grain_properties.pkl',
+    nang=3, # same as the default value in dsharp_opac
+    ):
+    """
+    Store grain properties computed using the DSHARP opacity model
+    (Birnstiel et al. 2018)
     
-#     Args:
-#       fname: file name for storing computed grain properties
-#       nang: number of angles to compute opacity (passed to dsharp_opac)
-#     """
+    Args:
+      fname: file name for storing computed grain properties
+      nang: number of angles to compute opacity (passed to dsharp_opac)
+    """
     
     
-#     # dust grain compoistion following Birnstiel et al. 2018
-#     # the four species:
-#     # water, scilicate, troilite, refractory organics
-#     N_composition = 4
-#     rho_grain = np.array([0.92, 3.30, 4.83, 1.50])
-#     mass_frac = np.array([0.2, 0.3291, 0.0743, 0.3966])
-#     vol_frac = np.array([0.3642, 0.1670, 0.0258, 0.4430])
+    # dust grain compoistion following Birnstiel et al. 2018
+    # the four species:
+    # water, scilicate, troilite, refractory organics
+    N_composition = 4
+    rho_grain = np.array([0.92, 3.30, 4.83, 1.50])
+    mass_frac = np.array([0.2, 0.3291, 0.0743, 0.3966])
+    vol_frac = np.array([0.3642, 0.1670, 0.0258, 0.4430])
 
-#     # sublimation temperature from Pollack et al. 1994
-#     T_crit = np.array([150, 425, 680, 1200])
+    # sublimation temperature from Pollack et al. 1994
+    T_crit = np.array([150, 425, 680, 1200])
 
-#     diel_constants = [dsharp_opac.diel_warrenbrandt08(),
-#                       dsharp_opac.diel_draine2003(species='astrosilicates'),
-#                       dsharp_opac.diel_henning('troilite'),
-#                       dsharp_opac.diel_henning('organics', refractory=True),
-#                      ]
+    diel_constants = [dsharp_opac.diel_warrenbrandt08(),
+                      dsharp_opac.diel_draine2003(species='astrosilicates'),
+                      dsharp_opac.diel_henning('troilite'),
+                      dsharp_opac.diel_henning('organics', refractory=True),
+                     ]
 
-#     species_exists = [[1,1,1,1],
-#                       [0,1,1,1],
-#                       [0,1,1,0],
-#                       [0,1,0,0]]
-#     # species_exits[i,j] = species j exists in temperature range i
-#     species_exists = np.array(species_exists)
-#     rho_grain_eff = np.zeros(N_composition)
-#     mass_ratio_after_subl = np.ones(N_composition)
-#     mixed_diel_constants = [None]*N_composition
-#     for i in range(N_composition):
-#         mass_ratio_after_subl[i] = np.sum(mass_frac*species_exists[i])
-#         current_vol_frac = vol_frac*species_exists[i]
-#         current_vol_frac = current_vol_frac/np.sum(current_vol_frac)
-#         rho_grain_eff[i] = np.sum(current_vol_frac*rho_grain)
-#         mixed_diel_constants[i] = dsharp_opac.diel_mixed(constants=diel_constants,
-#                                   abundances=current_vol_frac,
-#                                   rule='Bruggeman')
-#         mixed_diel_constants[i] = mixed_diel_constants[i].get_normal_object()
+    species_exists = [[1,1,1,1],
+                      [0,1,1,1],
+                      [0,1,1,0],
+                      [0,1,0,0]]
+    # species_exits[i,j] = species j exists in temperature range i
+    species_exists = np.array(species_exists)
+    rho_grain_eff = np.zeros(N_composition)
+    mass_ratio_after_subl = np.ones(N_composition)
+    mixed_diel_constants = [None]*N_composition
+    for i in range(N_composition):
+        mass_ratio_after_subl[i] = np.sum(mass_frac*species_exists[i])
+        current_vol_frac = vol_frac*species_exists[i]
+        current_vol_frac = current_vol_frac/np.sum(current_vol_frac)
+        rho_grain_eff[i] = np.sum(current_vol_frac*rho_grain)
+        mixed_diel_constants[i] = dsharp_opac.diel_mixed(constants=diel_constants,
+                                  abundances=current_vol_frac,
+                                  rule='Bruggeman')
+        mixed_diel_constants[i] = mixed_diel_constants[i].get_normal_object()
 
-#     # generate grids for grain size and wavelength
-#     a_min = 1e-6
-#     a_max = 1
-#     N_a = 121
-#     a_grid = np.logspace(np.log10(a_min),np.log10(a_max),N_a)
-#     lam_min = 1e-5 # 1000K=0.0002898cm, choose lam_min << this
-#     lam_max = 1 # 10K = 0.02898cm, choose lam_max >> this
-#     N_lam = 101
-#     lam_grid = np.logspace(np.log10(lam_min),np.log10(lam_max),N_lam)
+    # generate grids for grain size and wavelength
+    a_min = 1e-6
+    a_max = 1
+    N_a = 121
+    a_grid = np.logspace(np.log10(a_min),np.log10(a_max),N_a)
+    lam_min = 1e-5 # 1000K=0.0002898cm, choose lam_min << this
+    lam_max = 1 # 10K = 0.02898cm, choose lam_max >> this
+    N_lam = 101
+    lam_grid = np.logspace(np.log10(lam_min),np.log10(lam_max),N_lam)
 
-#     mie_data_package = [None]*N_composition
-#     for i in range(N_composition):
-#         mie_data_package[i] = dsharp_opac.get_mie_coefficients(
-#             a_grid, lam_grid, mixed_diel_constants[i],
-#             nang=nang, extrapolate_large_grains=False)
+    mie_data_package = [None]*N_composition
+    for i in range(N_composition):
+        mie_data_package[i] = dsharp_opac.get_mie_coefficients(
+            a_grid, lam_grid, mixed_diel_constants[i],
+            nang=nang, extrapolate_large_grains=False)
 
-#     kappa   = [None]*N_composition # abroption opacity
-#     kappa_s = [None]*N_composition # scattering opacity
-#     g       = [None]*N_composition # asymmetry factor
-#     for i in range(N_composition):
-#         m = 4*np.pi/3 * a_grid**3 * rho_grain_eff[i]
-#         kappa_both = dsharp_opac.get_kappa_from_q(
-#             a_grid, m,
-#             mie_data_package[i]['q_abs'],
-#             mie_data_package[i]['q_sca'],
-#         )
-#         kappa[i] = kappa_both[0]
-#         kappa_s[i] = kappa_both[1]
-#         g[i] = mie_data_package[i]['g']
+    kappa   = [None]*N_composition # abroption opacity
+    kappa_s = [None]*N_composition # scattering opacity
+    g       = [None]*N_composition # asymmetry factor
+    for i in range(N_composition):
+        m = 4*np.pi/3 * a_grid**3 * rho_grain_eff[i]
+        kappa_both = dsharp_opac.get_kappa_from_q(
+            a_grid, m,
+            mie_data_package[i]['q_abs'],
+            mie_data_package[i]['q_sca'],
+        )
+        kappa[i] = kappa_both[0]
+        kappa_s[i] = kappa_both[1]
+        g[i] = mie_data_package[i]['g']
 
-#     grain_properties = {}
-#     grain_properties['a_grid'] = a_grid
-#     grain_properties['lam_grid'] = lam_grid
-#     grain_properties['kappa'] = kappa
-#     grain_properties['kappa_s'] = kappa_s
-#     grain_properties['g'] = g
-#     grain_properties['T_crit'] = T_crit
-#     grain_properties['mass_ratio_after_subl'] = mass_ratio_after_subl
+    grain_properties = {}
+    grain_properties['a_grid'] = a_grid
+    grain_properties['lam_grid'] = lam_grid
+    grain_properties['kappa'] = kappa
+    grain_properties['kappa_s'] = kappa_s
+    grain_properties['g'] = g
+    grain_properties['T_crit'] = T_crit
+    grain_properties['mass_ratio_after_subl'] = mass_ratio_after_subl
 
-#     # with open(fname,"wb") as f:
-#     #     pickle.dump(grain_properties, f)
+    # with open(fname,"wb") as f:
+    #     pickle.dump(grain_properties, f)
     
-#     try:
-#         with open(fname, "wb") as f:
-#             pickle.dump(grain_properties, f)
-#     except FileNotFoundError:
-#         with open('../../'+fname, "wb") as f:
-#             pickle.dump(grain_properties, f)
-#     return
+    try:
+        with open(fname, "wb") as f:
+            pickle.dump(grain_properties, f)
+    except FileNotFoundError:
+        with open('../../'+fname, "wb") as f:
+            pickle.dump(grain_properties, f)
+    return
 
 # Optool to generate opacity table
-def generate_opacity_table(
+def generate_opacity_table_opt(
     a_min, a_max, q, dust_to_gas,
     T_min=20, T_max=2000, N_T=50,
     ):
@@ -395,21 +395,22 @@ def generate_opacity_table(
     kappa_r = []
     g       = []
     for idx in range(len(material)):
-        p = optool.particle(f'optool -c {' '.join(material[(idx):])} -a {a_min*1e4} {a_max*1e4} {-q} -l 0.1 10000 101 -mie -radmc','./opacity_table/',
+        p = optool.particle(f'optool -c {' '.join(material[(idx):])} -a {a_min*1e4} {a_max*1e4} {-q} -l 0.1 10000 101 -mie -radmc',
+                            cache='./opacity_table/',
                             silent=True)
         kappa.append(  p.kabs[0,:]*dust_to_gas*np.sum(fraction[idx:]))
         kappa_s.append(p.ksca[0,:]*dust_to_gas*np.sum(fraction[idx:]) * (1-p.gsca[0,:]))
-        with warnings.catch_warnings():
+        with warnings.catch_warnings():                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
             warnings.simplefilter('ignore')
             p.computemean(tmin=T_min, tmax=T_max, ntemp=N_T)
         kappa_p.append(p.kplanck[0,:]*dust_to_gas*np.sum(fraction[idx:]))
         kappa_r.append(p.kross[0,:]*dust_to_gas*np.sum(fraction[idx:]))
-        g.append(p.gsca[0,:])
+        g.append(p.gsca[0,:]*dust_to_gas*np.sum(fraction[idx:]))
         os.system(f'cp -r ./opacity_table/dustkappa.inp ./dustkappa_{fname[idx]}.inp')
-    try:
-        os.system('rm -r ./opacity_table')
-    except:
-        pass
+    # try:
+    #     os.system('rm -r ./opacity_table')
+    # except:
+    #     pass
 
     T_grid = p.temp
     kappa   = np.array(kappa)
@@ -530,6 +531,7 @@ def generate_disk_property_table(
             tau_r_mid_actual = tau_p_mid / res[-1]
             err = np.abs(tau_r_mid_actual/tau_r_mid - 1)
             tau_r_mid = tau_r_mid_actual
+        
         Sigma, mean_cs, T_mid, tau_p_over_tau_r_actual = get_disk_profile(T_eff, tau_r_mid, tau_p_mid)
         return tau_r_mid, Sigma, mean_cs, T_mid
 
@@ -540,6 +542,7 @@ def generate_disk_property_table(
     # get tau_r: solve iteratively
     tau_r = tau_p*1
     err = 1
+
     while err>1e-12:
         T_eff_4 = T_subl**4/(3/4)/(0.5*tau_r + 1/np.sqrt(3) + 1/(3*tau_p))
         tauf = np.linspace(0,tau_r,101)
@@ -552,17 +555,17 @@ def generate_disk_property_table(
         tau_r = tau_r_new
     T_eff_max = T_eff_4**(1/4)
     tau_p_at_T_eff_max = tau_p
-
+    
     # at given T_eff, do the following:
     # 1. solve disk profile for a range of tau_p
     # 2. get corresponding Sigma/cs, and invert that mapping
+
     def get_vertical_profile_data_at_T_eff(
         T_eff, N_Sigma_cs = 20,
         dtau = 0.2, # step size in log tau
         N_tau_max = 100, # max n_steps in each direction
         speed_up_factor = 1/50, # increase step size in log tau
         ):
-
         tau_p_list = []
         tau_r_list = []
         Sigma_list = []
@@ -638,7 +641,7 @@ def generate_disk_property_table(
         T_mid = f_T_mid(Sigma_cs)
 
         return [Sigma_cs_l, Sigma_cs_r], [tau_p, tau_r, Sigma, cs, T_mid]
-
+    
     data_boundary = []
     data_profile = []
     T_eff_grid = np.logspace(np.log10(T_eff_min), np.log10(T_eff_max), N_T_eff)
@@ -646,6 +649,7 @@ def generate_disk_property_table(
         res = get_vertical_profile_data_at_T_eff(T_eff, N_Sigma_cs=N_Sigma_cs)
         data_boundary.append(res[0])
         data_profile.append(res[1])
+    # print('pass2')
     data_boundary = np.transpose(np.array(data_boundary)) # l/r, T
     data_profile = np.transpose(np.array(data_profile), (1,0,2)) # variable, T, x
     disk_property_table = {}
@@ -993,19 +997,21 @@ class DiskImage:
         hdr = fits_data[0].header
         img = fits_data[0].data
         if ra_deg is None:
-            icx_float = img.shape[-1]/2
+            icx_float = img.shape[-1]/2-.5
+            self.ra_deg = (icx_float+1-hdr['CRPIX1'])*hdr['CDELT1'] + hdr['CRVAL1']
         else:
             icx_float = (ra_deg-hdr['CRVAL1'])/hdr['CDELT1']+hdr['CRPIX1']-1
         if dec_deg is None:
-            icy_float = img.shape[-2]/2
+            icy_float = img.shape[-2]/2-.5
+            self.dec_deg = (icy_float+1-hdr['CRPIX2'])*hdr['CDELT2'] + hdr['CRVAL2']
         else:
             icy_float = (dec_deg-hdr['CRVAL2'])/hdr['CDELT2']+hdr['CRPIX2']-1
         icx = int(icx_float)
         icy = int(icy_float)
         signx = int(-np.sign(hdr['CDELT1'])) # x propto minus RA
         signy = int(np.sign(hdr['CDELT2']))
-        self.au_per_pix = abs(hdr['CDELT1'])/180*pi*distance/au
-        Npix_half = int(np.ceil(self.img_size_au/self.au_per_pix))
+        self.au_per_pix = abs(hdr['CDELT1'])/180*pi*distance/au 
+        Npix_half = int(np.ceil(self.img_size_au/self.au_per_pix)) // 2
         if (icx-Npix_half)<0 or (icx+Npix_half)>=img.shape[-1] or (icy-Npix_half)<0 or (icy+Npix_half)>=img.shape[-2]:
             print('warning: image is too small for given img_size_au')
             # reduce Npix_half
@@ -1026,7 +1032,7 @@ class DiskImage:
                                  order=1)
         if remove_background:
             self.remove_background = True
-            background = np.sum(self.img *(self.img <(50*self.rms_Jy))) / np.sum(self.img <(50*self.rms_Jy))
+            background = np.sum(self.img *(self.img <(30*self.rms_Jy))) / np.sum(self.img <(30*self.rms_Jy))
             # background = np.average(self.img[0:20, 0:20])
             # self.img = np.where(self.img<.01*np.max(self.img), 0, self.img)
             self.img = self.img - background
@@ -1067,29 +1073,112 @@ class DiskImage:
         # convert to flux density in Jy/beam
         self.img_model = I*1e23*self.beam_area
         if self.remove_background:
-            background = np.sum(self.img_model *(self.img_model <(50*self.rms_Jy))) / np.sum(self.img_model <(50*self.rms_Jy))
+            background = np.sum(self.img_model *(self.img_model <(30*self.rms_Jy))) / np.sum(self.img_model <(30*self.rms_Jy))
             self.img_model = self.img_model - background
         return
-    def evaluate_log_likelihood(self, sigma_log_model=np.log(2)/2):
+    def generate_mask(self, mask_radius, cosI):
+        """
+        Generate a mask covering radius (in au) between mask_radius.
+        
+        Args:
+          mask_radius: (2,) array
+          cosI: disk inclination
+        Returns:
+          mask: 2d array of mask
+        """
+        N_half = self.Npix_half
+        x1d = np.arange(-N_half,N_half+1)*self.au_per_pix
+        y,x = np.meshgrid(x1d,x1d,indexing='ij')
+        r = np.sqrt(x**2/cosI**2+y**2)
+        mask = (r>=mask_radius[0])*(r<=mask_radius[1])*1.
+        mask = ndimage.interpolation.rotate(mask, -self.disk_pa,reshape=False)
+        # limit to (0,1)
+        mask = np.maximum(mask, 0)
+        mask = np.minimum(mask, 1)
+        self.mask = mask
+        return
+    def evaluate_log_likelihood_old(self, sigma_log_model=np.log(2)/2):
         img1 = self.img
         img2 = self.img_model
         sigma = self.rms_Jy # noise
-        chisq1 = (img1-img2)**2/(2*sigma**2)
+        if hasattr(self, 'sig_obs'):
+            sigma = self.sig_obs
+        chisq1 = (img1-img2)**2/(2*sigma**2) + np.log(sigma)
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            chisq2 = np.log(img1/img2)**2 / (2*sigma_log_model**2)
+            chisq2 = np.log(img1/img2)**2 / (2*sigma_log_model**2) + np.log(sigma_log_model) + np.log(img1)
         chisq2 = np.nan_to_num(chisq2, nan=1e6)
         chisq = np.minimum(chisq1, chisq2)
 
-        dlog_likelihood =  - chisq + 1/2 # normalization is unimportant here
+        dlog_likelihood =  - chisq # constant shift is unimportant here
 
         beam_size_au_sq = self.beam_maj_au * self.beam_min_au * pi/(4*np.log(2))
         pix_size_au_sq = self.au_per_pix**2
         beam_per_pix = pix_size_au_sq/beam_size_au_sq
-        log_likelihood = np.sum(dlog_likelihood*beam_per_pix)
-
-        self.log_likelihood=log_likelihood
+        
+        if hasattr(self, 'effective_beam_size_au_sq'):
+            beam_per_pix = pix_size_au_sq/self.effective_beam_size_au_sq
+        
+        if hasattr(self, 'mask'):
+            log_likelihood = np.sum(dlog_likelihood*beam_per_pix*self.mask)
+        else:
+            log_likelihood = np.sum(dlog_likelihood*beam_per_pix)
+        
+        self.log_likelihood = log_likelihood
+        self.sigma_log_model = sigma_log_model
         return log_likelihood
+    def evaluate_log_likelihood(self, sigma_log_model=np.log(2)/2):
+        img1 = self.img
+        img2 = self.img_model
+        sigma = self.rms_Jy # noise
+        if hasattr(self, 'sig_obs'):
+            sigma = self.sig_obs
+        sigma_sq = sigma**2 + (sigma_log_model*img2)**2
+        chisq = (img1-img2)**2/(2*sigma_sq) + np.log(sigma_sq)/2
+        #chisq1 = (img1-img2)**2/(2*sigma**2) + np.log(sigma)
+        #with warnings.catch_warnings():
+        #    warnings.simplefilter('ignore')
+        #    chisq2 = np.log(img1/img2)**2 / (2*sigma_log_model**2) + np.log(sigma_log_model) + np.log(img1)
+        #chisq2 = np.nan_to_num(chisq2, nan=1e6)
+        #chisq = np.minimum(chisq1, chisq2)
+
+        dlog_likelihood =  - chisq # constant shift is unimportant here
+
+        beam_size_au_sq = self.beam_maj_au * self.beam_min_au * pi/(4*np.log(2))
+        pix_size_au_sq = self.au_per_pix**2
+        beam_per_pix = pix_size_au_sq/beam_size_au_sq
+        
+        if hasattr(self, 'effective_beam_size_au_sq'):
+            beam_per_pix = pix_size_au_sq/self.effective_beam_size_au_sq
+        
+        if hasattr(self, 'mask'):
+            log_likelihood = np.sum(dlog_likelihood*beam_per_pix*self.mask)
+        else:
+            log_likelihood = np.sum(dlog_likelihood*beam_per_pix)
+        
+        self.log_likelihood = log_likelihood
+        self.sigma_log_model = sigma_log_model
+        return log_likelihood
+    # def evaluate_log_likelihood(self, sigma_log_model=np.log(2)/2):
+    #     img1 = self.img
+    #     img2 = self.img_model
+    #     sigma = self.rms_Jy # noise
+    #     chisq1 = (img1-img2)**2/(2*sigma**2)
+    #     with warnings.catch_warnings():
+    #         warnings.simplefilter('ignore')
+    #         chisq2 = np.log(img1/img2)**2 / (2*sigma_log_model**2)
+    #     chisq2 = np.nan_to_num(chisq2, nan=1e6)
+    #     chisq = np.minimum(chisq1, chisq2)
+
+    #     dlog_likelihood =  - chisq + 1/2 # normalization is unimportant here
+
+    #     beam_size_au_sq = self.beam_maj_au * self.beam_min_au * pi/(4*np.log(2))
+    #     pix_size_au_sq = self.au_per_pix**2
+    #     beam_per_pix = pix_size_au_sq/beam_size_au_sq
+    #     log_likelihood = np.sum(dlog_likelihood*beam_per_pix)
+
+    #     self.log_likelihood=log_likelihood
+    #     return log_likelihood
     def evaluate_disk_chi_sq(self, sigma_log_model=np.log(2)/2):
         img1 = self.img
         img2 = self.img_model
@@ -1143,7 +1232,7 @@ class DiskFitting:
         # leave the arguements for minimize here for better flexibility
         self.default_kwargs_for_minimize = {
             'x0':[np.log(0.14*Msun), np.log(30*au), np.log(5e-7*Msun/yr)],
-            'bounds': ((np.log(0.12*Msun),np.log(0.18*Msun)), (np.log(25*au),np.log(35*au)), (np.log(1e-7*Msun/yr), np.log(10e-7*Msun/yr))),
+            'bounds': ((np.log(0.13*Msun),np.log(0.17*Msun)), (np.log(25*au),np.log(35*au)), (np.log(3e-7*Msun/yr), np.log(10e-7*Msun/yr))),
             'options':{'maxiter':1e3, 'disp':False},
             'method':'Powell'
         }
@@ -1205,9 +1294,7 @@ class DiskFitting:
             normalized_edge_F = self.disk_model.I_obs[0][-1]*self.disk_image_list[0].beam_area*1e23/self.disk_image_list[0].rms_Jy
             edge_penalty = (normalized_edge_F<1)*(1-normalized_edge_F)*1e4
             return -ll+edge_penalty
-
         res = scipy.optimize.minimize(f, **kwargs_for_minimize)
-
         # record mean chisq
         self.mean_chisq_list = []
         self.disk_area_list = []
@@ -1216,3 +1303,17 @@ class DiskFitting:
             self.mean_chisq_list.append(mean_chisq)
             self.disk_area_list.append(disk_area)
         return res
+    
+    
+    def mcmc_fit(
+        self,
+        Mstar,
+        Mdot,
+        ):
+        
+        Rd = 30 * au
+        Q = 1.5
+        ll = self.evaluate_log_likelihood(Mstar, Rd, Mdot, Q)
+        normalized_edge_F = self.disk_model.I_obs[0][-1]*self.disk_image_list[0].beam_area*1e23/self.disk_image_list[0].rms_Jy
+        edge_penalty = (normalized_edge_F<1)*(1-normalized_edge_F)*1e4
+        return -ll+edge_penalty

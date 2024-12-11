@@ -319,6 +319,7 @@ class radmc3d_setup:
                                   NR = None,
                               NTheta = None,
                                 NPhi = None,
+                 generate_table_only = False
 
                       ):
       '''
@@ -352,15 +353,18 @@ class radmc3d_setup:
       if NPhi is None:                     NPhi = 10
        
       # Disk model
+      
       self.dust_to_gas_ratio = d_to_g_ratio
       # note: the original a_max is in cm
       # a_min is set to be 0.05 um = 5e-6 cm
-      self.opacity_table  = generate_opacity_table(a_min=1e-6, a_max=a_max*0.1,
+      self.opacity_table  = generate_opacity_table_opt(a_min=1e-6, a_max=a_max*0.1,
                                                    q=q, dust_to_gas=d_to_g_ratio)
       
+      self.disk_property_table = generate_disk_property_table(self.opacity_table)
+      if generate_table_only is True:
+        return
       
-      disk_property_table = generate_disk_property_table(self.opacity_table)
-      DM = DiskModel_spherical(self.opacity_table, disk_property_table)
+      DM = DiskModel_spherical(self.opacity_table, self.disk_property_table)
       
       self.Mstar = Mass_of_star
       self.Rd = Radius_of_disk
@@ -463,23 +467,6 @@ class radmc3d_setup:
       #     f.write(str(nlam)+'\n')
       #     for lam_idx in range(nlam):
       #       f.write('%13.6e %13.6e %13.6e %13.6e\n'%(lam[lam_idx],kappa_abs[idx,lam_idx],kappa_sca[idx,lam_idx],g[idx,lam_idx]))
-      
-    # def write_dust_opac(self):    
-    #   '''
-    #   Preparing the control file for dust opacity.
-    #   '''
-    #   with open('dustopac.inp','w+') as f:
-    #     f.write('2                          Format number of this file\n')
-    #     f.write('1                          Nr of dust species\n')
-    #     f.write('============================================================================\n')
-    #     f.write('1                          Way in which this dust species is read\n')
-    #     f.write('0                          0=Thermal grain\n')
-    #     f.write('dsharp_grain               Extension of name of dustkappa_***.inp file\n')
-    #     f.write('============================================================================\n')
-
-    #   self.dust_spec = 1
-    #   os.system(f'optool -dsharp -a 0.05 {self.amax*1e3} 3.5 -l 0.1 10000 -radmc')
-    #   os.system('mv dustkappa.inp dustkappa_dsharp_grain.inp')
 
     def write_dust_density(self):
       '''

@@ -16,8 +16,8 @@ import os
 sys.path.insert(0,'../')
 from fit_with_GIdisk.find_center import find_center
 
-n_processes = 10
-nwalkers = 20  # Total number of walkers
+n_processes = 6
+nwalkers = 6  # Total number of walkers
 ndim = 3        # Dimension of parameter space
 niter = 100000     # Number of iterations
 
@@ -72,9 +72,10 @@ for i, fname in enumerate(cb68_alma_list):
     observation_data.append(image_class.img)
     beam_pa.append(image_class.beam_pa)
     beam_axis.append([image_class.beam_maj_au, image_class.beam_min_au])
-    beam_area.append(image_class.beam_area)
+    beam_area.append(pi/(4*np.log(2))*image_class.beam_maj_au*image_class.beam_min_au/\
+                    (image_class.au_per_pix**2))
     disk_posang.append(disk_pa)
-
+    
 size_au  = image_class.img_size_au
 au_per_pix  = image_class.au_per_pix
 npix = image_class.img.shape[0]
@@ -127,14 +128,14 @@ def conti_model(theta):
     im = image.readImage()
     model_image_list = []
     for i in range(im.image.shape[2]):
-        model_image = im.image[:,:,i].T
+        model_image = im.imageJyppix[:,:,i].T / (140**2)
         I = ndimage.rotate(model_image, -disk_pa+beam_pa[i], reshape=False)
         sigmas = np.array([beam_axis[i][0], beam_axis[i][1]])/au_per_pix/(2*np.sqrt(2*np.log(2)))
         I = ndimage.gaussian_filter(I, sigma=sigmas)
         # rotate to align with image
         I = ndimage.rotate(I, -beam_pa[i], reshape=False)
         # convert to flux density in Jy/beam
-        model_image = I*1e23*beam_area[i]
+        model_image = I*beam_area[i]
         model_image_list.append(model_image)
     
     os.chdir("../..")
@@ -155,7 +156,7 @@ def log_likelihood(theta, observation, err):
 
 def log_prior(theta):
     amax, Mstar, Mdot = theta
-    if -3 < amax < 3 and 0.12 < Mstar < 0.18 and np.log10(3e-7) < Mdot < np.log10(7e-7):
+    if -3 < amax < 3 and 0.08 < Mstar < 0.3 and np.log10(1e-7) < Mdot < np.log10(10e-7):
         return 0.0
     return -np.inf
 
@@ -165,7 +166,7 @@ def log_probability(theta, observation, err):
         return -np.inf
     return lp + log_likelihood(theta, observation, err)
 
-pos = [np.array([0, 0.14, np.log10(5e-7)]) + [5e-1, 1e-3, 1e-2] * np.random.randn(ndim) for i in range(nwalkers)]
+pos = [np.array([0, 0.14, np.log10(5e-7)]) + [1e-1, 1e-3, 1e-2] * np.random.randn(ndim) for i in range(nwalkers)]
 
 # File for saving progress
 progress_file = "progress.h5"
