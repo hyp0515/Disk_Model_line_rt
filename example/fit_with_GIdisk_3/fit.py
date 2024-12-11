@@ -140,7 +140,7 @@ sigma_list = [
 
 
 opacity_table = generate_opacity_table_opt(
-    a_min=1e-6, a_max=.001, # min/max grain size
+    a_min=1e-6, a_max=.03, # min/max grain size
     q=-3.5, # slope for dust size distribution, dn/da ~ a^q
     dust_to_gas=0.01 # dust-to-gas ratio before sublimation
 )
@@ -296,4 +296,4 @@ ax[2].add_patch(beam)
 
 # plt.tight_layout()
 # plt.show()
-plt.savefig('residual_10.pdf', transparent=True)
+plt.savefig('residual_300.pdf', transparent=True)
