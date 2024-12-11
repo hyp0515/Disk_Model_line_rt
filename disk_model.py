@@ -1232,7 +1232,7 @@ class DiskFitting:
         # leave the arguements for minimize here for better flexibility
         self.default_kwargs_for_minimize = {
             'x0':[np.log(0.14*Msun), np.log(30*au), np.log(5e-7*Msun/yr)],
-            'bounds': ((np.log(0.13*Msun),np.log(0.17*Msun)), (np.log(25*au),np.log(35*au)), (np.log(3e-7*Msun/yr), np.log(10e-7*Msun/yr))),
+            'bounds': ((np.log(0.10*Msun),np.log(0.20*Msun)), (np.log(10*au),np.log(40*au)), (np.log(0.1e-7*Msun/yr), np.log(20e-7*Msun/yr))),
             'options':{'maxiter':1e3, 'disp':False},
             'method':'Powell'
         }

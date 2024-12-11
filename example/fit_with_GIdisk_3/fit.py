@@ -140,7 +140,7 @@ sigma_list = [
 
 
 opacity_table = generate_opacity_table_opt(
-    a_min=1e-6, a_max=.017, # min/max grain size
+    a_min=1e-6, a_max=.001, # min/max grain size
     q=-3.5, # slope for dust size distribution, dn/da ~ a^q
     dust_to_gas=0.01 # dust-to-gas ratio before sublimation
 )
@@ -153,11 +153,11 @@ images = []
 pa = []
 for i, fname in enumerate(cb68_alma_list):
     ra_deg, dec_deg, disk_pa = find_center(fname, x_lim=[2750,3250], y_lim=[2750,3250])
-    # ra_center  = '16:57:19.6428' # from 2d gaussian fitting
-    # dec_center = '-16:09:24.013'
-    # # Convert WCS to pixel coordinates
-    # coord_center = SkyCoord(ra=ra_center, dec=dec_center, unit=('hourangle', 'deg'))
-    # ra_deg, dec_deg = coord_center.ra.degree, coord_center.dec.degree
+    ra_center  = '16:57:19.6428' # from 2d gaussian fitting
+    dec_center = '-16:09:24.013'
+    # Convert WCS to pixel coordinates
+    coord_center = SkyCoord(ra=ra_center, dec=dec_center, unit=('hourangle', 'deg'))
+    ra_deg, dec_deg = coord_center.ra.degree, coord_center.dec.degree
     DI_alma = DiskImage(
         fname = fname,
         ra_deg = ra_deg,
@@ -296,4 +296,4 @@ ax[2].add_patch(beam)
 
 # plt.tight_layout()
 # plt.show()
-plt.savefig('residual.pdf', transparent=True)
+plt.savefig('residual_10.pdf', transparent=True)
