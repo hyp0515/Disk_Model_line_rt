@@ -29,7 +29,6 @@ hdul.close()
 rms_noise = 21e-6
 distance_pc = 140  # Distance in parsecs
 
-
 beam_major = header['BMAJ']
 beam_minor = header['BMIN']
 beam_pa = header['BPA']

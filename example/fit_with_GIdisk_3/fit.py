@@ -4,7 +4,6 @@ import matplotlib as mpl
 from matplotlib.colors import ListedColormap
 top = mpl.colormaps['Reds_r'].resampled(128)
 bottom = mpl.colormaps['Blues'].resampled(128)
-
 newcolors = np.vstack((top(np.linspace(0, 1, 128)),
                        bottom(np.linspace(0, 1, 128))))
 residual_cmp = ListedColormap(newcolors, name='RedsBlue')
@@ -140,7 +139,7 @@ sigma_list = [
 
 
 opacity_table = generate_opacity_table_opt(
-    a_min=1e-6, a_max=.03, # min/max grain size
+    a_min=1e-6, a_max=.015, # min/max grain size
     q=-3.5, # slope for dust size distribution, dn/da ~ a^q
     dust_to_gas=0.01 # dust-to-gas ratio before sublimation
 )
@@ -247,53 +246,3 @@ print('M_dot [M_sun/yr] =', D.disk_model.Mdot/Msun*yr)
 # ax[0].set_title('eDisk (1.3 mm)')
 # for row in range(len(images)):
 #     ax[row,].set_yticks([])
-
-
-fig, ax = plt.subplots(1,3, sharex=True, sharey=False, figsize=(15,5))
-fig.subplots_adjust(left=0.05, right=0.97, top=0.9, bottom=0.1, wspace=0.0, hspace=0.0)
-
-cb68 = ax[0].imshow(DI_alma.img*1e3, cmap='jet', origin='lower', vmin=-0.1, vmax=4)
-colorbar = fig.colorbar(cb68, ax=ax[0], pad=0.00, aspect=30, shrink=.98)
-colorbar.set_label('Intensity (mJy/beam)')
-ax[0].set_xlabel('AU', fontsize=14)
-ax[0].set_yticks([0, DI_alma.img.shape[0]//2, DI_alma.img.shape[0]-1])
-ax[0].set_yticklabels([-np.round(DI_alma.img_size_au), 0, np.round(DI_alma.img_size_au)])
-ax[0].set_ylabel('AU', fontsize=14)
-ax[0].set_title('eDisk (1.3 mm)', fontsize=14)
-
-beam = Ellipse((130, 10), width=DI_alma.beam_min_au/DI_alma.au_per_pix, height=DI_alma.beam_maj_au/DI_alma.au_per_pix,
-            angle=DI_alma.beam_pa, edgecolor='w', facecolor='w', lw=1.5, fill=True)
-ax[0].add_patch(beam)
-
-
-# ax[0].contour(DI_alma.img, levels=[50*40e-6]ors='black', linewidths=0.65)
-
-model = ax[1].imshow(DI_alma.img_model*1e3, cmap='jet', origin='lower', vmin=-0.1, vmax=4)
-colorbar = fig.colorbar(model, ax=ax[1], pad=0.00, aspect=30, shrink=.98)
-colorbar.set_label('Intensity (mJy/beam)')
-beam = Ellipse((120, 10), width=DI_alma.beam_min_au/DI_alma.au_per_pix, height=DI_alma.beam_maj_au/DI_alma.au_per_pix,
-            angle=DI_alma.beam_pa, edgecolor='w', facecolor='w', lw=1.5, fill=True)
-ax[1].set_xlabel('AU', fontsize=14)
-ax[1].set_yticks([])
-ax[1].set_title('GIdisk model (fitted by built-in)', fontsize=14)
-
-beam = Ellipse((130, 10), width=DI_alma.beam_min_au/DI_alma.au_per_pix, height=DI_alma.beam_maj_au/DI_alma.au_per_pix,
-            angle=DI_alma.beam_pa, edgecolor='w', facecolor='w', lw=1.5, fill=True)
-ax[1].add_patch(beam)
-
-residual = ax[2].imshow((DI_alma.img-DI_alma.img_model)*1e3, cmap=residual_cmp, origin='lower', vmin=-2, vmax=2)
-colorbar = fig.colorbar(residual, ax=ax[2], pad=0.00, aspect=30, shrink=.98)
-colorbar.set_label('Intensity (mJy/beam)')
-ax[2].set_xticks([0, DI_alma.img.shape[0]//2, DI_alma.img.shape[0]-1])
-ax[2].set_xticklabels([-np.round(DI_alma.img_size_au), 0, np.round(DI_alma.img_size_au)])
-ax[2].set_xlabel('AU', fontsize=14)
-ax[2].set_yticks([])
-ax[2].set_title('Residual', fontsize=14)
-
-beam = Ellipse((130, 10), width=DI_alma.beam_min_au/DI_alma.au_per_pix, height=DI_alma.beam_maj_au/DI_alma.au_per_pix,
-            angle=DI_alma.beam_pa, edgecolor='k', facecolor='k', lw=1.5, fill=True)
-ax[2].add_patch(beam)
-
-# plt.tight_layout()
-# plt.show()
-plt.savefig('residual_300.pdf', transparent=True)

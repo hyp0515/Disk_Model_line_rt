@@ -71,21 +71,21 @@ def GIdisk(theta):
     
     amax, mstar, mdot = theta
     
-    # opacity_table = generate_opacity_table_x22(
-    #     a_min=1e-6, a_max=10**(amax-1), # min/max grain size
-    #     q=-3.5, # slope for dust size distribution, dn/da ~ a^q
-    #     dust_to_gas=0.01 # dust-to-gas ratio before sublimation
-    # )
-    # # print('pass1')
-    # disk_property_table = generate_disk_property_table(opacity_table = opacity_table)
+    opacity_table = generate_opacity_table_x22(
+        a_min=1e-6, a_max=10**(amax-1), # min/max grain size
+        q=-3.5, # slope for dust size distribution, dn/da ~ a^q
+        dust_to_gas=0.01 # dust-to-gas ratio before sublimation
+    )
+    # print('pass1')
+    disk_property_table = generate_disk_property_table(opacity_table = opacity_table)
     
-    model = radmc3d_setup(silent=True)
-    model.get_diskcontrol(  d_to_g_ratio = 0.01,
-                            a_max=10**amax,
-                            generate_table_only=True)
+    # model = radmc3d_setup(silent=True)
+    # model.get_diskcontrol(  d_to_g_ratio = 0.01,
+    #                         a_max=10**amax,
+    #                         generate_table_only=True)
     
     
-    D = DiskFitting('CB68', model.opacity_table, model.disk_property_table)
+    D = DiskFitting('CB68', opacity_table, disk_property_table)
     
     cosI = np.cos(np.deg2rad(73))
     D.set_cosI(cosI=cosI)    
