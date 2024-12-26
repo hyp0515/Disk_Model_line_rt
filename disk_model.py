@@ -4,7 +4,6 @@ import pickle
 import warnings
 import optool
 import os
-from numba import jit, cuda 
 
 """
 =======================================================================

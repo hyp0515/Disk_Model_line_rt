@@ -8,7 +8,7 @@ cleanmodel:
 cleanall:
 	@rm -f	*.o *.mod *.pyc *.dat *.out *.info *.used           \
 	   *wavelength_micron.inp dustopac.inp dust_density.inp     \
-	   dustkappa_*                                              \
+	   dustkappa_*.inp                                          \
 	   gas_velocity.inp lines.inp                               \
 	   numberdens_ch3oh.inp numberdens_co.inp                   \
 	   gas_temperature.inp                                      \
