@@ -9,7 +9,7 @@ newcolors = np.vstack((top(np.linspace(0, 1, 128)),
 residual_cmp = ListedColormap(newcolors, name='RedsBlue')
 import sys
 sys.path.insert(0,'../../')
-from disk_model import *
+from X22_model.disk_model import *
 import time
 import astropy.table
 import os

@@ -13,7 +13,7 @@ import emcee
 import corner
 import sys
 sys.path.insert(0,'../../')
-from disk_model import *
+from X22_model.disk_model import *
 from find_center import find_center
 
 reader = emcee.backends.HDFBackend("progress.h5")

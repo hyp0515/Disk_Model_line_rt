@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 import sys
 sys.path.insert(0,'../../')
-from disk_model import *
+from X22_model.disk_model import *
 
 for a in [1, 0.1, 0.01, 0.001]:
     print("Calcuatle X22 opacity table \n")

@@ -15,8 +15,8 @@ rs  = 6.96e10        # Solar radius            [cm]
 #
 # Disk Model
 #
-from disk_model import *
-from vertical_profile_class import DiskModel_spherical
+from X22_model.disk_model import *
+from radmc.spherical_x22 import DiskModel_spherical
 
 class radmc3d_setup:
     '''
@@ -447,27 +447,6 @@ class radmc3d_setup:
         f.write('temp_4                     Extension of name of dustkappa_***.inp file\n')
         f.write('============================================================================\n')
         
-      # material = ['h2o-w 0.2', 'c-org 0.3966', 'fes 0.0743', 'astrosil 0.3291']
-      # fname = ['temp_1', 'temp_2', 'temp_3', 'temp_4']
-      # for idx in range(len(material)):
-      #   os.system(f'optool -c {' '.join(material[(idx):])} -a 0.01 {self.amax*1e3} 3.5 -l 0.1 10000 101 -mie -radmc '+fname[idx])
-      #   os.system(f'mv dustkappa.inp dustkappa_{fname[idx]}.inp')
-      
-      
-      # fname = ['temp_1', 'temp_2', 'temp_3', 'temp_4']
-      # fraction = [       0.2,         0.3966,       0.0743,            0.3291 ]
-      # nlam      = len(self.opacity_table['lam'])
-      # lam       = self.opacity_table['lam']*1e4     # lam in opacity_table is in cgs while RADMC3D uses micro
-      # for idx, composition in enumerate(fname):
-      #   kappa_abs = self.opacity_table['kappa'] / (self.dust_to_gas_ratio*np.sum(fraction[idx:]))
-      #   kappa_sca = self.opacity_table['kappa_s'] / (self.dust_to_gas_ratio*np.sum(fraction[idx:]))
-      #   g         = self.opacity_table['g']
-      #   with open('dustkappa_'+composition+'.inp', "w+") as f:
-      #     f.write('3\n')
-      #     f.write(str(nlam)+'\n')
-      #     for lam_idx in range(nlam):
-      #       f.write('%13.6e %13.6e %13.6e %13.6e\n'%(lam[lam_idx],kappa_abs[idx,lam_idx],kappa_sca[idx,lam_idx],g[idx,lam_idx]))
-
     def write_dust_density(self):
       '''
       Preparing the control file for dust density.
@@ -510,26 +489,6 @@ class radmc3d_setup:
           data.tofile(f, sep='\n', format="%13.6e")
           f.write('\n')
         f.write('\n')
-    
-    # def write_dust_density(self):
-    #   '''
-    #   Preparing the control file for dust density.
-    #   '''
-    #   nspec     = self.dust_spec
-
-    #   self.rho_dust = self.dust_to_gas_ratio * self.DM.rho_sph
-    #   self.rho_gas = self.DM.rho_sph
-  
-    #   with open('dust_density.inp', "w+") as f:
-    #     f.write(str(1)+'\n')
-    #     f.write('%d\n'%(self.NR*self.NTheta*self.NPhi))
-    #     f.write(str(nspec)+'\n')
-    #     for i in range(nspec):
-    #       data = self.rho_dust.ravel(order='F')
-    #       data.tofile(f, sep='\n', format="%13.6e")
-    #       f.write('\n')
-    #     f.write('\n')
-    
     
     def get_vfieldcontrol(self, Kep = True,
                             vinfall = None,
@@ -575,17 +534,7 @@ class radmc3d_setup:
           for idx_theta in range(self.NTheta):
             for idx_r in range(self.NR):
               f.write('%13.6e %13.6e %13.6e \n'%(vr[idx_r],vtheta,vphi[idx_r]))
-      
-      # f = open(self.filename, 'r+')
-      # content = f.read()
-      # f.seek(0,0)
-      # f.write(f'# Kep = {Kep} \n')
-      # f.write(f'# vinfall = {vinfall} Kep velocity \n')
-      # f.write(f'# Rcb = {Rcb} AU \n')
-      # f.write(content)
-      # f.close()
-    
-    
+            
     def get_heatcontrol(self, L_star = None,
                            accretion = True,
                          irradiation = True,
@@ -695,13 +644,6 @@ class radmc3d_setup:
           data.tofile(f, sep='\n', format="%13.6e")
           f.write('\n')
         
-      # f = open(self.filename, 'r+')
-      # content = f.read()
-      # f.seek(0,0)
-      # f.write(f'# L_star = {L_star} \n')
-      # f.write(f'# heating mechanism = '+mechanism+'\n')
-      # f.write(content)
-      # f.close()
     
     def get_gasdensitycontrol(self, 
                                  abundance   = 1e-10,
@@ -767,18 +709,6 @@ class radmc3d_setup:
         data.tofile(f, sep='\n', format="%13.6e")
         f.write('\n')
         
-      # f = open(self.filename, 'r+')
-      # content = f.read()
-      # f.seek(0,0)
-      # f.write(f'# initial abundance = {abundance} \n')
-      # if snowline is not None:
-      #   f.write(f'# snowline = {snowline}K\n')
-      #   f.write(f'# enhancement = {enhancement}\n')
-      # elif snowline is None:
-      #   f.write(f'# snowline = no snowline\n')
-      # f.write(f'# gas inside rcb = {gas_inside_rcb} \n')
-      # f.write(content)
-      # f.close()
       
     
     def duplicate_file(self, default_filename, filename, comment = None, timemark = None):

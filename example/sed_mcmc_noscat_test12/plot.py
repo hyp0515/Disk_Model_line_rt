@@ -4,7 +4,7 @@ import emcee
 import corner
 import sys
 sys.path.insert(0,'../../')
-from disk_model import *
+from X22_model.disk_model import *
 from radmc.setup import *
 from multiprocessing import Pool
 import time 

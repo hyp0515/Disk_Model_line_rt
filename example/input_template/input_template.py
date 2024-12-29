@@ -126,9 +126,9 @@ simulation = generate_simulation(
     parms=simulation_parms,
     channel       = False,
     pv            = False,
-    conti         = False,
+    conti         = True,
     sed           = False,
-    line_spectrum = True
+    line_spectrum = False
 )
 
 
@@ -214,10 +214,10 @@ plot_parms = general_parameters(
 plot = generate_plot(
     parms     = plot_parms, 
     profile   = False,
-    channel   = False,
+    channel   = True,
     pv        = False,
     continuum = False,
     sed       = False,
-    spectrum  = True,
+    spectrum  = False,
 )
 

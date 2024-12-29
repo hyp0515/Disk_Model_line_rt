@@ -14,7 +14,7 @@ from astropy.coordinates import SkyCoord
 
 import sys
 sys.path.insert(0,'../../')
-from disk_model import *
+from X22_model.disk_model import *
 from radmc.setup import *
 from radmc3dPy import *
 
@@ -22,7 +22,7 @@ sys.path.insert(0,'../')
 from fit_with_GIdisk.find_center import find_center
 
 
-filename = '/run/media/hyp0515/fd14f880-ba6f-450f-b82d-98ba3710dc5f/backup/CB68_eDisk/CB68_SBLB_continuum_robust_0.0.image.tt0.fits'
+filename = '~/project_data/cb68_edisk/CB68_SBLB_continuum_robust_0.0.image.tt0.fits'
 ra_center, dec_center, disk_pa = find_center(filename, x_lim=[2750,3250], y_lim=[2750,3250])
 # ra_center  = '16:57:19.6428' # from 2d gaussian fitting
 # dec_center = '-16:09:24.016'
@@ -57,10 +57,10 @@ model.get_mastercontrol(filename=None,
                         incl_dust=1,
                         incl_lines=1,
                         nphot=500000,
-                        nphot_scat=1000000,
+                        nphot_scat=100000,
                         scattering_mode_max=2,
                         istar_sphere=1,
-                        num_cpu=20,
+                        num_cpu=None,
                         modified_random_walk=1
                         )
 model.get_continuumlambda(filename=None,
@@ -131,7 +131,7 @@ colorbar = fig.colorbar(residual, ax=ax[2], pad=0.005, aspect=50, shrink=0.85)
 colorbar.set_label('Intensity (Jy/beam)')
 
 plt.savefig('residual.pdf', transparent=True)
-
+os.system('make cleanall')
 # print(np.unravel_index(np.argmax(convolved_image.T), convolved_image.shape))
 # print(np.unravel_index(np.argmax(cb68_conti), cb68_conti.shape))
 
