@@ -25,7 +25,7 @@ from fit_with_GIdisk.find_center import find_center
 
 
 # filename = '~/project_data/cb68_edisk/CB68_SBLB_continuum_robust_0.0.image.tt0.fits'
-filename = data_dict["3.2_faust"]["fname"]
+filename = data_dict["1.3_edisk"]["fname"]
 ra_center, dec_center, disk_pa = find_center(filename)
 # , x_lim=[2750,3250], y_lim=[2750,3250]
 # ra_center  = '16:57:19.6428' # from 2d gaussian fitting
@@ -39,7 +39,7 @@ cb68_image = DiskImage(
     ra_deg = ra_center,
     dec_deg = dec_center,
     distance_pc = 140,
-    rms_Jy = data_dict["3.2_faust"]["sigma"], # convert to Jy/beam
+    rms_Jy = data_dict["1.3_edisk"]["sigma"], # convert to Jy/beam
     disk_pa = disk_pa,
     img_size_au = 120,
     remove_background=True
@@ -72,7 +72,7 @@ model.get_continuumlambda(filename=None,
                           lambda_micron=None,
                           append=False)
 model.get_diskcontrol(  d_to_g_ratio=0.01,
-                        a_max=.01, 
+                        a_max=.1, 
                         Mass_of_star=0.14, 
                         Accretion_rate=4e-7,
                         Radius_of_disk=30,
@@ -80,7 +80,7 @@ model.get_diskcontrol(  d_to_g_ratio=0.01,
                         NTheta=200,
                         NPhi=10)
 model.get_heatcontrol(heat='accretion')
-os.system(f'radmc3d image npix {cb68_conti.shape[0]} sizeau {size_au} incl 73 lambda 3200 noline')
+os.system(f'radmc3d image npix {cb68_conti.shape[0]} sizeau {size_au} incl 73 lambda 1300 noline')
 
 im = image.readImage()
 model_image = im.imageJyppix[:,:,0] /(140**2)

@@ -18,15 +18,15 @@ from X22_model.disk_model import *
 from radmc.setup import *
 from CB68.data_dict import data_dict
 
-n_processes = 6
-nwalkers = 6  # Total number of walkers
+n_processes = 20
+nwalkers = 10  # Total number of walkers
 ndim = 3        # Dimension of parameter space
 niter = 100000     # Number of iterations
 
 fit_data    = [data_dict["1.3_edisk"], data_dict["3.2_faust"]]
 lam_list    = [fit_data[0]["wav"], fit_data[1]["wav"]]
 sigma_list  = [fit_data[0]["sigma"], fit_data[1]["sigma"]]
-desire_size = [60, 120]
+desire_size = [60, 150]
 
 observation_data = []
 beam_pa = []
@@ -75,10 +75,10 @@ def conti_model(theta):
                             incl_dust=1,
                             incl_lines=1,
                             nphot=500000,
-                            nphot_scat=500000,
+                            nphot_scat=100000,
                             scattering_mode_max=2,
                             istar_sphere=1,
-                            num_cpu=1)
+                            num_cpu=2)
     model.get_linecontrol(filename=None,
                         methanol='ch3oh leiden 0 0 0')
     model.get_continuumlambda(filename=None,
@@ -102,7 +102,7 @@ def conti_model(theta):
     model_image_list = []
 
     for i, wav in enumerate(lam_list):
-        os.system(f'radmc3d image npix {npix[i]} sizeau {size_au[i]} incl 73 {wav*1000} noline noscat')
+        os.system(f'radmc3d image npix {npix[i]} sizeau {size_au[i]} incl 73 lambda {wav*1000} noline')
         im = image.readImage()
         model_image = im.imageJyppix[:,:,0].T / (140**2)
         I = ndimage.rotate(model_image, -disk_posang[i]+beam_pa[i], reshape=False)
