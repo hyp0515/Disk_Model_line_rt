@@ -26,7 +26,7 @@ niter = 100000     # Number of iterations
 fit_data    = [data_dict["1.3_edisk"], data_dict["3.2_faust"]]
 lam_list    = [fit_data[0]["wav"], fit_data[1]["wav"]]
 sigma_list  = [fit_data[0]["sigma"], fit_data[1]["sigma"]]
-desire_size = [60, 150]
+desire_size = [50, 180]
 
 observation_data = []
 beam_pa = []
