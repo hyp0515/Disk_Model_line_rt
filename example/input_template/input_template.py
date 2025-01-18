@@ -47,7 +47,6 @@ model.get_continuumlambda(filename=None,
                           lambda_micron=None,
                           append=False)
 
-
 model.get_diskcontrol(  d_to_g_ratio = 0.01,
                         a_max=0.1, 
                         Mass_of_star=0.14, 
@@ -74,41 +73,43 @@ condition_parms = general_parameters(
     extract_gas = True,
 )
 
+
+simulate_mutual_parms = {
+    "incl"      : 70,
+    "line"      : 240,
+    "npix"      : 500,
+    "sizeau"    : 200,
+    "v_width"   : 10,
+    "vkms"      : 0,
+    "v_width"   : 10,
+    "dir"       : './test/',
+    "fname"     : 'test',
+}
+
 channel_cube_parms = general_parameters(
-    incl=70, line=240,
-    v_width=10, nlam=11, vkms=0,
-    npix=500, sizeau=200,
-    dir='./test/', fname=f'test',
-    read_cube=True
+    **simulate_mutual_parms,
+    nlam=11,
 )
 
 pv_cube_parms = general_parameters(
-    incl=70, line=240,
-    v_width=10, nlam=50, vkms=0,
-    npix=500, sizeau=200,
-    dir=f'./test/', fname=f'test',
-    read_cube=True
+    **simulate_mutual_parms,
+    nlam=50,
 )
 
 sed_parms = general_parameters(
-    incl = 70, scat=True,
+    **simulate_mutual_parms, 
+    scat=True,
     freq_min=5e1, freq_max=5e2, nlam=10,
-    dir=f'./test/', fname=f'test',
-    read_sed=True
 )
 
 spectrum_parms = general_parameters(
-    incl=70, line=240,
-    v_width=10, nlam=10, vkms=0,
-    dir=f'./test/', fname=f'test',
-    read_spectrum=True
+    **simulate_mutual_parms,
+    nlam=10
 )
 conti_parms = general_parameters(
-    incl=70, wav=1300,
-    npix=500, sizeau=200,
+    **simulate_mutual_parms,
+    wav=1300,
     scat=True,
-    dir=f'./test/', fname=f'test',
-    read_conti=True
 )
 
 simulation_parms = general_parameters(
@@ -133,6 +134,11 @@ simulation = generate_simulation(
 
 
 ##############################################
+plot_mutual_parms = {
+   
+}
+
+
 plot_profile_parms = general_parameters(
     dir=f'./test/', fname='profile'
 )
