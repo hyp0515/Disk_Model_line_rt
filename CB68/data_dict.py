@@ -15,7 +15,7 @@ data_dict = {
 
     "3.2_faust": {
         "fname" : '/Users/hyp0515/project_data/cb68_faust/cb68_setup3_all.rob2.I.image.tt0.pbcor.smooth.dropdeg.fits',
-        "wav"   : 3.2,
+        "wav"   : 3.155,
         "sigma" : 26e-6,
         "freq"  : 95.0
     },
