@@ -23,10 +23,10 @@ from fit_with_GIdisk.find_center import find_center
 
 reader = emcee.backends.HDFBackend("progress.h5")
 
-
-fig, axes = plt.subplots(3, figsize=(10, 10), sharex=True)
+label = [r'log($a_{max}$)',r'$M_{*}$', r'log($\dot{M}$)', r"$Q$"]
+fig, axes = plt.subplots(len(label), figsize=(10, 10), sharex=True)
 samples = reader.get_chain()
-label = [r'log($a_{max}$)',r'$M_{*}$', r'log($\dot{M}$)']
+
 for i in range(len(label)):
     ax = axes[i]
     ax.plot(samples[:, :, i], "k", alpha=0.3)
@@ -65,11 +65,12 @@ plt.close()
 samples = reader.get_chain(discard=0, flat=True)
 theta_max = samples[np.argmax(reader.get_log_prob(flat=True, discard=0))]
 print(theta_max)
-a, mstar, mdot = theta_max[0], theta_max[1], theta_max[2]
+a, mstar, mdot, Q = theta_max[0], theta_max[1], theta_max[2], theta_max[3]
 
-fit_data    = [data_dict["1.3_edisk"], data_dict["3.2_faust"]]
-lam_list    = [fit_data[0]["wav"], fit_data[1]["wav"]]
-desire_size = [50, 180]
+fit_data    = [data_dict["1.3_edisk"], data_dict["1.2_faust"], data_dict["3.2_faust"]]
+lam_list    = [fit_data[0]["wav"], fit_data[1]["wav"], fit_data[2]["wav"]]
+sigma_list  = [fit_data[0]["sigma"], fit_data[1]["sigma"], fit_data[2]["sigma"]]
+desire_size = [50, 250, 250]
 
 observation_data = []
 beam_pa = []
@@ -124,6 +125,7 @@ model.get_diskcontrol(  d_to_g_ratio = 0.01,
                         Mass_of_star=mstar, 
                         Accretion_rate=10**mdot,
                         Radius_of_disk=30,
+                        Q=Q,
                         NR=200,
                         NTheta=200,
                         NPhi=10)
@@ -134,8 +136,8 @@ model_image_list = []
 for i, wav in enumerate(lam_list):
     os.system(f'radmc3d image npix {npix[i]} sizeau {size_au[i]} incl 73 lambda {wav*1000} noline noscat')
     im = image.readImage()
-    model_image = im.imageJyppix[:,:,0] / (140**2)
-    I = ndimage.rotate(model_image, -disk_posang[i]+beam_pa[i], reshape=False)
+    model_image = im.imageJyppix[:,:,0].T / (140**2)
+    I = ndimage.rotate(model_image, +disk_posang[i]+beam_pa[i], reshape=False)
     sigmas = np.array([beam_axis[i][0], beam_axis[i][1]])/au_per_pix[i]/(2*np.sqrt(2*np.log(2)))
     I = ndimage.gaussian_filter(I, sigma=sigmas)
     # rotate to align with image
@@ -145,15 +147,21 @@ for i, wav in enumerate(lam_list):
     model_image_list.append(model_image)
 
 
-fig, ax = plt.subplots(2,3, sharex=False, sharey=False, figsize=(15,10))
+fig, ax = plt.subplots(3,3, sharex=False, sharey=False, figsize=(15,15))
 fig.subplots_adjust(left=0.05, right=0.97, top=0.9, bottom=0.1, wspace=0.0, hspace=0.0)
-
+v_max_list = [4, 55, 7]
 for i, data in enumerate(fit_data):
 
-    cb68 = ax[i, 0].imshow(observation_data[i]*1e3, cmap='jet', origin='lower', vmin=0)
+    mask = observation_data[i] < 10*sigma_list[i]
+    observation_data[i][mask] = 0
+    model_image_list[i][mask] = 0
+
+    cb68 = ax[i, 0].imshow(observation_data[i]*1e3, cmap='jet', origin='lower', vmin=0, vmax=v_max_list[i])
     colorbar = fig.colorbar(cb68, ax=ax[i, 0], pad=0.00, aspect=30, shrink=.98)
     colorbar.set_label('Intensity (mJy/beam)')
     ax[i, 0].set_xlabel('AU', fontsize=14)
+    ax[i, 0].set_xticks([0, observation_data[i].shape[0]//2, observation_data[i].shape[0]-1])
+    ax[i, 0].set_xticklabels([-np.round(size_au[i]), 0, np.round(size_au[i])])
     ax[i, 0].set_yticks([0, observation_data[i].shape[0]//2, observation_data[i].shape[0]])
     ax[i, 0].set_yticklabels([-np.round(size_au[i]), 0, np.round(size_au[i])])
     ax[i, 0].set_ylabel('AU', fontsize=14)
@@ -166,11 +174,13 @@ for i, data in enumerate(fit_data):
 
     # ax[0].contour(DI_alma.img, levels=[50*40e-6]ors='black', linewidths=0.65)
 
-    model = ax[i, 1].imshow(model_image_list[i]*1e3, cmap='jet', origin='lower', vmin=0)
+    model = ax[i, 1].imshow(model_image_list[i]*1e3, cmap='jet', origin='lower', vmin=0, vmax=v_max_list[i])
     colorbar = fig.colorbar(model, ax=ax[i, 1], pad=0.00, aspect=30, shrink=.98)
     colorbar.set_label('Intensity (mJy/beam)')
     # beam = Ellipse((120, 10), width=DI_alma.beam_min_au/DI_alma.au_per_pix, height=DI_alma.beam_maj_au/DI_alma.au_per_pix,
     #             angle=DI_alma.beam_pa, edgecolor='w', facecolor='w', lw=1.5, fill=True)
+    ax[i, 1].set_xticks([0, observation_data[i].shape[0]//2, observation_data[i].shape[0]-1])
+    ax[i, 1].set_xticklabels([-np.round(size_au[i]), 0, np.round(size_au[i])])
     ax[i, 1].set_xlabel('AU', fontsize=14)
     ax[i, 1].set_yticks([])
     ax[i, 1].set_title('Best-fit GIdisk model', fontsize=14)
@@ -179,7 +189,8 @@ for i, data in enumerate(fit_data):
     #             angle=DI_alma.beam_pa, edgecolor='w', facecolor='w', lw=1.5, fill=True)
     # ax[i, 1].add_patch(beam)
 
-    residual = ax[i, 2].imshow((observation_data[i]-model_image_list[i])*1e3, cmap=residual_cmp, origin='lower')
+    residual = ax[i, 2].imshow((observation_data[i]-model_image_list[i])*1e3, cmap=residual_cmp, origin='lower',
+                               vmin=-(v_max_list[i]//2), vmax=(v_max_list[i]//2))
     colorbar = fig.colorbar(residual, ax=ax[i, 2], pad=0.00, aspect=30, shrink=.98)
     colorbar.set_label('Intensity (mJy/beam)')
     ax[i, 2].set_xticks([0, observation_data[i].shape[0]//2, observation_data[i].shape[0]-1])
