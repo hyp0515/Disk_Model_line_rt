@@ -21,7 +21,7 @@ from astropy import units as u
 
 from astropy.coordinates import SkyCoord
 n_processes = 20
-nwalkers = 15  # Total number of walkers
+nwalkers = 8  # Total number of walkers
 ndim = 4        # Dimension of parameter space
 niter = 100000     # Number of iterations
 
@@ -43,6 +43,10 @@ npix = []
 for i, data in enumerate(fit_data):
     ra_deg, dec_deg, disk_pa = find_center(data["fname"])
     # print(ra_deg, dec_deg)
+    # if i == 0:
+    #     c = SkyCoord('16h57m19.6435s', '-16d09m24.0265s', frame='icrs')
+    #     ra_deg = c.ra.deg
+    #     dec_deg = c.dec.deg
     # c = SkyCoord('16h57m19.6428s', '-16d09m24.016s', frame='icrs')
     # ra_deg = c.ra.deg
     # dec_deg = c.dec.deg
@@ -67,8 +71,8 @@ for i, data in enumerate(fit_data):
     au_per_pix.append(image_class.au_per_pix)
     npix.append(image_class.img.shape[0])
 # disk_posang[0] = 90
-# disk_posang[1] = disk_posang[0]
-# disk_posang[2] = disk_posang[0]
+# disk_posang[1] = 0
+# disk_posang[2] = 0
 
 
 # amax, Mstar, Mdot, Rd, Q = -1, 0.14, np.log10(5e-7), 30, 1.5
@@ -149,7 +153,7 @@ def conti_model(theta):
                             incl_dust=1,
                             incl_lines=1,
                             nphot=500000,
-                            nphot_scat=100000,
+                            nphot_scat=200000,
                             scattering_mode_max=2,
                             istar_sphere=1,
                             num_cpu=2)
@@ -202,8 +206,8 @@ def log_likelihood(theta, observation, err):
         model_image[i][mask] = 0
         ll = -0.5 * np.sum((observation[i] - model_image[i]) ** 2 / err[i]**2)
         log_likelihood.append(ll)
-
-    return np.mean(log_likelihood)
+    
+    return np.average(log_likelihood, weights=[0.6, 0.2, 0.2])
 
 def log_prior(theta):
     amax, Mstar, Mdot, Q = theta
@@ -217,7 +221,7 @@ def log_probability(theta, observation, err):
         return -np.inf
     return lp + log_likelihood(theta, observation, err)
 
-pos = [np.array([0, 0.14, np.log10(5e-7), 1.5]) + [1e-1, 1e-3, 1e-2, 1e-1] * np.random.randn(ndim) for i in range(nwalkers)]
+pos = [np.array([-1, 0.14, np.log10(5e-7), 1.5]) + [1e-1, 1e-3, 1e-2, 1e-1] * np.random.randn(ndim) for i in range(nwalkers)]
 
 # File for saving progress
 progress_file = "progress.h5"

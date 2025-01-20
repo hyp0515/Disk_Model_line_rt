@@ -19,7 +19,7 @@ from CB68.data_dict import data_dict
 from radmc.setup import *
 sys.path.insert(0,'../')
 from fit_with_GIdisk.find_center import find_center
-
+from astropy.coordinates import SkyCoord
 
 reader = emcee.backends.HDFBackend("progress.h5")
 
@@ -83,6 +83,10 @@ npix = []
 
 for i, data in enumerate(fit_data):
     ra_deg, dec_deg, disk_pa = find_center(data["fname"])
+    # if i == 0:
+    #     c = SkyCoord('16h57m19.6435s', '-16d09m24.0265s', frame='icrs')
+    #     ra_deg = c.ra.deg
+    #     dec_deg = c.dec.deg
     image_class = DiskImage(
         fname = data["fname"],
         ra_deg = ra_deg,
@@ -110,7 +114,7 @@ model.get_mastercontrol(filename=None,
                         incl_dust=1,
                         incl_lines=1,
                         nphot=500000,
-                        nphot_scat=500000,
+                        nphot_scat=200000,
                         scattering_mode_max=2,
                         istar_sphere=1,
                         num_cpu=2)
@@ -134,7 +138,7 @@ model.get_heatcontrol(heat='accretion')
 model_image_list = []
 
 for i, wav in enumerate(lam_list):
-    os.system(f'radmc3d image npix {npix[i]} sizeau {size_au[i]} incl 73 lambda {wav*1000} noline noscat')
+    os.system(f'radmc3d image npix {npix[i]} sizeau {size_au[i]} incl 73 lambda {wav*1000} noline')
     im = image.readImage()
     model_image = im.imageJyppix[:,:,0].T / (140**2)
     I = ndimage.rotate(model_image, +disk_posang[i]+beam_pa[i], reshape=False)
