@@ -3,13 +3,16 @@ data_dict = {
         "fname" : '~/project_data/cb68_faust/cb68_setup1_all.rob2.I.image.tt0.pbcor.smooth.dropdeg.fits',
         "wav"   : 1.3,
         "sigma" : 30e-6,
-        "freq"  : 233.8
+        "freq"  : 233.8,
+        "bmaj"  : 0.68,
+        "bmin"  : 0.58,
+        "bpa"   : -90
     },
 
     "1.2_faust": {
         "fname" : '~/project_data/cb68_faust/cb68_setup2_all.rob2.I.image.tt0.pbcor.smooth.dropdeg.fits',
         "wav"   : 1.2,
-        "sigma" : 40e-6,
+        "sigma" : 60e-6,
         "freq"  : 246.7
     },
 
@@ -17,13 +20,23 @@ data_dict = {
         "fname" : '~/project_data/cb68_faust/cb68_setup3_all.rob2.I.image.tt0.pbcor.smooth.dropdeg.fits',
         "wav"   : 3.155,
         "sigma" : 26e-6,
-        "freq"  : 95.0
+        "freq"  : 95.0,
+        "bmaj"  : 0.68,
+        "bmin"  : 0.58,
+        "bpa"   : -90
     },
 
     "1.3_edisk": {
         "fname" : '~/project_data/cb68_edisk/CB68_SBLB_continuum_robust_0.0.image.tt0.fits',
         "wav"   : 1.3,
         "sigma" : 21e-6,
-        "freq"  : 233.8
+        "freq"  : 233.8,
+        "bmaj"  : 0.0363,
+        "bmin"  : 0.274,
+        "bpa"   : 69.4
+    },
+
+    "ch3oh_218_faust": {
+        "fname" : '~/project_data/cb68_faust_line/CB68_218.440GHz_CH3OH_joint_0.5_clean.image.pbcor.common.fits',
     }
 }

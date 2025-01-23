@@ -55,7 +55,6 @@ class generate_simulation:
             except:
                 print('Wrong parameters to generate dust continuum')
 
-    
     def generate_cube(self, parms, cube_parms, **kwargs):
                     
         """
@@ -87,8 +86,9 @@ class generate_simulation:
         v_width     = getattr(cube_parms,     'v_width',    10)
         nlam        = getattr(cube_parms,        'nlam',    10)
         vkms        = getattr(cube_parms,        'vkms',     0)
-        
-        prompt = f'npix {npix} sizeau {sizeau} incl {incl} iline {line} vkms {vkms} widthkms {v_width} linenlam {nlam}'
+        posang      = getattr(cube_parms,      'posang',    45)
+
+        prompt = f'npix {npix} sizeau {sizeau} incl {incl} posang {-posang} iline {line} vkms {vkms} widthkms {v_width} linenlam {nlam}'
         
         if nlam > 15:
             type_note = 'pv'
@@ -113,15 +113,14 @@ class generate_simulation:
                     
             os.system(f"radmc3d image "+prompt)
             
-            if (cube_parms.read_cube is True) or (kwargs['read_cube'] is True):
-                self.cube = readImage('image.out')
-                if self.save_npz is True:
-                    if 'fname' in kwargs.keys():
-                        self.save_npzfile(self.cube, cube_parms, fname=kwargs['fname'], f=f, note=type_note)
-                    else:
-                        self.save_npzfile(self.cube, cube_parms, f=f, note=type_note)
-            else:
-                pass
+
+            self.cube = readImage('image.out')
+            if self.save_npz is True:
+                if 'fname' in kwargs.keys():
+                    self.save_npzfile(self.cube, cube_parms, fname=kwargs['fname'], f=f, note=type_note)
+                else:
+                    self.save_npzfile(self.cube, cube_parms, f=f, note=type_note)
+
             
             if self.save_out is True:
                 if 'fname' in kwargs.keys():
@@ -133,60 +132,58 @@ class generate_simulation:
                     
         elif extract_gas is True:
             os.system(f"radmc3d image "+prompt)
-            if cube_parms.read_cube is True:
-                self.cube = readImage('image.out')
-                if self.save_npz is True:
-                    if 'fname' in kwargs.keys():
-                        self.save_npzfile(self.cube, cube_parms, fname=kwargs['fname'], f='_scat', note=type_note)
-                    else:
-                        self.save_npzfile(self.cube, cube_parms, f='_scat', note=type_note)
+
+            self.cube = readImage('image.out')
+            if self.save_npz is True:
+                if 'fname' in kwargs.keys():
+                    self.save_npzfile(self.cube, cube_parms, fname=kwargs['fname'], f='_scat', note=type_note)
                 else:
-                    pass
-                
-                if self.save_out is True:
-                    if 'fname' in kwargs.keys():
-                        self.save_outfile(cube_parms, fname=kwargs['fname'], f='_scat', note=type_note)
-                    else:
-                        self.save_outfile(cube_parms, f='_scat', note=type_note)
-                else:
-                    pass
+                    self.save_npzfile(self.cube, cube_parms, f='_scat', note=type_note)
             else:
                 pass
             
-            os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} lambdarange {self.cube.wav[0]} {self.cube.wav[-1]} nlam {nlam} noline")
+            if self.save_out is True:
+                if 'fname' in kwargs.keys():
+                    self.save_outfile(cube_parms, fname=kwargs['fname'], f='_scat', note=type_note)
+                else:
+                    self.save_outfile(cube_parms, f='_scat', note=type_note)
+            else:
+                pass
+
+            if self.cube.nwav%2 == 0:
+                mid_wav = 0.5 * (self.cube.wav[self.cube.nwav//2] + self.cube.wav[(self.cube.nwav//2)+1])
+            else:
+                mid_wav = self.cube.wav[(self.cube.nwav//2)+1]\
             
-            if cube_parms.read_cube is True:
-                self.conti = readImage('image.out')
-                if self.save_npz is True:
-                    if 'fname' in kwargs.keys():
-                        self.save_npzfile(self.conti, cube_parms, fname=kwargs['fname'], f='_conti', note=type_note)
-                    else:
-                        self.save_npzfile(self.conti, cube_parms, f='_conti', note=type_note)
+            os.system(f"radmc3d image npix {npix} sizeau {sizeau} incl {incl} posang {-posang} lambda {mid_wav} noline")
+
+            self.conti = readImage('image.out')
+            if self.save_npz is True:
+                if 'fname' in kwargs.keys():
+                    self.save_npzfile(self.conti, cube_parms, fname=kwargs['fname'], f='_conti', note=type_note)
                 else:
-                    pass
-                
-                if self.save_out is True:
-                    if 'fname' in kwargs.keys():
-                        self.save_outfile(cube_parms, fname=kwargs['fname'], f='_conti', note=type_note)
-                    else:
-                        self.save_outfile(cube_parms, f='_conti', note=type_note)
-                else:
-                    pass
+                    self.save_npzfile(self.conti, cube_parms, f='_conti', note=type_note)
             else:
                 pass
             
-            if cube_parms.read_cube is True:
-                
-                self.cube_list = [self.cube, self.conti]
-                if self.save_npz is True:
-                    if 'fname' in kwargs.keys():
-                        self.save_npzfile(self.cube_list, cube_parms, fname=kwargs['fname'], f='_extracted', note=type_note)
-                    else:
-                        self.save_npzfile(self.cube_list, cube_parms, f='_extracted', note=type_note)
+            if self.save_out is True:
+                if 'fname' in kwargs.keys():
+                    self.save_outfile(cube_parms, fname=kwargs['fname'], f='_conti', note=type_note)
                 else:
-                    pass
+                    self.save_outfile(cube_parms, f='_conti', note=type_note)
             else:
                 pass
+
+
+            self.cube_list = [self.cube, self.conti]
+            if self.save_npz is True:
+                if 'fname' in kwargs.keys():
+                    self.save_npzfile(self.cube_list, cube_parms, fname=kwargs['fname'], f='_extracted', note=type_note)
+                else:
+                    self.save_npzfile(self.cube_list, cube_parms, f='_extracted', note=type_note)
+            else:
+                pass
+            
         else:
             pass
             
@@ -198,8 +195,9 @@ class generate_simulation:
         wav    = getattr(conti_parms,    'wav', 1300)
         npix   = getattr(conti_parms,   'npix',  200)
         sizeau = getattr(conti_parms, 'sizeau',  100)
-        
-        prompt = f'radmc3d image npix {npix} sizeau {sizeau} incl {incl} lambda {wav} noline'
+        posang = getattr(conti_parms, 'posang',  45)
+
+        prompt = f'radmc3d image npix {npix} sizeau {sizeau} incl {incl} lambda {wav} posang {-posang} noline'
         
         f = '_scat'
         
@@ -209,15 +207,12 @@ class generate_simulation:
         os.system(prompt)
         
         
-        if (conti_parms.read_conti is True) or (kwargs['read_conti'] is True):
-            self.conti = readImage('image.out')
-            if self.save_npz is True:
-                if 'fname' in kwargs.keys():
-                    self.save_npzfile(self.conti, conti_parms, fname=kwargs['fname'], f=f, note=type_note)
-                else:
-                    self.save_npzfile(self.conti, conti_parms, f=f, note=type_note)
-        else:
-            pass
+        self.conti = readImage('image.out')
+        if self.save_npz is True:
+            if 'fname' in kwargs.keys():
+                self.save_npzfile(self.conti, conti_parms, fname=kwargs['fname'], f=f, note=type_note)
+            else:
+                self.save_npzfile(self.conti, conti_parms, f=f, note=type_note)
         
         if self.save_out is True:
             if 'fname' in kwargs.keys():
@@ -392,9 +387,6 @@ class generate_simulation:
         else:
             pass
 
-    
-    
-    
     def save_outfile(self, parms, **kwargs):
         """
         This will save whole information of simulation.
@@ -456,14 +448,20 @@ class generate_simulation:
                     fnu = data[:, 1])
         else:
             if isinstance(data, list):
+                line_cube = data[0]
+                dust_conti_value = data[1].imageJyppix
+                dust_conti_value = np.tile(dust_conti_value[:, :, np.newaxis], (1, 1, line_cube.nwav))
+
                 np.savez(dir+'npzfile/'+head+fname+f+'.npz',
-                        imageJyppix = data[0].imageJyppix - data[1].imageJyppix,
-                        x           = data[0].x,
-                        nx          = data[0].nx,
-                        y           = data[0].y,
-                        ny          = data[0].ny,
-                        wav         = data[0].wav,
-                        freq        = data[0].freq)
+                        imageJyppix = line_cube.imageJyppix - dust_conti_value,
+                        x           = line_cube.x,
+                        nx          = line_cube.nx,
+                        y           = line_cube.y,
+                        ny          = line_cube.ny,
+                        wav         = line_cube.wav,
+                        freq        = line_cube.freq,
+                        nwav        = len(line_cube.wav),
+                        nfreq       = len(line_cube.freq),)
             else:
                 np.savez(dir+'npzfile/'+head+fname+f+'.npz',
                         imageJyppix = data.imageJyppix,
@@ -472,5 +470,7 @@ class generate_simulation:
                         y           = data.y,
                         ny          = data.ny,
                         wav         = data.wav,
-                        freq        = data.freq)
+                        freq        = data.freq,
+                        nwav        = len(data.wav),
+                        nfreq       = len(data.freq),)
         

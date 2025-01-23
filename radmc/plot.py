@@ -114,8 +114,6 @@ class generate_plot():
         
         self.save_plot(fig=fig, parms=parms)
 
-
-    
     def plot_channel_map(self, parms):
         
         if os.path.isdir(parms.cube_dir):
@@ -150,7 +148,8 @@ class generate_plot():
                         else:
                             print("No correct cube file is given")
                             break
-                    image = cube.imageJyppix - cube_conti.imageJyppix
+                    
+                    image = cube.imageJyppix - np.tile(cube_conti.imageJyppix[:, :, np.newaxis], (1, 1, cube.nwav))
                 else:
                     print('No correct cube file is given')
                     pass
@@ -291,8 +290,7 @@ class generate_plot():
                 fig, cbar = channel(image=convolved_image, convolved=True)
             cbar.set_label('Intensity (mJy/beam)')
             self.save_plot(fig=fig, parms=parms, f='_convolved')
-            
-            
+                
     def plot_pv(self, parms):
         
         if os.path.isdir(parms.cube_dir):
@@ -401,7 +399,6 @@ class generate_plot():
             ax_plot.set_title(title+' (convolved)', fontsize = 16)
             self.save_plot(fig=pv_plot, parms=parms, f='_convolved')
 
-    
     def plot_continuum(self, parms):
         
         if os.path.isdir(parms.conti_dir):
@@ -578,7 +575,6 @@ class generate_plot():
         ax.set_title(title)
         self.save_plot(fig=fig, parms=parms)
         
-    
     def plot_sed(self, parms):
         
         if os.path.isdir(parms.sed_dir):
