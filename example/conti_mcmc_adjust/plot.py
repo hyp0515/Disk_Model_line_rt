@@ -146,7 +146,7 @@ for i, wav in enumerate(lam_list):
     
 
 
-fig, ax = plt.subplots(2,3, sharex=False, sharey=False, figsize=(15,15))
+fig, ax = plt.subplots(2,3, sharex=False, sharey=False, figsize=(15,10))
 fig.subplots_adjust(left=0.05, right=0.97, top=0.9, bottom=0.1, wspace=0.0, hspace=0.0)
 v_max_list = [4, 7]
 for i, data in enumerate(fit_data):

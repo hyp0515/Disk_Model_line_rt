@@ -69,36 +69,36 @@ for i, data in enumerate(fit_data):
 # print(beam_axis[1][0]*beam_axis[1][1]*np.pi/(4*np.log(2))/(0.03**2))
 
 
-amax, Mstar, Mdot, Rd, Q = -0, 0.14, np.log10(5e-7), 30, 1.5
- 
-model = radmc3d_setup(silent=False)
-model.get_mastercontrol(filename=None,
-                        comment=None,
-                        incl_dust=1,
-                        incl_lines=1,
-                        nphot=500000,
-                        nphot_scat=100000,
-                        scattering_mode_max=2,
-                        istar_sphere=1,
-                        num_cpu=5)
-model.get_linecontrol(filename=None,
-                    methanol='ch3oh leiden 0 0 0')
-model.get_continuumlambda(filename=None,
-                        comment=None,
-                        lambda_micron=None,
-                        append=False)
-model.get_diskcontrol(  d_to_g_ratio = 0.01,
-                        a_max=10**amax, 
-                        Mass_of_star=Mstar, 
-                        Accretion_rate=10**Mdot,
-                        Radius_of_disk=Rd,
-                        Q=Q,
-                        NR=200,
-                        NTheta=200,
-                        NPhi=10)
-model.get_heatcontrol(heat='accretion')
+# amax, Mstar, Mdot, Rd, Q = -0, 0.14, np.log10(5e-7), 30, 1.5
+#  
+# model = radmc3d_setup(silent=False)
+# model.get_mastercontrol(filename=None,
+#                         comment=None,
+#                         incl_dust=1,
+#                         incl_lines=1,
+#                         nphot=500000,
+#                         nphot_scat=100000,
+#                         scattering_mode_max=2,
+#                         istar_sphere=1,
+#                         num_cpu=5)
+# model.get_linecontrol(filename=None,
+#                     methanol='ch3oh leiden 0 0 0')
+# model.get_continuumlambda(filename=None,
+#                         comment=None,
+#                         lambda_micron=None,
+#                         append=False)
+# model.get_diskcontrol(  d_to_g_ratio = 0.01,
+#                         a_max=10**amax, 
+#                         Mass_of_star=Mstar, 
+#                         Accretion_rate=10**Mdot,
+#                         Radius_of_disk=Rd,
+#                         Q=Q,
+#                         NR=200,
+#                         NTheta=200,
+#                         NPhi=10)
+# model.get_heatcontrol(heat='accretion')
 
-model_image_list = []
+# model_image_list = []
 
 
 
