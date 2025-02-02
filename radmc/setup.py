@@ -182,7 +182,11 @@ class radmc3d_setup:
       if filename != None:
         self.duplicate_file(default_filename, filename, comment = comment, timemark = self.now)
 
-    def get_continuumlambda(self, filename = None, comment = None, lambda_micron = None, append = False):
+    def get_continuumlambda(self, filename = None,
+                                  comment = None,
+                                  lambda_micron = None,
+                                  append = False,
+                                  silent = False):
       '''
       Preparing the wavelength file (wavelengths are in units of micron).
       This is the file that sets the discrete wavelength points for the continuum radiative transfer calculations.
@@ -228,8 +232,11 @@ class radmc3d_setup:
       try:
         num_input_lambda =  len(lambda_micron)
       except:
-        print( 'get_continuumlambda: No input wavelength.' )
-        print( 'get_continuumlambda: Re-creating {} using default wavelengths.'.format(default_filename))
+        if silent is False:
+          print( 'get_continuumlambda: No input wavelength.' )
+          print( 'get_continuumlambda: Re-creating {} using default wavelengths.'.format(default_filename))
+        else:
+          pass
         lam1,lam2,lam3,lam4 = 0.1e0, 1.0e2, 5.0e3, 1.0e4
         n12, n23, n34       = 100, 100, 50
         lam12    = np.logspace(np.log10(lam1),np.log10(lam2),n12,endpoint=False)

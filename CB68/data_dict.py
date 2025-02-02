@@ -6,14 +6,21 @@ data_dict = {
         "freq"  : 233.8,
         "bmaj"  : 0.68,
         "bmin"  : 0.58,
-        "bpa"   : -90
+        "bpa"   : -90,
+        "flux"  : 59.7,  # mJy,
+        "peak"  : 53.44  # mJy/beam
     },
 
     "1.2_faust": {
         "fname" : '~/project_data/cb68_faust/cb68_setup2_all.rob2.I.image.tt0.pbcor.smooth.dropdeg.fits',
         "wav"   : 1.2,
         "sigma" : 60e-6,
-        "freq"  : 246.7
+        "freq"  : 246.7,
+        "bmaj"  : 0.68,
+        "bmin"  : 0.58,
+        "bpa"   : -90,
+        "flux"  : 66.3,  # mJy
+        "peak"  : 58.54  # mJy/beam
     },
 
     "3.2_faust": {
@@ -23,7 +30,9 @@ data_dict = {
         "freq"  : 95.0,
         "bmaj"  : 0.68,
         "bmin"  : 0.58,
-        "bpa"   : -90
+        "bpa"   : -90,
+        "flux"  : 7.7,  # mJy
+        "peak"  : 7.07  # mJy/beam
     },
 
     "1.3_edisk": {
@@ -33,7 +42,9 @@ data_dict = {
         "freq"  : 233.8,
         "bmaj"  : 0.0363,
         "bmin"  : 0.274,
-        "bpa"   : 69.4
+        "bpa"   : 69.4,
+        "flux"  : 51.6,  # mJy
+        "peak"  : 4.04  # mJy/beam
     },
 
     "ch3oh_218_faust": {
