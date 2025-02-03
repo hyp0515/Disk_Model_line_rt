@@ -286,5 +286,5 @@ def mcmc():
                                         backend=backend)
         sampler.run_mcmc(pos, niter, progress=True)
 
-debugger()
-# mcmc()
+# debugger()
+mcmc()

@@ -20,61 +20,40 @@ from radmc.setup import *
 sys.path.insert(0,'../')
 from fit_with_GIdisk.find_center import find_center
 from astropy.coordinates import SkyCoord
-
-reader = emcee.backends.HDFBackend("progress.h5")
-
-label = [r'log($a_{max}$)',r'$M_{*}$', r'log($\dot{M}$)', r"$Q$"]
-fig, axes = plt.subplots(len(label), figsize=(10, 10), sharex=True)
-samples = reader.get_chain()
-
-for i in range(len(label)):
-    ax = axes[i]
-    ax.plot(samples[:, :, i], "k", alpha=0.3)
-    ax.set_xlim(0, len(samples))
-    ax.set_ylabel(label[i])
-    ax.yaxis.set_label_coords(-0.1, 0.5)
-# plt.show()
-plt.savefig('chain_step.pdf', transparent = True)
-plt.close()
+import io
+import contextlib
 
 
-chains = reader.get_chain(discard=0, flat=False)
-n_steps, n_walkers, n_params = chains.shape
-
-acceptance_fractions = np.mean(
-    np.diff(reader.get_log_prob(discard=0, flat=False), axis=0) != 0, axis=0
-)
-
-# Define a threshold for stuck walkers
-threshold = 0.001
-valid_walkers = np.where(acceptance_fractions > threshold)[0]
-
-# Filter the chains to exclude stuck walkers
-filtered_chains = chains[:, valid_walkers, :]
-
-# Flatten the filtered chains
-flat_samples = filtered_chains.reshape(-1, n_params)[::1]
-fig = corner.corner(
-    flat_samples[::], labels=label,
-    show_titles=True, plot_datapoints=True, quantiles=[0.16, 0.5, 0.84])
-fig.savefig('posterior.pdf', transparent=True)
-plt.close()
-
-
-
-samples = reader.get_chain(discard=0, flat=True)
-theta_max = samples[np.argmax(reader.get_log_prob(flat=True, discard=0))]
-print(theta_max)
-a, mstar, mdot, Q = theta_max[0], theta_max[1], theta_max[2], theta_max[3]
-
+"""
+Initialize observation data
+"""
 fit_data    = [data_dict["1.3_edisk"], data_dict["3.2_faust"]]
 lam_list    = [fit_data[0]["wav"], fit_data[1]["wav"]]
 sigma_list  = [fit_data[0]["sigma"], fit_data[1]["sigma"]]
-
 disk_posang = 45
-
 desire_size = [50, 250]
 
+"""
+Pick center position in different observation data
+---------------------------------------------
+The eDisks observation doesn't peak at the gaussian center,
+so we need to adjust the center position.
+We use "CARTA" to find the center position.
+---------------------------------------------
+"""
+centroid_position = [
+    ['16h57m19.6429s', '-16d09m24.027s'],
+    ['16h57m19.64147s', '-16d09m23.9756s']
+]
+
+"""
+Initialize observation data
+---------------------------------------------
+We use the class "DiskImage" from "disk_model.py"
+to store the observation data.
+It can simply crop the image to the desired size in au units.
+---------------------------------------------
+"""
 observation_data = []
 beam_pa = []
 beam_axis = []
@@ -82,69 +61,87 @@ size_au = []
 npix = []
 
 for i, data in enumerate(fit_data):
-    if i == 0:
-        c = SkyCoord('16h57m19.64278s', '-16d09m24.0157s', frame='icrs')
-    else:
-        c = SkyCoord('16h57m19.64147s', '-16d09m23.9756s', frame='icrs')
+
+    # Convert the center position to ra, dec in degree
+    c = SkyCoord(centroid_position[i][0], centroid_position[i][1], frame='icrs')
     ra_deg = c.ra.deg
     dec_deg = c.dec.deg
 
+    # Initialize the DiskImage class
     image_class = DiskImage(
         fname = data["fname"],
         ra_deg = ra_deg,
         dec_deg = dec_deg,
         distance_pc = 140,
-        rms_Jy = data["sigma"], # convert to Jy/beam
+        rms_Jy = data["sigma"],
         disk_pa = disk_posang,
         img_size_au = desire_size[i],
-        remove_background=True
+        remove_background=False,
     )
+
     observation_data.append(image_class.img)
     beam_pa.append(image_class.beam_pa)
-    beam_axis.append([image_class.beam_maj_au/image_class.distance_pc,
-                      image_class.beam_min_au/image_class.distance_pc])
-    size_au.append(image_class.img_size_au)
+    beam_axis.append([  image_class.beam_maj_au/image_class.distance_pc,
+                        image_class.beam_min_au/image_class.distance_pc])
+    size_au.append(image_class.img_size_au*2)
     npix.append(image_class.img.shape[0])
 
-model = radmc3d_setup(silent=False)
-model.get_mastercontrol(filename=None,
-                        comment=None,
-                        incl_dust=1,
-                        incl_lines=1,
-                        nphot=500000,
-                        nphot_scat=200000,
-                        scattering_mode_max=2,
-                        istar_sphere=1,
-                        num_cpu=2)
-model.get_linecontrol(filename=None,
-                    methanol='ch3oh leiden 0 0 0')
-model.get_continuumlambda(filename=None,
-                        comment=None,
-                        lambda_micron=None,
-                        append=False)
-model.get_diskcontrol(  d_to_g_ratio = 0.01,
-                        a_max=10**a, 
-                        Mass_of_star=mstar, 
-                        Accretion_rate=10**mdot,
-                        Radius_of_disk=30,
-                        Q=Q,
-                        NR=200,
-                        NTheta=200,
-                        NPhi=10)
-model.get_heatcontrol(heat='accretion')
-
-model_image_list = []
-
-for i, wav in enumerate(lam_list):
-    os.system(f'radmc3d image npix {npix[i]} sizeau {size_au[i]} posang {-45} incl 73 lambda {wav*1000} noline')
-    im = image.readImage()
-    # model_image = image.readImage()
-    model_image = im.imConv(dpc=140, fwhm=beam_axis[i], pa=-beam_pa[i])
-    pixel_area = (size_au[i]/npix[i]/140)**2
-    beam_area = beam_axis[i][0]*beam_axis[i][1]*np.pi/(4*np.log(2))
-    model_image_list.append(model_image.imageJyppix[:, :, 0]/(140**2)*(beam_area/pixel_area))
+"""
+Disk model + radmc3d
+---------------------------------------------
+This function produce the model image using radmc3d.
+RADMC-3D is works in each directory named by the current time and pid
+in order to do parallelization.
+---------------------------------------------
+"""
+def radmc_conti(parms):
+    amax, Mdot, Q = parms[0], parms[1], parms[2]
+    model = radmc3d_setup(silent=True)
+    model.get_mastercontrol(filename=None,
+                            comment=None,
+                            incl_dust=1,
+                            incl_lines=1,
+                            nphot=500000,
+                            nphot_scat=500000,
+                            scattering_mode_max=2,
+                            istar_sphere=1,
+                            num_cpu=10)
+    model.get_linecontrol(filename=None,
+                        methanol='ch3oh leiden 0 0 0')
+    model.get_continuumlambda(filename=None,
+                            comment=None,
+                            lambda_micron=None,
+                            append=False,
+                            silent=True)
+    model.get_diskcontrol(  d_to_g_ratio = 0.01,
+                            a_max=10**amax, 
+                            Mass_of_star=0.14, 
+                            Accretion_rate=10**Mdot,
+                            Radius_of_disk=30,
+                            Q=Q,
+                            NR=200,
+                            NTheta=200,
+                            NPhi=10)
+    model.get_heatcontrol(heat='accretion')
+    model_image_list = []
+    beam_per_pix = []
+    for i, wav in enumerate(lam_list):
+        os.system(f'radmc3d image npix {npix[i]} sizeau {size_au[i]} posang {-disk_posang} incl 73 lambda {wav*1000} noline > /dev/null 2>&1')
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            im = image.readImage()
+        # Convolve the image with the beam
+        model_image = im.imConv(dpc=140, fwhm=beam_axis[i], pa=-beam_pa[i])
+        pixel_area = (size_au[i]/npix[i]/140)**2
+        beam_area = beam_axis[i][0]*beam_axis[i][1]*np.pi/(4*np.log(2))
+        beam_per_pix.append(pixel_area/beam_area)
+        model_image_list.append(model_image.imageJyppix[:, :, 0]/(140**2)*(beam_area/pixel_area))
+    return model_image_list, beam_per_pix
     
+reader = emcee.backends.HDFBackend("progress.h5")
+samples = reader.get_chain(discard=0, flat=True)
+theta_max = samples[np.argmax(reader.get_log_prob(flat=True, discard=0))]
 
+model_image_list, beam_per_pix = radmc_conti(theta_max)
 
 fig, ax = plt.subplots(2,3, sharex=False, sharey=False, figsize=(15,10))
 fig.subplots_adjust(left=0.05, right=0.97, top=0.9, bottom=0.1, wspace=0.0, hspace=0.0)
